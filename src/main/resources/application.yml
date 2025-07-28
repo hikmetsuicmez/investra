@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: investra
+
+  datasource:
+    url: jdbc:sqlserver://localhost:1434;databaseName=Kizikos;encrypt=true;trustServerCertificate=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServer2016Dialect
+    hibernate:
+      ddl-auto: update
