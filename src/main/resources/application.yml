@@ -1,16 +1,31 @@
+
+server:
+  port: 8088
+
+# Veritabanı bağlantı bilgileri
 spring:
   application:
     name: investra
 
   datasource:
-    url: jdbc:sqlserver://localhost:1434;databaseName=Kizikos;encrypt=true;trustServerCertificate=true
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:sqlserver://192.168.144.76:1450;databaseName=Kizikos;encrypt=true;trustServerCertificate=true
+    username: grup4
+    password: 8B8bToZc38mhQ
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.SQLServer2016Dialect
-    hibernate:
-      ddl-auto: update
+
+
+
+# JWT Secret key değeri
+secreteJwtString: ${JWT_SECRET}
+
+
+
+
