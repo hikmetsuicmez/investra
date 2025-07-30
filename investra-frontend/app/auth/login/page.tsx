@@ -17,8 +17,7 @@ export default function Login() {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [wrongCredentials, setWrongCredentials] = useState(false);
 
-	// Validation: username not empty, password min 8 chars
-	const isFormValid = validateEmail(email);
+	const isFormValid = validateEmail(email) && password.length >= 8;
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
@@ -33,16 +32,14 @@ export default function Login() {
 			headers: { "Content-Type": "application/json" },
 		});
 
-		setTimeout(() => {
-			setIsSubmitting(false);
+		setIsSubmitting(false);
 
-			if (res.ok) {
-				setWrongCredentials(false);
-				window.location.href = "/"; // redirect on success
-			} else {
-				setWrongCredentials(true);
-			}
-		}, 2000);
+		if (res.ok) {
+			setWrongCredentials(false);
+			window.location.href = "/"; // redirect on success
+		} else {
+			setWrongCredentials(true);
+		}
 	}
 
 	return (
@@ -50,7 +47,7 @@ export default function Login() {
 			<Card className="w-full max-w-sm bg-gray-50">
 				<CardHeader className="text-center">
 					<div className="flex justify-center mb-2">
-						<div className="bg-slate-800/90 p-3 rounded-full">
+						<div className="bg-blue-600 p-3 rounded-full">
 							<UserLock size={32} color="white" />
 						</div>
 					</div>
@@ -118,7 +115,7 @@ export default function Login() {
 							<Alert
 								variant="destructive"
 								className={`border-red-600/70 border-0 border-l-4 bg-red-600/5 transition-all duration-300 ${
-									wrongCredentials ? "opacity-100 max-h-32 mb-6" : "opacity-0 max-h-0 h-0"
+									wrongCredentials ? "opacity-100 max-h-32 mb-6" : "opacity-0 max-h-0 h-0 p-0 -z-50"
 								}`}
 							>
 								<AlertDescription>Kullanıcı bilgileriniz hatalıdır. Lütfen tekrar deneyiniz.</AlertDescription>
@@ -127,7 +124,7 @@ export default function Login() {
 
 						<hr className="border-t border-neutral-200 pb-6" />
 
-						<Button type="submit" className="w-full bg-slate-800/90" disabled={!isFormValid || isSubmitting}>
+						<Button type="submit" className="w-full bg-blue-600 cursor-pointer" disabled={!isFormValid || isSubmitting}>
 							<p>{isSubmitting ? "Giriş Yapılıyor..." : "Giriş Yap"}</p>
 							<ArrowRight />
 						</Button>
@@ -135,9 +132,12 @@ export default function Login() {
 				</form>
 
 				<CardFooter className="flex-col justify-center gap-2">
-					<Link href="/forgot-password" className="flex items-center gap-2 text-sm text-slate-800/90">
-						<KeyRound size={14} />
-						<p>Şifremi Unuttum?</p>
+					<Link href="/auth/forgot-password" className="group flex-col justify-center gap-2 text-sm text-blue-600">
+						<div className="flex items-center gap-2">
+							<KeyRound size={14} />
+							<p>Şifremi Unuttum?</p>
+						</div>
+						<hr className="border-t border-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
 					</Link>
 				</CardFooter>
 			</Card>
