@@ -17,9 +17,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
 
-export default function ResetPassword() {
-	const [password, setPassword] = useState("");
+export default function ChangePassword() {
+	const [currentPassword, setCurrentPassword] = useState("");
+	const [newPassword, setNewPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
+	const [showCurrentPassword, setShowCurrentPassword] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [openDialog, setOpenDialog] = useState(false);
@@ -33,16 +35,37 @@ export default function ResetPassword() {
 		special: /[^A-Za-z0-9]/.test(pwd),
 	});
 
-	const requirements = validatePassword(password);
-	const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
+	const requirements = validatePassword(newPassword);
+	const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0;
 	const isValid = Object.values(requirements).every(Boolean) && passwordsMatch;
 
-	const handleSubmit = (e: React.FormEvent) => {
+	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		if (!isValid) return alert("Lütfen tüm kurallara uygun şifre giriniz.");
-		// TODO: Add your password reset logic here (e.g. API call)
-		setOpenDialog(true);
-	};
+		try {
+			const res = await fetch("/api/auth/change-password", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					currentPassword,
+					newPassword,
+					confirmPassword,
+				}),
+			});
+
+			if (!res.ok) {
+				const data = await res.json();
+				alert(data.message || "Şifre güncellenemedi.");
+				return;
+			}
+
+			setOpenDialog(true);
+		} catch (err) {
+			alert("Sunucu hatası: " + err);
+		}
+	}
 
 	useEffect(() => {
 		if (openDialog) {
@@ -76,6 +99,30 @@ export default function ResetPassword() {
 
 				<form onSubmit={handleSubmit}>
 					<CardContent className="flex flex-col gap-6">
+						<div className="grid gap-2">
+							<Label htmlFor="currentPassword">Mevcut Şifre</Label>
+							<div className="relative">
+								<Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+								<Input
+									id="currentPassword"
+									type={showCurrentPassword ? "text" : "password"}
+									required
+									className="pl-10 pr-10"
+									value={currentPassword}
+									onChange={(e) => setCurrentPassword(e.target.value)}
+								/>
+								<div
+									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground"
+									onMouseDown={() => setShowCurrentPassword(true)}
+									onMouseUp={() => setShowCurrentPassword(false)}
+									onMouseLeave={() => setShowCurrentPassword(false)}
+									onTouchStart={() => setShowCurrentPassword(true)}
+									onTouchEnd={() => setShowCurrentPassword(false)}
+								>
+									{showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+								</div>
+							</div>
+						</div>
 						{/* Yeni Şifre */}
 						<div className="grid gap-2">
 							<Label htmlFor="password">Yeni Şifre</Label>
@@ -86,8 +133,8 @@ export default function ResetPassword() {
 									type={showPassword ? "text" : "password"}
 									required
 									className="pl-10 pr-10"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
+									value={newPassword}
+									onChange={(e) => setNewPassword(e.target.value)}
 								/>
 								<div
 									className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground"

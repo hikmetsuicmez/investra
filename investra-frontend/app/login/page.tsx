@@ -8,30 +8,41 @@ import { Label } from "@/components/ui/label";
 import { KeyRound, Lock, User, UserLock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { validateEmail } from "@/lib/auth";
 
 export default function Login() {
 	const [showPassword, setShowPassword] = useState(false);
-	const [username, setUsername] = useState("");
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [wrongCredentials, setWrongCredentials] = useState(false);
 
 	// Validation: username not empty, password min 8 chars
-	const isFormValid = username.trim() !== "" && password.length >= 8;
+	const isFormValid = validateEmail(email);
 
-	const handleSubmit = (e: React.FormEvent) => {
+	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 
 		if (!isFormValid) return; // extra safety
 
 		setIsSubmitting(true);
 
-		// Simulate login process (replace with real login logic)
+		const res = await fetch("/api/auth/login", {
+			method: "POST",
+			body: JSON.stringify({ email, password }),
+			headers: { "Content-Type": "application/json" },
+		});
+
 		setTimeout(() => {
 			setIsSubmitting(false);
-			// Reset fields or redirect on success here
+
+			if (res.ok) {
+				window.location.href = "/"; // redirect on success
+			} else {
+				alert("Invalid credentials");
+			}
 		}, 2000);
-	};
+	}
 
 	return (
 		<div className="w-full h-screen flex items-center justify-center bg-auth-gradient">
@@ -43,24 +54,24 @@ export default function Login() {
 						</div>
 					</div>
 					<CardTitle className="text-indigo-700/70 text-2xl font-semibold">Sisteme Giriş</CardTitle>
-					<CardDescription>Kullanıcı adınızı ve şifrenizi girerek sisteme giriş yapın.</CardDescription>
+					<CardDescription>E-posta adresinizi ve şifrenizi girerek sisteme giriş yapın.</CardDescription>
 				</CardHeader>
 
 				<form onSubmit={handleSubmit}>
 					<CardContent className="flex flex-col">
 						<div className="grid gap-2 pb-6">
-							<Label htmlFor="username">Kullanıcı adı</Label>
+							<Label htmlFor="email">E-posta</Label>
 							<div className="relative">
 								<User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
 								<Input
-									id="username"
-									name="username"
+									id="email"
+									name="email"
 									type="text"
-									autoComplete="username"
+									autoComplete="email"
 									required
 									className="pl-10"
-									value={username}
-									onChange={(e) => setUsername(e.target.value)}
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
 								/>
 							</div>
 						</div>
@@ -108,8 +119,6 @@ export default function Login() {
 								<AlertDescription>Kullanıcı bilgileriniz hatalıdır. Lütfen tekrar deneyiniz.</AlertDescription>
 							</Alert>
 						</div>
-
-						{/* <div onClick={() => setWrongCredentials(!wrongCredentials)}>aaaa</div> */}
 
 						<hr className="border-t border-neutral-200 pb-6" />
 

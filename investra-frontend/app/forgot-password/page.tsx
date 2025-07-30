@@ -8,28 +8,12 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Send } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { validateEmail } from "@/lib/auth";
 
 export default function ForgotPassword() {
 	const [email, setEmail] = useState("");
 	const [isValidEmail, setIsValidEmail] = useState(false);
 	const [isEmailSent, setIsEmailSent] = useState(false);
-
-	/**
-	 * Validates whether a given string is a properly formatted email address.
-	 *
-	 * This function uses a regular expression to check that the input:
-	 * - Contains exactly one "@" symbol,
-	 * - Has no whitespace characters,
-	 * - Has at least one character before and after the "@" symbol,
-	 * - Contains a period (".") after the "@" with at least one character on each side.
-	 *
-	 * @param {string} email - The email address string to validate.
-	 * @returns {boolean} - Returns true if the email matches the expected format, false otherwise.
-	 */
-	const validateEmail = (email: string) => {
-		const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		return regex.test(email);
-	};
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
