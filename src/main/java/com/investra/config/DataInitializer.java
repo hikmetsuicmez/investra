@@ -19,6 +19,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        userRepository.deleteAll();
             User adminUser = User.builder()
                     .email("admin@investra.com")
                     .password(passwordEncoder.encode("123456"))
@@ -41,9 +42,23 @@ public class DataInitializer implements CommandLineRunner {
                     .createdAt(LocalDateTime.now())
                     .build();
 
+            User hikmet = User.builder()
+                    .email("suicmezhikmet1@gmail.com")
+                    .password(passwordEncoder.encode("123456"))
+                    .firstName("Hikmet")
+                    .lastName("Suicmez")
+                    .role(Role.ADMIN)
+                    .isActive(true)
+                    .firstLogin(true)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
             userRepository.save(adminUser);
             userRepository.save(traderUser);
+            userRepository.save(hikmet);
             System.out.println("Test admin kullanıcısı oluşturuldu: admin@investra.com / 123456");
-            System.out.println("Test admin kullanıcısı oluşturuldu: trader@investra.com / 123456");
+            System.out.println("Test trader kullanıcısı oluşturuldu: trader@investra.com / 123456");
+            System.out.println("Test admin kullanıcısı oluşturuldu: suicmezhikmet1@gmail.com / 123456");
+
     }
 }
