@@ -10,8 +10,6 @@ export async function POST(req: Request) {
 
   const result = await res.json();
 
-  console.log(result)
-
   if (result.statusCode != 200) {
     return new Response(JSON.stringify(result), { status: result.statusCode });
   }
