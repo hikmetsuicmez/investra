@@ -37,12 +37,16 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    private static final String[] WHITE_LIST_URL = {
+    private static final String[] API_AUTH = {
             "/api/v1/auth/login",
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
+    };
+
+    private static final String[] SWAGGER_PATHS = {
             "/swagger-ui/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            "/swagger-ui.html"
     };
 
     @Bean
@@ -51,7 +55,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(req ->
-                        req.requestMatchers(WHITE_LIST_URL).permitAll()
+                        req.requestMatchers(API_AUTH).permitAll()
+                                .requestMatchers(SWAGGER_PATHS).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
