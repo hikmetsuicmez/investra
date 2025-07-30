@@ -85,15 +85,15 @@ export default function ChangePassword() {
 	}, [openDialog]);
 
 	return (
-		<div className="w-full h-screen flex items-center justify-center bg-auth-gradient">
+		<div className="w-full h-screen flex items-center justify-center bg-gray-300">
 			<Card className="w-full max-w-sm">
 				<CardHeader className="text-center">
 					<div className="flex justify-center mb-2">
-						<div className="bg-auth-gradient p-3 rounded-full">
+						<div className="bg-slate-800/90 p-3 rounded-full">
 							<UserCheck size={32} color="white" />
 						</div>
 					</div>
-					<CardTitle className="text-indigo-700/70 text-2xl font-semibold">Yeni Şifre Belirle</CardTitle>
+					<CardTitle className="text-slate-800/90 text-2xl font-semibold">Yeni Şifre Belirle</CardTitle>
 					<CardDescription>Güçlü bir şifre belirleyerek hesabınızı güvene alın.</CardDescription>
 				</CardHeader>
 
@@ -206,7 +206,7 @@ export default function ChangePassword() {
 							</div>
 						</div>
 
-						<Button type="submit" className="w-full bg-auth-gradient" disabled={!isValid}>
+						<Button type="submit" className="w-full bg-slate-800/90" disabled={!isValid}>
 							<p>Şifremi Güncelle</p>
 							<KeyRound />
 						</Button>
@@ -228,7 +228,7 @@ export default function ChangePassword() {
 						Şifreniz başarıyla güncellendi. Ana sayfaya yönderiliyorsunuz.
 					</AlertDialogDescription>
 					<AlertDialogFooter>
-						<Progress value={progress} className="bg-indigo-700/20 [&>*]:bg-indigo-700/70" />
+						<Progress value={progress} className="bg-indigo-700/20 [&>*]:bg-slate-800/90" />
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>

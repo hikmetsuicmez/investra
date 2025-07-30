@@ -120,9 +120,3 @@
 		@apply bg-background text-foreground;
 	}
 }
-
-@layer utilities {
-	.bg-auth-gradient {
-		@apply bg-gradient-to-br from-blue-700/75 to-purple-800/75;
-	}
-}

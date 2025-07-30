@@ -27,15 +27,15 @@ export default function ForgotPassword() {
 	};
 
 	return (
-		<div className="w-full h-screen flex items-center justify-center bg-auth-gradient">
+		<div className="w-full h-screen flex items-center justify-center bg-gray-300">
 			<Card className="w-full max-w-sm">
 				<CardHeader className="text-center">
 					<div className="flex justify-center mb-2">
-						<div className="bg-auth-gradient p-3 rounded-full">
+						<div className="bg-slate-800/90 p-3 rounded-full">
 							<Mail size={32} color="white" />
 						</div>
 					</div>
-					<CardTitle className="text-indigo-700/70 text-2xl font-semibold">Şifre Sıfırlama</CardTitle>
+					<CardTitle className="text-slate-800/90 text-2xl font-semibold">Şifre Sıfırlama</CardTitle>
 					<CardDescription>E-posta adresinizi girin, şifre sıfırlama bağlantısını size gönderelim.</CardDescription>
 				</CardHeader>
 
@@ -68,7 +68,7 @@ export default function ForgotPassword() {
 							</AlertDescription>
 						</Alert>
 
-						<Button type="submit" className="w-full bg-auth-gradient" disabled={!isValidEmail}>
+						<Button type="submit" className="w-full bg-slate-800/90" disabled={!isValidEmail}>
 							<p>Sıfırlama Bağlantısı Gönder</p>
 							<Send />
 						</Button>

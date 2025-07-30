@@ -37,30 +37,33 @@ export default function Login() {
 			setIsSubmitting(false);
 
 			if (res.ok) {
+				setWrongCredentials(false);
 				window.location.href = "/"; // redirect on success
 			} else {
-				alert("Invalid credentials");
+				setWrongCredentials(true);
 			}
 		}, 2000);
 	}
 
 	return (
-		<div className="w-full h-screen flex items-center justify-center bg-auth-gradient">
-			<Card className="w-full max-w-sm">
+		<div className="w-full h-screen flex items-center justify-center bg-gray-300">
+			<Card className="w-full max-w-sm bg-gray-50">
 				<CardHeader className="text-center">
 					<div className="flex justify-center mb-2">
-						<div className="bg-auth-gradient p-3 rounded-full">
+						<div className="bg-slate-800/90 p-3 rounded-full">
 							<UserLock size={32} color="white" />
 						</div>
 					</div>
-					<CardTitle className="text-indigo-700/70 text-2xl font-semibold">Sisteme Giriş</CardTitle>
+					<CardTitle className="text-slate-800/90 text-2xl font-semibold">Sisteme Giriş</CardTitle>
 					<CardDescription>E-posta adresinizi ve şifrenizi girerek sisteme giriş yapın.</CardDescription>
 				</CardHeader>
 
 				<form onSubmit={handleSubmit}>
 					<CardContent className="flex flex-col">
 						<div className="grid gap-2 pb-6">
-							<Label htmlFor="email">E-posta</Label>
+							<Label htmlFor="email" className="text-slate-800/90">
+								E-posta
+							</Label>
 							<div className="relative">
 								<User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
 								<Input
@@ -77,7 +80,9 @@ export default function Login() {
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor="password">Şifre</Label>
+							<Label htmlFor="password" className="text-slate-800/90">
+								Şifre
+							</Label>
 							<div className="relative">
 								<Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
 								<Input
@@ -122,7 +127,7 @@ export default function Login() {
 
 						<hr className="border-t border-neutral-200 pb-6" />
 
-						<Button type="submit" className="w-full bg-auth-gradient" disabled={!isFormValid || isSubmitting}>
+						<Button type="submit" className="w-full bg-slate-800/90" disabled={!isFormValid || isSubmitting}>
 							<p>{isSubmitting ? "Giriş Yapılıyor..." : "Giriş Yap"}</p>
 							<ArrowRight />
 						</Button>
@@ -130,7 +135,7 @@ export default function Login() {
 				</form>
 
 				<CardFooter className="flex-col justify-center gap-2">
-					<Link href="/forgot-password" className="flex items-center gap-2 text-sm text-indigo-700/70">
+					<Link href="/forgot-password" className="flex items-center gap-2 text-sm text-slate-800/90">
 						<KeyRound size={14} />
 						<p>Şifremi Unuttum?</p>
 					</Link>
