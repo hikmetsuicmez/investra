@@ -1,17 +1,21 @@
 package com.investra.mapper;
 
 import com.investra.dtos.request.CreateUserRequest;
+import com.investra.dtos.request.UpdateUserRequest;
 import com.investra.dtos.response.CreateUserResponse;
+import com.investra.dtos.response.UpdateUserResponse;
 import com.investra.entity.User;
+
+import java.util.Optional;
 
 public class UserMapper {
 
-    public static User toEntity(CreateUserRequest request, String encodedPassword) {
+    public static User toEntity(CreateUserRequest request, String encodedPassword, String employeeNumber) {
         return User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .tckn(request.getTckn())
-                .sicilNo(request.getSicilNo())
+                .nationalityNumber(request.getNationalityNumber())
+                .employeeNumber(employeeNumber)
                 .phoneNumber(request.getPhoneNumber())
                 .email(request.getEmail())
                 .role(request.getRole())
@@ -19,16 +23,37 @@ public class UserMapper {
                 .build();
     }
 
-    public static CreateUserResponse toResponse(CreateUserRequest request, String rawPassword) {
+    public static CreateUserResponse toResponse(CreateUserRequest request, String rawPassword,String employeeNumber) {
         return CreateUserResponse.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .tckn(request.getTckn())
-                .sicilNo(request.getSicilNo())
+                .nationalityNumber(request.getNationalityNumber())
+                .employeeNumber(employeeNumber)
                 .phoneNumber(request.getPhoneNumber())
                 .email(request.getEmail())
                 .role(request.getRole().name())
                 .password(rawPassword)
                 .build();
     }
+
+    public static void updateFields(User user, UpdateUserRequest request) {
+        Optional.ofNullable(request.getFirstName()).ifPresent(user::setFirstName);
+        Optional.ofNullable(request.getLastName()).ifPresent(user::setLastName);
+        Optional.ofNullable(request.getPhoneNumber()).ifPresent(user::setPhoneNumber);
+        Optional.ofNullable(request.getEmail()).ifPresent(user::setEmail);
+        Optional.ofNullable(request.getRole()).ifPresent(user::setRole);
+    }
+
+    public static UpdateUserResponse toUpdateResponse(User user) {
+        return UpdateUserResponse.builder()
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .nationalityNumber(user.getNationalityNumber())
+                .employeeNumber(user.getEmployeeNumber())
+                .phoneNumber(user.getPhoneNumber())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
+    }
+
 }

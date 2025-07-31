@@ -23,10 +23,7 @@ public class CreateUserRequest {
 
     @NotBlank(message = "TC kimlik no zorunludur")
     @Size(min = 11, max = 11, message = "TC kimlik no 11 haneli olmalı")
-    private String tckn;
-
-    @NotBlank(message = "Sicil no zorunludur")
-    private String sicilNo;
+    private String nationalityNumber;
 
     @NotBlank(message = "Telefon numarası zorunludur")
     private String phoneNumber;

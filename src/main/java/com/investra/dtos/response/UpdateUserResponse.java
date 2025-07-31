@@ -5,21 +5,12 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CreateUserResponse {
-
+public class UpdateUserResponse {
     private String firstName;
-
     private String lastName;
-
-    private String employeeNumber;
-
-    private String role;
-
     private String nationalityNumber;
-
+    private String employeeNumber;
     private String phoneNumber;
-
     private String email;
-
-    private String password;
+    private String role;
 }
