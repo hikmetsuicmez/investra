@@ -1,8 +1,8 @@
 package com.investra.enums;
 
 public enum NotificationType {
-    INFO,
-    WARNING,
+    SUCCESS,
     ERROR,
-    SUCCESS
+    WARNING,
+    INFO,
 }

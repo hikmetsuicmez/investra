@@ -36,6 +36,14 @@ public class AuthFilter extends OncePerRequestFilter {
 
         String token = getTokenFromRequest(request);
 
+        String requestPath = request.getRequestURI();
+        if (requestPath.startsWith("/api/auth/") ||
+                requestPath.startsWith("/h2-console/") ||
+                requestPath.startsWith("/swagger-ui/") ||
+                requestPath.startsWith("/v3/api-docs/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (token != null) {
             String email;
