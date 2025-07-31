@@ -27,6 +27,9 @@ public class User {
     private String email;
     private String password;
     private String sicilNo;
+    private String phoneNumber;
+    private String tckn;
+
 
     private boolean firstLogin = true;  // Varsayılan olarak ilk giriş true olsun
 
