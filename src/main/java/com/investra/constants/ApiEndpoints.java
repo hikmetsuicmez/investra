@@ -15,7 +15,8 @@ public class ApiEndpoints {
 
      public static final class User {
         private User() {}
-        // Kullanıcı ile ilgili endpoint'ler burada tanımlanabilir
+         public static final String BASE = "/api/v1/users";
+         public static final String CREATE = "/create";
     }
 
     private static final class Stock {
@@ -23,4 +24,5 @@ public class ApiEndpoints {
 
         // Stok işlemleri ile ilgili endpoint'ler burada tanımlanabilir
     }
+
 }
