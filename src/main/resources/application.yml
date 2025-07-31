@@ -12,7 +12,7 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
-# Hibernate ayarları
+  # Hibernate ayarları
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,7 +21,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.SQLServer2016Dialect
 
-# Mail ayarları
+  # Mail ayarları
   mail:
     host: smtp.gmail.com
     port: 587
@@ -36,10 +36,9 @@ spring:
             required: true
       from: Investra Destek <investradestek@gmail.com>
 
-
-
 # JWT Secret key değeri
 secreteJwtString: ${JWT_SECRET}
 
 app:
-  backendUrl: ${BACKEND_URL}
+#  backendUrl: ${BACKEND_URL}
+  frontendUrl: ${FRONTEND_URL}

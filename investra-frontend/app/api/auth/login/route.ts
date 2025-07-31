@@ -13,8 +13,6 @@ export async function POST(req: Request) {
   
   const body = await loginRes.json();
 
-  console.log(body)
-
   if (body.statusCode != 200) {
     return new Response('Invalid credentials', { status: 401 });
   }

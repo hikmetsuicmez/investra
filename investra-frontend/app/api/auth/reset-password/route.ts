@@ -1,21 +1,16 @@
-import { cookies } from "next/headers";
-
 export async function POST(req: Request) {
-  const { currentPassword, newPassword, confirmPassword } = await req.json();
-  const cookieStore = await cookies()
-  const token = cookieStore.get("token")?.value;
+  const { newPassword, confirmPassword, token } = await req.json();
 
   if (!token) {
     return new Response(JSON.stringify({ message: "Yetkisiz" }), { status: 401 });
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password?token=${token}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+    body: JSON.stringify({ password: newPassword, confirmPassword }),
   });
 
   const result = await res.json();

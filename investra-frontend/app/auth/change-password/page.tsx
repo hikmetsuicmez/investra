@@ -89,7 +89,7 @@ export default function ChangePassword() {
 			<Card className="w-full max-w-sm">
 				<CardHeader className="text-center">
 					<div className="flex justify-center mb-2">
-						<div className="bg-slate-800/90 p-3 rounded-full">
+						<div className="bg-blue-600 p-3 rounded-full">
 							<UserCheck size={32} color="white" />
 						</div>
 					</div>
@@ -206,7 +206,7 @@ export default function ChangePassword() {
 							</div>
 						</div>
 
-						<Button type="submit" className="w-full bg-slate-800/90" disabled={!isValid}>
+						<Button type="submit" className="w-full bg-blue-600 cursor-pointer" disabled={!isValid}>
 							<p>Şifremi Güncelle</p>
 							<KeyRound />
 						</Button>

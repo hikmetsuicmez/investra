@@ -32,8 +32,8 @@ import java.util.UUID;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    @Value("${app.backendUrl}")
-    private String BACKEND_URL;
+    @Value("${app.frontendUrl}")
+    private String FRONTEND_URL;
 
     private static final String RESET_PASSWORD_URL = "/reset-password?token=";
 
@@ -140,7 +140,7 @@ public class AuthServiceImpl implements AuthService {
                     System.out.println("Token oluşturuldu: " + resetToken);
 
                     // Şifre sıfırlama maili gönder - ortam değişkeni kullan
-                    String resetLink =  BACKEND_URL + "/api/v1/auth" + RESET_PASSWORD_URL + resetToken;
+                    String resetLink =  FRONTEND_URL + "/auth" + RESET_PASSWORD_URL + resetToken;
                     String emailContent = "<h2>Şifre Sıfırlama İsteği</h2>"
                             + "<p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:</p>"
                             + "<a href='" + resetLink + "'>Şifremi Sıfırla</a>"
