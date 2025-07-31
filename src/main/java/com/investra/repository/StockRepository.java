@@ -1,0 +1,6 @@
+package com.investra.repository;
+
+import com.investra.entity.Stock;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface StockRepository {
+}

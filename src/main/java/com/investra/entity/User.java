@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -24,6 +26,7 @@ public class User {
     private String username;
     private String email;
     private String password;
+    private String sicilNo;
 
     private boolean firstLogin = true;  // Varsayılan olarak ilk giriş true olsun
 
@@ -44,4 +47,11 @@ public class User {
 
     private String firstName;
     private String lastName;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Client> clients = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TradeOrder> tradeOrders = new ArrayList<>();
+
 }
