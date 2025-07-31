@@ -8,6 +8,7 @@ import com.investra.dtos.response.NotificationDTO;
 import com.investra.dtos.response.Response;
 import com.investra.entity.User;
 import com.investra.enums.NotificationType;
+import com.investra.exception.UserNotFoundException;
 import com.investra.repository.UserRepository;
 import com.investra.security.AuthUser;
 import com.investra.security.JwtUtil;
@@ -56,7 +57,7 @@ public class AuthServiceImpl implements AuthService {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
             User user = userRepository.findByEmail(userDetails.getUsername())
-                    .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+                    .orElseThrow(() -> new UserNotFoundException(userDetails.getUsername()));
 
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
@@ -92,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
         AuthUser authUser = (AuthUser) authentication.getPrincipal();
 
         User user = userRepository.findByEmail(authUser.getUsername())
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new UserNotFoundException(authUser.getUsername()));
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             return Response.<Void>builder()
