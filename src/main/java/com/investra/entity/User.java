@@ -30,7 +30,6 @@ public class User {
     private String phoneNumber;
     private String tckn;
 
-
     private boolean firstLogin = true;  // Varsayılan olarak ilk giriş true olsun
 
     @Enumerated(EnumType.STRING)

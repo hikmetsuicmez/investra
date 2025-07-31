@@ -125,10 +125,20 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Response<Void> forgotPassword(String email) {
+        boolean emailExists = userRepository.findByEmail(email).isPresent();
+
+        if (!emailExists) {
+            log.info("Şifre sıfırlama isteği yapılan email bulunamadı: {}", email);
+            return Response.<Void>builder()
+                    .statusCode(HttpStatus.OK.value())
+                    .message("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
+                    .data(null)
+                    .build();
+        }
 
         return userRepository.findByEmail(email)
                 .map(user -> {
-                    System.out.println("Kullanıcı bulundu: " + user.getEmail());
+                    log.info("Kullanıcı bulundu: {}", user.getEmail());
 
                     String resetToken = UUID.randomUUID().toString();
                     LocalDateTime tokenExpiry = LocalDateTime.now().plusHours(24);
@@ -137,14 +147,17 @@ public class AuthServiceImpl implements AuthService {
                     user.setPasswordResetTokenExpiry(tokenExpiry);
                     userRepository.save(user);
 
-                    System.out.println("Token oluşturuldu: " + resetToken);
+                    log.info("Token oluşturuldu: {}", resetToken);
 
                     // Şifre sıfırlama maili gönder - ortam değişkeni kullan
                     String resetLink =  FRONTEND_URL + "/auth" + RESET_PASSWORD_URL + resetToken;
                     String emailContent = "<h2>Şifre Sıfırlama İsteği</h2>"
                             + "<p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:</p>"
                             + "<a href='" + resetLink + "'>Şifremi Sıfırla</a>"
-                            + "<p>Bu link 24 saat içinde geçerliliğini yitirecektir.</p>";
+                            + "<p>Bu link 24 saat içinde geçerliliğini yitirecektir.</p>"
+                            + "<p>Teşekkürler,</p>"
+                            + "<p>Investra Ekibi</p>"
+                            + "<p>Not: Bu e-posta otomatik olarak oluşturulmuştur, lütfen yanıtlamayın.</p>";
 
                     NotificationDTO notificationDTO = NotificationDTO.builder()
                             .recipient(user.getEmail())
@@ -154,14 +167,13 @@ public class AuthServiceImpl implements AuthService {
                             .isHtml(true)
                             .build();
 
-                    System.out.println("Email gönderiliyor: " + resetLink);
+                    log.info("Email gönderiliyor: {}", resetLink);
 
                     try {
                         notificationService.sendEmail(notificationDTO);
-                        System.out.println("Email başarıyla gönderildi");
+                        log.info("Email başarıyla gönderildi");
                     } catch (Exception e) {
-                        System.err.println("Email gönderme hatası: " + e.getMessage());
-                        e.printStackTrace();
+                        log.error("Email gönderme hatası: {}", e.getMessage(), e);
                     }
 
                     return Response.<Void>builder()
@@ -170,11 +182,7 @@ public class AuthServiceImpl implements AuthService {
                             .data(null)
                             .build();
                 })
-                .orElse(Response.<Void>builder()
-                        .statusCode(HttpStatus.OK.value())
-                        .message("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
-                        .data(null)
-                        .build());
+                .orElseThrow(() -> new IllegalStateException("Bu hata asla oluşmamalı - Kontrol zaten yapıldı"));
     }
 
     @Override

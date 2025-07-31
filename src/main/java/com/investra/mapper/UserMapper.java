@@ -4,6 +4,8 @@ import com.investra.dtos.request.CreateUserRequest;
 import com.investra.dtos.response.CreateUserResponse;
 import com.investra.entity.User;
 
+import java.time.LocalDateTime;
+
 public class UserMapper {
 
     public static User toEntity(CreateUserRequest request, String encodedPassword) {
@@ -14,6 +16,7 @@ public class UserMapper {
                 .sicilNo(request.getSicilNo())
                 .phoneNumber(request.getPhoneNumber())
                 .email(request.getEmail())
+                .firstLogin(true)
                 .role(request.getRole())
                 .password(encodedPassword)
                 .build();
@@ -27,8 +30,9 @@ public class UserMapper {
                 .sicilNo(request.getSicilNo())
                 .phoneNumber(request.getPhoneNumber())
                 .email(request.getEmail())
-                .role(request.getRole().name())
+                .role(request.getRole())
                 .password(rawPassword)
+                .createdDate(LocalDateTime.now())
                 .build();
     }
 }
