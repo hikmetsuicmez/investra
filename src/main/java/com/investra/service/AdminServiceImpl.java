@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import static com.investra.utils.AdminOperationsValidator.duplicateResourceCheck;
+import static com.investra.mapper.UserMapper.*;
 
 @Service
 @RequiredArgsConstructor
@@ -29,10 +30,10 @@ public class AdminServiceImpl implements AdminService {
             String rawPassword = PasswordGenerator.generatePassword(10);
             String encodedPassword = passwordEncoder.encode(rawPassword);
 
-            User user = mapToUserEntity(request, encodedPassword);
+            User user = toEntity(request, encodedPassword);
             userRepository.save(user);
 
-            CreateUserResponse response = mapToUserResponse(request,rawPassword);
+            CreateUserResponse response = toResponse(request, rawPassword);
 
             return Response.<CreateUserResponse>builder()
                     .statusCode(201)
@@ -47,30 +48,5 @@ public class AdminServiceImpl implements AdminService {
         }
     }
 
-    private User mapToUserEntity(CreateUserRequest request, String encodedPassword) {
-        return User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .tckn(request.getTckn())
-                .sicilNo(request.getSicilNo())
-                .phoneNumber(request.getPhoneNumber())
-                .email(request.getEmail())
-                .role(request.getRole())
-                .password(encodedPassword)
-                .build();
-    }
-
-    private CreateUserResponse mapToUserResponse(CreateUserRequest request,String password) {
-        return CreateUserResponse.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .tckn(request.getTckn())
-                .sicilNo(request.getSicilNo())
-                .phoneNumber(request.getPhoneNumber())
-                .email(request.getEmail())
-                .role(request.getRole().name())
-                .password(password)
-                .build();
-    }
 
 }
