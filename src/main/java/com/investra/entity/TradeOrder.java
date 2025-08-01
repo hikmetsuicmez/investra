@@ -35,6 +35,14 @@ public class TradeOrder {
     @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
 
+    // Hisse senedi kodu (örn. GARAN, THYAO)
+    @Column(name = "stock_code", nullable = false)
+    private String stockCode;
+
+    // Emir referans numarası
+    @Column(name = "order_reference", nullable = false)
+    private String orderReference;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "order_type", nullable = false)
     private OrderType orderType;
@@ -52,18 +60,36 @@ public class TradeOrder {
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal totalAmount;
 
+    // Komisyon tutarı
+    @Column(name = "commission", nullable = false, precision = 19, scale = 4)
+    private BigDecimal commission;
+
+    // BSMV tutarı
+    @Column(name = "bsmv", nullable = false, precision = 19, scale = 4)
+    private BigDecimal bsmv;
+
+    // Net tutar (toplam tutardan komisyon ve vergi düşülmüş hali)
+    @Column(name = "net_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal netAmount;
+
+    // Valör tarihi bilgisi (T+2 veya T+3)
+    @Column(name = "value_date", nullable = false)
+    private String valueDate;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "submitted_by", nullable = false)
-    private User user;
+    private User submittedBy;
 
-    @Column(name = "submitted_at")
+    @Column(name = "order_date", nullable = false)
+    private LocalDateTime orderDate;
+
+    @Column(name = "submitted_at", nullable = false)
     private LocalDateTime submittedAt;
 
     @Column(name = "executed_at")
     private LocalDateTime executedAt;
 }
-

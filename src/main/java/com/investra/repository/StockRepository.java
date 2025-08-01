@@ -2,5 +2,5 @@ package com.investra.repository;
 
 import com.investra.entity.Stock;
 import org.springframework.data.jpa.repository.JpaRepository;
-public interface StockRepository {
+public interface StockRepository extends JpaRepository<Stock, Long>{
 }
