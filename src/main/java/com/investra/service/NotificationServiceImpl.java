@@ -30,16 +30,17 @@ public class NotificationServiceImpl implements NotificationService {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(
                     mimeMessage,
-                    true,
+                    MimeMessageHelper.MULTIPART_MODE_RELATED,
                     StandardCharsets.UTF_8.name());
 
             helper.setTo(notificationDTO.getRecipient());
             helper.setSubject(notificationDTO.getSubject());
+            helper.setText(notificationDTO.getContent(), notificationDTO.isHtml());
+
 
             File res = new File(new File("src/main/resources/static/images/logo.png").toURI());
             helper.addInline("logoImage", res);
 
-            helper.setText(notificationDTO.getContent(), notificationDTO.isHtml());
 
             javaMailSender.send(mimeMessage);
             Notification notificationToSave = Notification.builder()
