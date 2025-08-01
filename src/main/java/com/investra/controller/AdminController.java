@@ -18,14 +18,14 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
     private final AdminService adminService;
 
-    @PostMapping("/create-user")
+    @PostMapping(ApiEndpoints.User.CREATE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Response<CreateUserResponse>> createUser(@RequestBody CreateUserRequest request) {
         Response<CreateUserResponse> response = adminService.createUser(request);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @PatchMapping("/update-user/{employeeNumber}")
+    @PatchMapping(ApiEndpoints.User.UPDATE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Response<UpdateUserResponse>> updateUser(
             @PathVariable String employeeNumber,
