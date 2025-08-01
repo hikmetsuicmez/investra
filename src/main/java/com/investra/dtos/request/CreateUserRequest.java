@@ -38,5 +38,7 @@ public class CreateUserRequest {
     @NotNull(message = "Personel yetki seçimi zorunludur")
     private Role role;
 
+    private boolean firstLogin = true;
+
 
 }
