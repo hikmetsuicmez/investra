@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBaseException(BaseException exception, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
-                exception.getHttpStatus().value(),
+                exception.getErrorCode().getCode(),
                 exception.getErrorCode().getMessage(),
                 exception.getMessage(),
                 ((ServletWebRequest) request).getRequest().getRequestURI()
@@ -31,6 +31,7 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, exception.getHttpStatus());
     }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidationException(MethodArgumentNotValidException exception, WebRequest request) {
