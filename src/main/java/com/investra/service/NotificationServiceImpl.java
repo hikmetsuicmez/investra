@@ -2,6 +2,7 @@ package com.investra.service;
 
 import com.investra.dtos.response.NotificationDTO;
 import com.investra.entity.Notification;
+import com.investra.exception.NotificationException;
 import com.investra.repository.NotificationRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -11,7 +12,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 
 @Service
@@ -28,6 +28,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
             MimeMessageHelper helper = new MimeMessageHelper(
                     mimeMessage,
                     MimeMessageHelper.MULTIPART_MODE_RELATED,
@@ -36,11 +37,6 @@ public class NotificationServiceImpl implements NotificationService {
             helper.setTo(notificationDTO.getRecipient());
             helper.setSubject(notificationDTO.getSubject());
             helper.setText(notificationDTO.getContent(), notificationDTO.isHtml());
-
-
-            File res = new File(new File("src/main/resources/static/images/logo.png").toURI());
-            helper.addInline("logoImage", res);
-
 
             javaMailSender.send(mimeMessage);
             Notification notificationToSave = Notification.builder()
@@ -55,8 +51,11 @@ public class NotificationServiceImpl implements NotificationService {
             log.info("Notification table'ına kaydedildi: {}", notificationToSave);
 
         } catch (MessagingException e) {
-            log.error("Email gönderilirken hata oluştu: {}", e.getMessage());
-            throw new RuntimeException("Email gönderme hatası: " + e.getMessage(), e);
+            log.error("E-posta gönderimi sırasında hata oluştu: {}", e.getMessage());
+            throw new NotificationException("E-posta gönderimi sırasında bir hata oluştu", e);
+        } catch (Exception e) {
+            log.error("Bildirim işlemi sırasında beklenmeyen bir hata oluştu: {}", e.getMessage());
+            throw new NotificationException("Bildirim işlemi sırasında beklenmeyen bir hata oluştu", e);
         }
     }
 }
