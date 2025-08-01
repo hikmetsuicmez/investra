@@ -1,4 +1,4 @@
-package com.investra.service;
+package com.investra.service.impl;
 
 import com.investra.dtos.request.ChangePasswordRequest;
 import com.investra.dtos.request.LoginRequest;
@@ -11,6 +11,9 @@ import com.investra.enums.NotificationType;
 import com.investra.repository.UserRepository;
 import com.investra.security.AuthUser;
 import com.investra.security.JwtUtil;
+import com.investra.service.AuthService;
+import com.investra.service.EmailTemplateService;
+import com.investra.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +28,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -42,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
+    private final EmailTemplateService emailTemplateService;
 
     @Override
     public Response<LoginResponse> login(LoginRequest loginRequest) {
@@ -149,29 +155,31 @@ public class AuthServiceImpl implements AuthService {
 
                     log.info("Token oluşturuldu: {}", resetToken);
 
-                    // Şifre sıfırlama maili gönder - ortam değişkeni kullan
-                    String resetLink =  FRONTEND_URL + "/auth" + RESET_PASSWORD_URL + resetToken;
-                    String emailContent = "<h2>Şifre Sıfırlama İsteği</h2>"
-                            + "<p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:</p>"
-                            + "<a href='" + resetLink + "'>Şifremi Sıfırla</a>"
-                            + "<p>Bu link 24 saat içinde geçerliliğini yitirecektir.</p>"
-                            + "<p>Teşekkürler,</p>"
-                            + "<p>Investra Ekibi</p>"
-                            + "<p>Not: Bu e-posta otomatik olarak oluşturulmuştur, lütfen yanıtlamayın.</p>";
-
-                    NotificationDTO notificationDTO = NotificationDTO.builder()
-                            .recipient(user.getEmail())
-                            .subject("Şifre Sıfırlama İsteği")
-                            .content(emailContent)
-                            .type(NotificationType.INFO)
-                            .isHtml(true)
-                            .build();
-
-                    log.info("Email gönderiliyor: {}", resetLink);
+                    String resetLink = FRONTEND_URL + "/auth" + RESET_PASSWORD_URL + resetToken;
 
                     try {
+                        Map<String, Object> templateVariables = new HashMap<>();
+                        templateVariables.put("title", "Şifre Sıfırlama İsteği");
+                        templateVariables.put("userName", user.getFirstName() != null ? user.getFirstName() : "Değerli Kullanıcımız");
+                        templateVariables.put("message", "Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için aşağıdaki butona tıklayın.");
+                        templateVariables.put("actionUrl", resetLink);
+                        templateVariables.put("actionText", "Şifremi Sıfırla");
+                        templateVariables.put("expiryTime", "24 saat");
+
+                        String emailContent = emailTemplateService.processTemplate("password-reset", templateVariables);
+
+                        NotificationDTO notificationDTO = NotificationDTO.builder()
+                                .recipient(user.getEmail())
+                                .subject("Şifre Sıfırlama İsteği")
+                                .content(emailContent)
+                                .type(NotificationType.INFO)
+                                .isHtml(true)
+                                .build();
+
+                        log.info("Email gönderiliyor: {}", user.getEmail());
                         notificationService.sendEmail(notificationDTO);
                         log.info("Email başarıyla gönderildi");
+
                     } catch (Exception e) {
                         log.error("Email gönderme hatası: {}", e.getMessage(), e);
                     }

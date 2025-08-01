@@ -1,4 +1,4 @@
-package com.investra.service;
+package com.investra.service.impl;
 
 import com.investra.dtos.request.CreateUserRequest;
 import com.investra.dtos.response.CreateUserResponse;
@@ -7,13 +7,19 @@ import com.investra.dtos.response.Response;
 import com.investra.entity.User;
 import com.investra.enums.NotificationType;
 import com.investra.repository.UserRepository;
+import com.investra.service.AdminService;
+import com.investra.service.NotificationService;
+import com.investra.service.EmailTemplateService;
 import com.investra.utils.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.investra.utils.AdminOperationsValidator.duplicateResourceCheck;
 import static com.investra.mapper.UserMapper.*;
 
@@ -28,6 +34,7 @@ public class AdminServiceImpl implements AdminService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
+    private final EmailTemplateService emailTemplateService;
 
     @Override
     public Response<CreateUserResponse> createUser(CreateUserRequest request) {
@@ -40,18 +47,19 @@ public class AdminServiceImpl implements AdminService {
             User user = toEntity(request, encodedPassword);
             userRepository.save(user);
 
-            String emailContent = "<h2>Merhaba " + request.getFirstName() + ",</h2>" +
-                    "<p>Yeni hesabınız başarıyla oluşturuldu. Aşağıdaki bilgilerle giriş yapabilirsiniz:</p>" +
-                    "<p><strong>Email:</strong> " + user.getEmail() + "</p>" +
-                    "<p><strong>Şifre:</strong> " + rawPassword + "</p>" +
-                    "<p>Giriş yapmak için <a href=\"" + FRONTEND_URL + "/login\">buraya tıklayın</a>.</p>" +
-                    "<p>Teşekkürler,</p>" +
-                    "<p>Investra Ekibi</p>" +
-                    "<p>Not: Bu e-posta otomatik olarak oluşturulmuştur, lütfen yanıtlamayın.</p>";
+            Map<String, Object> templateVariables = new HashMap<>();
+            templateVariables.put("title", "Investra'ya Hoş Geldiniz!");
+            templateVariables.put("userName", user.getFirstName() + " " + user.getLastName());
+            templateVariables.put("welcomeMessage", "Investra ailesine katıldığınız için teşekkür ederiz. Hesabınız başarıyla oluşturulmuştur.");
+            templateVariables.put("email", user.getEmail());
+            templateVariables.put("password", rawPassword);
+            templateVariables.put("loginUrl", FRONTEND_URL + "/auth/login");
+
+            String emailContent = emailTemplateService.processTemplate("user-welcome", templateVariables);
 
             NotificationDTO notificationDTO = NotificationDTO.builder()
                     .recipient(user.getEmail())
-                    .subject("Yeni Hesap Oluşturma")
+                    .subject("Investra'ya Hoş Geldiniz!")
                     .content(emailContent)
                     .type(NotificationType.SUCCESS)
                     .isHtml(true)
@@ -59,9 +67,9 @@ public class AdminServiceImpl implements AdminService {
 
             try {
                 notificationService.sendEmail(notificationDTO);
-                System.out.println("Email başarıyla gönderildi");
+                log.info("Email başarıyla gönderildi: {}", user.getEmail());
             } catch (Exception e) {
-                System.err.println("Email gönderilirken hata oluştu: " + e.getMessage());
+                log.error("Email gönderilirken hata oluştu: {}", e.getMessage());
                 throw new IllegalArgumentException("Email gönderilirken hata oluştu: " + e.getMessage());
             }
 

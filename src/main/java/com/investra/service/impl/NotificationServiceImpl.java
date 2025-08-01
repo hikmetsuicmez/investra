@@ -1,9 +1,9 @@
-package com.investra.service;
+package com.investra.service.impl;
 
 import com.investra.dtos.response.NotificationDTO;
 import com.investra.entity.Notification;
-import com.investra.enums.NotificationType;
 import com.investra.repository.NotificationRepository;
+import com.investra.service.NotificationService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +12,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 
 @Service
@@ -28,14 +29,17 @@ public class NotificationServiceImpl implements NotificationService {
 
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-
             MimeMessageHelper helper = new MimeMessageHelper(
                     mimeMessage,
-                    MimeMessageHelper.MULTIPART_MODE_RELATED,
+                    true,
                     StandardCharsets.UTF_8.name());
 
             helper.setTo(notificationDTO.getRecipient());
             helper.setSubject(notificationDTO.getSubject());
+
+            File res = new File(new File("src/main/resources/static/images/logo.png").toURI());
+            helper.addInline("logoImage", res);
+
             helper.setText(notificationDTO.getContent(), notificationDTO.isHtml());
 
             javaMailSender.send(mimeMessage);
@@ -51,8 +55,8 @@ public class NotificationServiceImpl implements NotificationService {
             log.info("Notification table'ına kaydedildi: {}", notificationToSave);
 
         } catch (MessagingException e) {
-            throw new RuntimeException(e);
+            log.error("Email gönderilirken hata oluştu: {}", e.getMessage());
+            throw new RuntimeException("Email gönderme hatası: " + e.getMessage(), e);
         }
-
     }
 }
