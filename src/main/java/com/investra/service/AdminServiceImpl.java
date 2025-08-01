@@ -1,4 +1,4 @@
-package com.investra.service.impl;
+package com.investra.service;
 
 import com.investra.dtos.request.CreateUserRequest;
 import com.investra.dtos.response.CreateUserResponse;
@@ -7,9 +7,6 @@ import com.investra.dtos.response.Response;
 import com.investra.entity.User;
 import com.investra.enums.NotificationType;
 import com.investra.repository.UserRepository;
-import com.investra.service.AdminService;
-import com.investra.service.NotificationService;
-import com.investra.service.EmailTemplateService;
 import com.investra.utils.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.investra.service.impl;
+package com.investra.service;
 
 import com.investra.dtos.request.ChangePasswordRequest;
 import com.investra.dtos.request.LoginRequest;
@@ -11,9 +11,6 @@ import com.investra.enums.NotificationType;
 import com.investra.repository.UserRepository;
 import com.investra.security.AuthUser;
 import com.investra.security.JwtUtil;
-import com.investra.service.AuthService;
-import com.investra.service.EmailTemplateService;
-import com.investra.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
