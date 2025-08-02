@@ -8,6 +8,9 @@ import com.investra.dtos.response.NotificationDTO;
 import com.investra.dtos.response.Response;
 import com.investra.entity.User;
 import com.investra.enums.NotificationType;
+import com.investra.exception.InvalidCredentialsException;
+import com.investra.exception.InvalidOrExpiredTokenException;
+import com.investra.exception.NotificationException;
 import com.investra.exception.UserNotFoundException;
 import com.investra.repository.UserRepository;
 import com.investra.security.AuthUser;
@@ -77,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
                     .data(loginResponse)
                     .build();
 
-        } catch (BadCredentialsException e) {
+        } catch (InvalidCredentialsException e) {
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .message("E-posta veya şifre hatalı")
@@ -99,28 +102,18 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new UserNotFoundException(authUser.getUsername()));
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            return Response.<Void>builder()
-                    .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .message("Mevcut şifre hatalı")
-                    .build();
+            throw new InvalidCredentialsException("Mevcut şifre hatalı");
         }
 
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            return Response.<Void>builder()
-                    .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .message("Yeni şifre ve onay şifresi eşleşmiyor")
-                    .build();
+            throw new InvalidCredentialsException("Yeni şifre ve şifre tekrarı eşleşmiyor");
         }
-
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-
         // İlk kez giriş yapmışsa, artık ilk giriş değil
         if (user.isFirstLogin()) {
             user.setFirstLogin(false);
         }
-
         userRepository.save(user);
-
         return Response.<Void>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Şifreniz başarıyla değiştirildi")
@@ -133,11 +126,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (!emailExists) {
             log.info("Şifre sıfırlama isteği yapılan email bulunamadı: {}", email);
-            return Response.<Void>builder()
-                    .statusCode(HttpStatus.OK.value())
-                    .message("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
-                    .data(null)
-                    .build();
+            throw new UserNotFoundException("Bu e-posta adresi ile kayıtlı bir kullanıcı bulunamadı");
         }
 
         return userRepository.findByEmail(email)
@@ -178,14 +167,13 @@ public class AuthServiceImpl implements AuthService {
                         notificationService.sendEmail(notificationDTO);
                         log.info("Email başarıyla gönderildi");
 
-                    } catch (Exception e) {
+                    } catch (NotificationException e) {
                         log.error("Email gönderme hatası: {}", e.getMessage(), e);
+                        throw new NotificationException("Şifre sıfırlama e-postası gönderilirken bir hata oluştu: " + e.getMessage());
                     }
-
                     return Response.<Void>builder()
                             .statusCode(HttpStatus.OK.value())
                             .message("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
-                            .data(null)
                             .build();
                 })
                 .orElseThrow(() -> new IllegalStateException("Bu hata asla oluşmamalı - Kontrol zaten yapıldı"));
@@ -194,12 +182,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Response<Void> resetPassword(ResetPasswordRequest request, String token) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            return Response.<Void>builder()
-                    .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .message("Şifre ve şifre tekrarı eşleşmiyor")
-                    .build();
+            throw new InvalidCredentialsException("Yeni şifre ve şifre tekrarı eşleşmiyor");
         }
-
         return userRepository.findByPasswordResetToken(token)
                 .filter(user -> {
                     return user.getPasswordResetTokenExpiry() != null &&
@@ -210,7 +194,6 @@ public class AuthServiceImpl implements AuthService {
 
                     user.setPasswordResetToken(null);
                     user.setPasswordResetTokenExpiry(null);
-
                     userRepository.save(user);
 
                     return Response.<Void>builder()
@@ -218,9 +201,9 @@ public class AuthServiceImpl implements AuthService {
                             .message("Şifreniz başarıyla sıfırlandı")
                             .build();
                 })
-                .orElse(Response.<Void>builder()
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
-                        .message("Geçersiz veya süresi dolmuş şifre sıfırlama bağlantısı")
-                        .build());
+                .orElseThrow(() -> {
+                    log.error("Geçersiz veya süresi dolmuş token: {}", token);
+                    return new InvalidOrExpiredTokenException("Geçersiz veya süresi dolmuş token");
+                });
     }
 }

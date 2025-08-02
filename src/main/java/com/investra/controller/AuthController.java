@@ -1,6 +1,7 @@
 package com.investra.controller;
 
 import com.investra.constants.ApiEndpoints;
+import com.investra.docs.AuthApiDocs;
 import com.investra.dtos.request.ChangePasswordRequest;
 import com.investra.dtos.request.LoginRequest;
 import com.investra.dtos.request.ResetPasswordRequest;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(ApiEndpoints.Auth.BASE)
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthApiDocs {
 
     private final AuthService authService;
 

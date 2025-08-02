@@ -1,6 +1,7 @@
 package com.investra.controller;
 
 import com.investra.constants.ApiEndpoints;
+import com.investra.docs.AdminApiDocs;
 import com.investra.dtos.request.CreateUserRequest;
 import com.investra.dtos.request.UpdateUserRequest;
 import com.investra.dtos.response.CreateUserResponse;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(ApiEndpoints.User.BASE)
 @RequiredArgsConstructor
-public class AdminController {
+public class AdminController implements AdminApiDocs {
 
     private final AdminService adminService;
 
