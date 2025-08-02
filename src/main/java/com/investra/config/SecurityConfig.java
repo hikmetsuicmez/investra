@@ -49,6 +49,14 @@ public class SecurityConfig {
             "/swagger-ui.html"
     };
 
+    private static final String[] ACTUATOR_PATHS = {
+            "/actuator/**",
+            "/actuator/health",
+            "/actuator/info",
+            "/actuator/prometheus",
+            "/actuator/metrics"
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -57,6 +65,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(API_AUTH).permitAll()
                                 .requestMatchers(SWAGGER_PATHS).permitAll()
+                                .requestMatchers(ACTUATOR_PATHS).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
