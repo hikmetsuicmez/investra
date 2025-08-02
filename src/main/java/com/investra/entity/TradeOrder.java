@@ -52,6 +52,9 @@ public class TradeOrder {
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal totalAmount;
 
+    @Column(name = "net_amount")
+    private BigDecimal netAmount;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;

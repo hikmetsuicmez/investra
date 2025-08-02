@@ -1,6 +1,7 @@
 package com.investra.entity;
 
 import com.investra.enums.ClientStatus;
+import com.investra.enums.ClientType;
 import com.investra.enums.Gender;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,11 +30,11 @@ public class Client {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    @Column(name = "vergi_no", unique = true)
-    private String vergiNo;
+    @Column(name = "tax_id", unique = true)
+    private String taxId;
 
-    @Column(name = "tckn", unique = true)
-    private String tckn;
+    @Column(name = "nationality_number", unique = true)
+    private String nationalityNumber;
 
     @Column(name = "passport_no", unique = true)
     private String passportNo;
@@ -89,7 +90,8 @@ public class Client {
     private Boolean isActive;
 
     @Column(name = "client_type")
-    private String clientType;
+    @Enumerated(EnumType.STRING)
+    private ClientType clientType;
 
     @Column(name = "company_type")
     private String companyType;
