@@ -26,9 +26,13 @@ public class User {
     private String username;
     private String email;
     private String password;
-    private String sicilNo;
+
+    @Column(unique = true)
+    private String employeeNumber;
     private String phoneNumber;
-    private String tckn;
+
+    @Column(unique = true)
+    private String nationalityNumber;
 
     private boolean firstLogin = true;  // Varsayılan olarak ilk giriş true olsun
 
