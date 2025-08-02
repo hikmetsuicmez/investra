@@ -42,3 +42,5 @@ secreteJwtString: ${JWT_SECRET}
 app:
 #  frontend: ${FRONTEND_URL}
   frontendUrl: ${FRONTEND_URL}
+# Logo URL
+  logo-url: /images/logo.png

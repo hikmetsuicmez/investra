@@ -17,7 +17,9 @@ public class ApiEndpoints {
      public static final class User {
         private User() {}
          public static final String BASE = "/api/v1/users";
-         public static final String CREATE = "/create";
+         public static final String CREATE = "/create-user";
+         public static final String UPDATE = "/update-user/{employeeNumber}";
+         public static final String DELETE = "/delete-user/{employeeNumber}";
     }
 
     public static final class Stock {

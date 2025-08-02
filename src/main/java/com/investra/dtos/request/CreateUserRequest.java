@@ -1,10 +1,7 @@
 package com.investra.dtos.request;
 
 import com.investra.enums.Role;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,11 +19,8 @@ public class CreateUserRequest {
     private String lastName;
 
     @NotBlank(message = "TC kimlik no zorunludur")
-    @Size(min = 11, max = 11, message = "TC kimlik no 11 haneli olmalı")
-    private String tckn;
-
-    @NotBlank(message = "Sicil no zorunludur")
-    private String sicilNo;
+    @Pattern(regexp = "\\d{11}", message = "TC kimlik no 11 haneli sayı olmalıdır")
+    private String nationalityNumber;
 
     @NotBlank(message = "Telefon numarası zorunludur")
     private String phoneNumber;
@@ -37,6 +31,8 @@ public class CreateUserRequest {
 
     @NotNull(message = "Personel yetki seçimi zorunludur")
     private Role role;
+
+    private boolean firstLogin = true;
 
 
 }
