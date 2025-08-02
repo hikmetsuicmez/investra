@@ -4,20 +4,19 @@ import com.investra.dtos.request.ClientSearchRequest;
 import com.investra.dtos.request.StockSellOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.entity.*;
-import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
 import com.investra.repository.*;
+import com.investra.service.helper.StockTradeHelper;
+import com.investra.service.helper.StockTradeHelper.TradeCalculation;
+import com.investra.service.helper.StockTradeHelper.TradeEntities;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,10 +28,7 @@ public class StockSellService {
     private final TradeOrderRepository tradeOrderRepository;
     private final StockRepository stockRepository;
     private final UserRepository userRepository;
-
-    private static final BigDecimal INDIVIDUAL_COMMISSION_RATE = new BigDecimal("0.002"); // %0.20
-    private static final BigDecimal CORPORATE_COMMISSION_RATE = new BigDecimal("0.001"); // %0.10
-    private static final BigDecimal BSMV_RATE = new BigDecimal("0.05"); // %5
+    private final StockTradeHelper tradeHelper;
 
     public List<ClientSearchResponse> searchClients(ClientSearchRequest request) {
         List<Client> clients;
@@ -74,50 +70,36 @@ public class StockSellService {
 
     @Transactional
     public StockSellOrderPreviewResponse previewSellOrder(StockSellOrderRequest request) {
-        validateSellOrderRequest(request);
+        // İstek validasyonu
+        tradeHelper.validateSellOrderRequest(request);
 
-        Client client = clientRepository.findById(request.getClientId())
-                .orElseThrow(() -> new RuntimeException("Müşteri bulunamadı"));
+        // İşlem için gerekli varlıkları bul
+        TradeEntities entities = tradeHelper.findTradeEntities(request);
+        Client client = entities.client();
+        Stock stock = entities.stock();
+        PortfolioItem portfolioItem = entities.portfolioItem();
+        Account account = entities.account();
 
-        Stock stock = stockRepository.findById(request.getStockId())
-                .orElseThrow(() -> new RuntimeException("Hisse senedi bulunamadı"));
+        // Fiyat ve işlem tutarlarını hesapla
+        BigDecimal price = tradeHelper.calculatePrice(request, stock);
+        TradeCalculation calculation = tradeHelper.calculateTradeAmounts(price, request.getQuantity(), client);
 
-        PortfolioItem portfolioItem = portfolioItemRepository
-                .findByClientIdAndStockId(request.getClientId(), request.getStockId())
-                .orElseThrow(() -> new RuntimeException("Müşterinin portföyünde bu hisse senedi bulunmamaktadır"));
-
-        if (portfolioItem.getQuantity() < request.getQuantity()) {
-            throw new RuntimeException("Yeterli miktarda hisse senedi bulunmamaktadır");
-        }
-
-        BigDecimal price = request.getExecutionType() == ExecutionType.MARKET ?
-                stock.getCurrentPrice() : request.getPrice();
-
-        BigDecimal totalAmount = price.multiply(BigDecimal.valueOf(request.getQuantity()));
-
-        // Komisyon hesaplama
-        BigDecimal commissionRate = "KURUMSAL".equals(client.getClientType()) ?
-                CORPORATE_COMMISSION_RATE : INDIVIDUAL_COMMISSION_RATE;
-
-        BigDecimal commission = totalAmount.multiply(commissionRate);
-        BigDecimal bsmv = commission.multiply(BSMV_RATE);
-        BigDecimal totalTaxAndCommission = commission.add(bsmv);
-
+        // Yanıt oluştur
         return StockSellOrderPreviewResponse.builder()
-                .accountNumber(portfolioItem.getAccount().getAccountNumber())
+                .accountNumber(account.getAccountNumber())
                 .operation("Satış")
                 .stockName(stock.getName())
                 .stockSymbol(stock.getSymbol())
                 .price(price)
                 .quantity(request.getQuantity())
-                .tradeDate(LocalDate.now())
-                .valueDate(calculateValueDate(stock))
-                .totalAmount(totalAmount)
+                .tradeDate(tradeHelper.getTradeDate())
+                .valueDate(tradeHelper.calculateValueDate())
+                .totalAmount(calculation.totalAmount())
                 .stockGroup(stock.getGroup())
-                .commission(commission.setScale(2, RoundingMode.HALF_UP))
-                .bsmv(bsmv.setScale(2, RoundingMode.HALF_UP))
-                .totalTaxAndCommission(totalTaxAndCommission.setScale(2, RoundingMode.HALF_UP))
-                .netAmount(totalAmount.subtract(totalTaxAndCommission).setScale(2, RoundingMode.HALF_UP))
+                .commission(calculation.commission())
+                .bsmv(calculation.bsmv())
+                .totalTaxAndCommission(calculation.totalTaxAndCommission())
+                .netAmount(calculation.netAmount())
                 .executionType(request.getExecutionType())
                 .build();
     }
@@ -128,29 +110,21 @@ public class StockSellService {
             throw new RuntimeException("Emir önizlemesi onaylanmamış");
         }
 
+        // Ön izleme ile aynı doğrulamaları ve hesaplamaları yap
         StockSellOrderPreviewResponse preview = previewSellOrder(request);
 
+        // İşlem için gerekli varlıkları bul
+        TradeEntities entities = tradeHelper.findTradeEntities(request);
+        Stock stock = entities.stock();
+
+        // Kullanıcıyı bul
         User submittedBy = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
-
-        Stock stock = stockRepository.findById(request.getStockId())
-                .orElseThrow(() -> new RuntimeException("Hisse senedi bulunamadı"));
 
         LocalDateTime now = LocalDateTime.now();
         String orderReference = generateOrderReference();
 
-        // Komisyon hesaplama
-        Client client = clientRepository.findById(request.getClientId())
-                .orElseThrow(() -> new RuntimeException("Müşteri bulunamadı"));
-
-        BigDecimal commissionRate = "KURUMSAL".equals(client.getClientType()) ?
-                CORPORATE_COMMISSION_RATE : INDIVIDUAL_COMMISSION_RATE;
-
-        BigDecimal commission = preview.getTotalAmount().multiply(commissionRate);
-        BigDecimal bsmv = commission.multiply(BSMV_RATE);
-        BigDecimal totalTaxAndCommission = commission.add(bsmv);
-        BigDecimal netAmount = preview.getTotalAmount().subtract(totalTaxAndCommission);
-
+        // Emir oluştur
         TradeOrder order = TradeOrder.builder()
                 .client(clientRepository.getReferenceById(request.getClientId()))
                 .account(accountRepository.getReferenceById(request.getAccountId()))
@@ -162,10 +136,10 @@ public class StockSellService {
                 .price(preview.getPrice())
                 .quantity(request.getQuantity())
                 .totalAmount(preview.getTotalAmount())
-                .commission(commission.setScale(2, RoundingMode.HALF_UP))
-                .bsmv(bsmv.setScale(2, RoundingMode.HALF_UP))
-                .netAmount(netAmount.setScale(2, RoundingMode.HALF_UP))
-                .valueDate(calculateValueDate(stock))
+                .commission(preview.getCommission())
+                .bsmv(preview.getBsmv())
+                .netAmount(preview.getNetAmount())
+                .valueDate(preview.getValueDate())
                 .status(OrderStatus.PENDING)
                 .submittedBy(submittedBy)
                 .orderDate(now)
@@ -206,19 +180,6 @@ public class StockSellService {
         }
     }
 
-    private void validateSellOrderRequest(StockSellOrderRequest request) {
-        if (request.getExecutionType() == null) {
-            throw new RuntimeException("Emir tipi seçilmelidir");
-        }
-
-        // Fiyat validasyonu
-        request.validatePrice();
-
-        if (request.getQuantity() == null || request.getQuantity() <= 0) {
-            throw new RuntimeException("Satılacak hisse senedi miktarı pozitif bir sayı olmalıdır");
-        }
-    }
-
     private void validateOrderExecution(TradeOrder order) {
         // Borsa açık mı kontrolü
         if (!isBorsaOpen()) {
@@ -247,17 +208,17 @@ public class StockSellService {
         portfolioItemRepository.save(portfolioItem);
     }
 
-    private String calculateValueDate(Stock stock) {
-        // Alfabetik sıraya göre ilk %20'lik dilimde olan hisseler T+3, diğerleri T+2
-        return stock.getSymbol().charAt(0) <= 'D' ? "T+3" : "T+2";
-    }
-
     private boolean isBorsaOpen() {
         // Borsa açık/kapalı kontrolü implementasyonu
         // Şimdilik basit bir kontrol
         LocalDateTime now = LocalDateTime.now();
         int hour = now.getHour();
         return hour >= 10 && hour < 18; // 10:00-18:00 arası açık
+    }
+
+    private String generateOrderReference() {
+        // Benzersiz sipariş referansı oluştur
+        return "ORD-" + System.currentTimeMillis();
     }
 
     private ClientSearchResponse mapToClientSearchResponse(Client client) {
@@ -300,10 +261,5 @@ public class StockSellService {
                 .totalValue(item.getStock().getCurrentPrice()
                         .multiply(BigDecimal.valueOf(item.getQuantity())))
                 .build();
-    }
-
-    // Benzersiz sipariş referans numarası oluşturma
-    private String generateOrderReference() {
-        return "ORD-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 1000);
     }
 }
