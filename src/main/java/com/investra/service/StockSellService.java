@@ -3,7 +3,6 @@ package com.investra.service;
 import com.investra.dtos.request.ClientSearchRequest;
 import com.investra.dtos.request.StockSellOrderRequest;
 import com.investra.dtos.response.*;
-import jakarta.validation.Valid;
 
 import java.util.List;
 

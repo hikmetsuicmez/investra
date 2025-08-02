@@ -11,8 +11,8 @@ public class ClientMapper {
         }
         return ClientSearchResponse.builder()
                 .id(client.getId())
-                .taxId(client.getVergiNo())
-                .nationalityNumber(client.getTckn())
+                .taxId(client.getTaxId())
+                .nationalityNumber(client.getNationalityNumber())
                 .phoneNumber(client.getPhone())
                 .email(client.getEmail())
                 .clientStatus(client.getStatus())

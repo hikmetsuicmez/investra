@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -42,7 +41,6 @@ public class StockSellServiceImpl implements StockSellService {
     private static final BigDecimal INDIVIDUAL_COMMISION_RATE = new BigDecimal("0.002"); // %0.2
     private static final BigDecimal CORPORATE_COMMISION_RATE = new BigDecimal("0.001"); // %0.1
     private static final BigDecimal BSMV_FEE_RATE = new BigDecimal("0.05");  // %5
-    private final RestClient.Builder builder;
     private final UserRepository userRepository;
     private final TradeOrderRepository tradeOrderRepository;
 
@@ -66,8 +64,8 @@ public class StockSellServiceImpl implements StockSellService {
 
     private Function<String, Optional<Client>> getStringOptionalFunction(ClientSearchRequest request) {
         var searchStrategies = Map.of(
-                "TCKN", clientRepository::findByTckn,
-                "VERGI_N0", clientRepository::findByVergiNo,
+                "TCKN", clientRepository::findByNationalityNumber,
+                "VERGI_N0", clientRepository::findByTaxId,
                 "MAVI_KART_NO", clientRepository::findByBlueCardNo,
                 "NAME", (Function<String, Optional<Client>>) term ->
                         clientRepository.findAll().stream()
@@ -227,6 +225,7 @@ public class StockSellServiceImpl implements StockSellService {
                 .price(price)
                 .quantity(request.getQuantity())
                 .totalAmount(totalAmount)
+                .netAmount(netAmount)
                 .status(OrderStatus.PENDING)
                 .user(submittedBy)
                 .submittedAt(LocalDateTime.now())

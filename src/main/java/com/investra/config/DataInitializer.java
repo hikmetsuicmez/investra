@@ -24,7 +24,6 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
 
-    @Override
     public void run(String... args) throws Exception {
 
         portfolioItemRepository.deleteAll();
@@ -51,8 +50,8 @@ public class DataInitializer implements CommandLineRunner {
         Client client = Client.builder()
                 .user(admin)
                 .fullName("John Doe")
-                .tckn("12345678901")
-                .vergiNo("9876543210")
+                .nationalityNumber("12345678901")
+                .taxId("9876543210")
                 .blueCardNo("1234567890")
                 .email("johndoe@gmail.com")
                 .phone("555-1234")
