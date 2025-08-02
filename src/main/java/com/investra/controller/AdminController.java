@@ -7,6 +7,7 @@ import com.investra.dtos.response.CreateUserResponse;
 import com.investra.dtos.response.Response;
 import com.investra.dtos.response.UpdateUserResponse;
 import com.investra.service.AdminService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,17 +21,22 @@ public class AdminController {
 
     @PostMapping(ApiEndpoints.User.CREATE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Response<CreateUserResponse>> createUser(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<Response<CreateUserResponse>> createUser(@Valid @RequestBody CreateUserRequest request) {
         Response<CreateUserResponse> response = adminService.createUser(request);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
     @PatchMapping(ApiEndpoints.User.UPDATE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Response<UpdateUserResponse>> updateUser(
-            @PathVariable String employeeNumber,
-            @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<Response<UpdateUserResponse>> updateUser(@PathVariable String employeeNumber, @RequestBody UpdateUserRequest request) {
         Response<UpdateUserResponse> response = adminService.updateUser(employeeNumber, request);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @PatchMapping(ApiEndpoints.User.DELETE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Response<Void>> deleteUser(@Valid @PathVariable String employeeNumber) {
+        Response<Void> response = adminService.deleteUser(employeeNumber);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 }

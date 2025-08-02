@@ -10,6 +10,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByNationalityNumber(String nationalityNumber);
     Optional<User> findByEmployeeNumber(String employeeNumber);
     Optional<User> findByPasswordResetToken(String token);
-    Optional<User> findTopByOrderByNationalityNumberDesc();
+    Optional<User> findTopByOrderByEmployeeNumberDesc();
 
 }

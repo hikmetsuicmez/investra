@@ -26,17 +26,18 @@ public class AdminServiceImpl implements AdminService {
     private final EmployeeNumberGenerator employeeNumberGenerator;
     @Override
     public Response<CreateUserResponse> createUser(CreateUserRequest request) {
-        String generatedSicilNo = employeeNumberGenerator.generateNext();
+        String generatedEmployeeNumber = employeeNumberGenerator.generateNext();
         try {
             duplicateResourceCheck(() -> userRepository.findByNationalityNumber(request.getNationalityNumber()).isPresent(), "Bu TCKN ile kayıtlı bir kullanıcı  mevcut");
             duplicateResourceCheck(() -> userRepository.findByEmail(request.getEmail()).isPresent(), "Bu email ile kayıtlı bir kullanıcı  mevcut");
             String rawPassword = PasswordGenerator.generatePassword(10);
             String encodedPassword = passwordEncoder.encode(rawPassword);
 
-            User user = toEntity(request, encodedPassword, generatedSicilNo);
+            User user = toEntity(request, encodedPassword, generatedEmployeeNumber);
+            user.setActive(true);
             userRepository.save(user);
 
-            CreateUserResponse response = toResponse(request, rawPassword,generatedSicilNo);
+            CreateUserResponse response = toResponse(request, rawPassword,generatedEmployeeNumber);
 
             return Response.<CreateUserResponse>builder()
                     .statusCode(201)
@@ -52,9 +53,9 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Response<UpdateUserResponse> updateUser(String sicilNo, UpdateUserRequest request) {
+    public Response<UpdateUserResponse> updateUser(String employeeNumber, UpdateUserRequest request) {
         try {
-            User user = userRepository.findByEmployeeNumber(sicilNo)
+            User user = userRepository.findByEmployeeNumber(employeeNumber)
                     .orElseThrow(() -> new IllegalArgumentException("Güncellenecek kullanıcı bulunamadı"));
 
             updateFields(user, request);
@@ -73,6 +74,36 @@ public class AdminServiceImpl implements AdminService {
                     .build();
         }
     }
+
+    @Override
+    public Response<Void> deleteUser(String employeeNumber) {
+        try {
+            User user = userRepository.findByEmployeeNumber(employeeNumber)
+                    .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
+
+            if (!user.isActive()) {
+                return Response.<Void>builder()
+                        .statusCode(400)
+                        .message("Kullanıcı pasif durumda")
+                        .build();
+            }
+
+            user.setActive(false);
+            userRepository.save(user);
+
+            return Response.<Void>builder()
+                    .statusCode(200)
+                    .message("Kullanıcı pasif hale getirildi")
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.<Void>builder()
+                    .statusCode(404)
+                    .message(e.getMessage())
+                    .build();
+        }
+    }
+
+
 
 
 }

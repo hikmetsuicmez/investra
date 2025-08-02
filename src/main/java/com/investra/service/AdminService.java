@@ -9,5 +9,7 @@ import com.investra.dtos.response.UpdateUserResponse;
 public interface AdminService {
 
     Response<CreateUserResponse> createUser(CreateUserRequest createUserRequest);
-    Response<UpdateUserResponse> updateUser(String sicilNo ,UpdateUserRequest updateUserRequest);
+    Response<UpdateUserResponse> updateUser(String employeeNumber ,UpdateUserRequest updateUserRequest);
+    Response<Void> deleteUser(String employeeNumber);
+
 }
