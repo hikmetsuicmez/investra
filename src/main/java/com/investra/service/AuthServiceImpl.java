@@ -8,6 +8,7 @@ import com.investra.dtos.response.NotificationDTO;
 import com.investra.dtos.response.Response;
 import com.investra.entity.User;
 import com.investra.enums.NotificationType;
+import com.investra.exception.UserNotFoundException;
 import com.investra.repository.UserRepository;
 import com.investra.security.AuthUser;
 import com.investra.security.JwtUtil;
@@ -25,6 +26,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -42,6 +45,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
+    private final EmailTemplateService emailTemplateService;
 
     @Override
     public Response<LoginResponse> login(LoginRequest loginRequest) {
@@ -56,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
             User user = userRepository.findByEmail(userDetails.getUsername())
-                    .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+                    .orElseThrow(() -> new UserNotFoundException(userDetails.getUsername()));
 
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
@@ -92,7 +96,7 @@ public class AuthServiceImpl implements AuthService {
         AuthUser authUser = (AuthUser) authentication.getPrincipal();
 
         User user = userRepository.findByEmail(authUser.getUsername())
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new UserNotFoundException(authUser.getUsername()));
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             return Response.<Void>builder()
@@ -125,10 +129,20 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Response<Void> forgotPassword(String email) {
+        boolean emailExists = userRepository.findByEmail(email).isPresent();
+
+        if (!emailExists) {
+            log.info("Şifre sıfırlama isteği yapılan email bulunamadı: {}", email);
+            return Response.<Void>builder()
+                    .statusCode(HttpStatus.OK.value())
+                    .message("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
+                    .data(null)
+                    .build();
+        }
 
         return userRepository.findByEmail(email)
                 .map(user -> {
-                    System.out.println("Kullanıcı bulundu: " + user.getEmail());
+                    log.info("Kullanıcı bulundu: {}", user.getEmail());
 
                     String resetToken = UUID.randomUUID().toString();
                     LocalDateTime tokenExpiry = LocalDateTime.now().plusHours(24);
@@ -137,31 +151,35 @@ public class AuthServiceImpl implements AuthService {
                     user.setPasswordResetTokenExpiry(tokenExpiry);
                     userRepository.save(user);
 
-                    System.out.println("Token oluşturuldu: " + resetToken);
+                    log.info("Token oluşturuldu: {}", resetToken);
 
-                    // Şifre sıfırlama maili gönder - ortam değişkeni kullan
-                    String resetLink =  FRONTEND_URL + "/auth" + RESET_PASSWORD_URL + resetToken;
-                    String emailContent = "<h2>Şifre Sıfırlama İsteği</h2>"
-                            + "<p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:</p>"
-                            + "<a href='" + resetLink + "'>Şifremi Sıfırla</a>"
-                            + "<p>Bu link 24 saat içinde geçerliliğini yitirecektir.</p>";
-
-                    NotificationDTO notificationDTO = NotificationDTO.builder()
-                            .recipient(user.getEmail())
-                            .subject("Şifre Sıfırlama İsteği")
-                            .content(emailContent)
-                            .type(NotificationType.INFO)
-                            .isHtml(true)
-                            .build();
-
-                    System.out.println("Email gönderiliyor: " + resetLink);
+                    String resetLink = FRONTEND_URL + "/auth" + RESET_PASSWORD_URL + resetToken;
 
                     try {
+                        Map<String, Object> templateVariables = new HashMap<>();
+                        templateVariables.put("title", "Şifre Sıfırlama İsteği");
+                        templateVariables.put("userName", user.getFirstName() != null ? user.getFirstName() : "Değerli Kullanıcımız");
+                        templateVariables.put("message", "Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için aşağıdaki butona tıklayın.");
+                        templateVariables.put("actionUrl", resetLink);
+                        templateVariables.put("actionText", "Şifremi Sıfırla");
+                        templateVariables.put("expiryTime", "24 saat");
+
+                        String emailContent = emailTemplateService.processTemplate("password-reset", templateVariables);
+
+                        NotificationDTO notificationDTO = NotificationDTO.builder()
+                                .recipient(user.getEmail())
+                                .subject("Şifre Sıfırlama İsteği")
+                                .content(emailContent)
+                                .type(NotificationType.INFO)
+                                .isHtml(true)
+                                .build();
+
+                        log.info("Email gönderiliyor: {}", user.getEmail());
                         notificationService.sendEmail(notificationDTO);
-                        System.out.println("Email başarıyla gönderildi");
+                        log.info("Email başarıyla gönderildi");
+
                     } catch (Exception e) {
-                        System.err.println("Email gönderme hatası: " + e.getMessage());
-                        e.printStackTrace();
+                        log.error("Email gönderme hatası: {}", e.getMessage(), e);
                     }
 
                     return Response.<Void>builder()
@@ -170,11 +188,7 @@ public class AuthServiceImpl implements AuthService {
                             .data(null)
                             .build();
                 })
-                .orElse(Response.<Void>builder()
-                        .statusCode(HttpStatus.OK.value())
-                        .message("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
-                        .data(null)
-                        .build());
+                .orElseThrow(() -> new IllegalStateException("Bu hata asla oluşmamalı - Kontrol zaten yapıldı"));
     }
 
     @Override

@@ -1,7 +1,10 @@
 package com.investra.dtos.response;
 
+import com.investra.enums.Role;
 import lombok.Builder;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -13,7 +16,7 @@ public class CreateUserResponse {
 
     private String employeeNumber;
 
-    private String role;
+    private Role role;
 
     private String nationalityNumber;
 
@@ -22,4 +25,6 @@ public class CreateUserResponse {
     private String email;
 
     private String password;
+
+    private LocalDateTime createdDate;
 }

@@ -2,7 +2,7 @@ package com.investra.service;
 
 import com.investra.dtos.response.NotificationDTO;
 import com.investra.entity.Notification;
-import com.investra.enums.NotificationType;
+import com.investra.exception.NotificationException;
 import com.investra.repository.NotificationRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -51,8 +51,11 @@ public class NotificationServiceImpl implements NotificationService {
             log.info("Notification table'ına kaydedildi: {}", notificationToSave);
 
         } catch (MessagingException e) {
-            throw new RuntimeException(e);
+            log.error("E-posta gönderimi sırasında hata oluştu: {}", e.getMessage());
+            throw new NotificationException("E-posta gönderimi sırasında bir hata oluştu", e);
+        } catch (Exception e) {
+            log.error("Bildirim işlemi sırasında beklenmeyen bir hata oluştu: {}", e.getMessage());
+            throw new NotificationException("Bildirim işlemi sırasında beklenmeyen bir hata oluştu", e);
         }
-
     }
 }

@@ -40,5 +40,7 @@ spring:
 secreteJwtString: ${JWT_SECRET}
 
 app:
-#  backendUrl: ${BACKEND_URL}
+#  frontend: ${FRONTEND_URL}
   frontendUrl: ${FRONTEND_URL}
+# Logo URL
+  logo-url: /images/logo.png

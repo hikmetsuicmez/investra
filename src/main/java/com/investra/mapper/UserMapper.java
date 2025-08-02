@@ -7,6 +7,7 @@ import com.investra.dtos.response.UpdateUserResponse;
 import com.investra.entity.User;
 
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 public class UserMapper {
 
@@ -18,6 +19,7 @@ public class UserMapper {
                 .employeeNumber(employeeNumber)
                 .phoneNumber(request.getPhoneNumber())
                 .email(request.getEmail())
+                .firstLogin(true)
                 .role(request.getRole())
                 .password(encodedPassword)
                 .build();
@@ -31,8 +33,9 @@ public class UserMapper {
                 .employeeNumber(employeeNumber)
                 .phoneNumber(request.getPhoneNumber())
                 .email(request.getEmail())
-                .role(request.getRole().name())
+                .role(request.getRole())
                 .password(rawPassword)
+                .createdDate(LocalDateTime.now())
                 .build();
     }
 
