@@ -30,11 +30,11 @@ public class Client {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    @Column(name = "vergi_no", unique = true)
-    private String vergiNo;
+    @Column(name = "tax_id", unique = true)
+    private String taxId;
 
-    @Column(name = "tckn", unique = true)
-    private String tckn;
+    @Column(name = "nationality_number", unique = true)
+    private String nationalityNumber;
 
     @Column(name = "passport_no", unique = true)
     private String passportNo;

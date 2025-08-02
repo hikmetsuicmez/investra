@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
@@ -29,8 +28,8 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
         portfolioItemRepository.deleteAll();
-        portfolioRepository.deleteAll();
         tradeOrderRepository.deleteAll();
+        portfolioRepository.deleteAll();
         accountRepository.deleteAll();
         stockRepository.deleteAll();
         clientRepository.deleteAll();
@@ -50,9 +49,11 @@ public class DataInitializer implements CommandLineRunner {
 
         // Müşteri Oluşturma
         Client client = Client.builder()
+                .user(admin)
                 .fullName("John Doe")
                 .tckn("12345678901")
                 .vergiNo("9876543210")
+                .blueCardNo("1234567890")
                 .email("johndoe@gmail.com")
                 .phone("555-1234")
                 .status(ClientStatus.ACTIVE)
@@ -68,23 +69,13 @@ public class DataInitializer implements CommandLineRunner {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        Portfolio portfolio2= Portfolio.builder()
-                .client(client)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        Portfolio portfolio3= Portfolio.builder()
-                .client(client)
-                .createdAt(LocalDateTime.now())
-                .build();
-
         portfolioRepository.save(portfolio);
 
         // Müşteriye takas hesabı oluşturma
         Account takasAccount = Account.builder()
                 .client(client)
                 .accountNumber("TR12345678901234567890")
-                .accountType(AccountType.TAKAS)
+                .accountType(AccountType.SETTLEMENT)
                 .balance(new BigDecimal("100000.00"))
                 .createdAt(LocalDateTime.now())
                 .currency(Currency.TRY)

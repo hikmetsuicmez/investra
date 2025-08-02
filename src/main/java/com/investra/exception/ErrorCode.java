@@ -23,7 +23,6 @@ public enum ErrorCode {
     CLIENT_NOT_FOUND(3003, "Müşteri bulunamadı"),
     ACCOUNT_NOT_FOUND(3004, "Hesap bulunamadı"),
 
-
     // İzin/Yetki hataları (4000-4999)
     UNAUTHORIZED(4000, "Yetkisiz erişim"),
     FORBIDDEN(4001, "Bu işlem için yetkiniz bulunmamaktadır"),
@@ -32,6 +31,7 @@ public enum ErrorCode {
     OPERATION_FAILED(5000, "İşlem başarısız"),
     INSUFFICIENT_STOCK(5001, "Yetersiz hisse senedi miktarı"),
     INSUFFICIENT_FUNDS(5002, "Yetersiz bakiye"),
+    INACTIVE_STOCK(5003, "Hisse senedi aktif değil"),
 
     // Bildirim hataları (6000-6999)
     NOTIFICATION_ERROR(6000, "Bildirim gönderimi başarısız"),

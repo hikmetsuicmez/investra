@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(ApiEndpoints.User.BASE)
 @RequiredArgsConstructor
 public class AdminController {
+
     private final AdminService adminService;
 
     @PostMapping(ApiEndpoints.User.CREATE)

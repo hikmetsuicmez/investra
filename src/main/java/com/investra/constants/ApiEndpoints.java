@@ -30,6 +30,7 @@ public class ApiEndpoints {
         public static final String SEARCH_CLIENT = "/search-client"; // Hisse senedi arama
         public static final String CLIENT_STOCK_HOLDINGS = "/client/{clientId}/stocks"; // Hisse senedi detayları
         public static final String PREVIEW_SELL_ORDER = "/preview"; // Satış önizleme
+        public static final String EXECUTE_SELL_ORDER = "/execute"; // Satış işlemi
     }
 
 }

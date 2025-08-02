@@ -8,6 +8,8 @@ import com.investra.service.StockSellService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,9 +36,10 @@ public class StockSellController {
         return ResponseEntity.ok(stockSellService.previewSellOrder(request));
     }
 
-    @PostMapping("/execute")
+    @PostMapping(ApiEndpoints.Stock.EXECUTE_SELL_ORDER)
     public ResponseEntity<Response<StockSellOrderResultResponse>> executeSellOrder(@RequestBody @Valid StockSellOrderRequest request) {
-        return ResponseEntity.ok(stockSellService.executeSellOrder(request));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        return ResponseEntity.ok(stockSellService.executeSellOrder(request,userEmail));
     }
-
 }
