@@ -31,4 +31,10 @@ public class StockSellOrderPreviewResponse {
     private OrderType orderType; // "BUY" veya "SELL"
     private LocalDate tradeDate; // Emir tarihini belirtir, genellikle bugünün tarihi
     private String valueDate; // Vade tarihi, genellikle emir tarihinden 2 iş günü sonrasını ifade eder
+
+    // Önizleme ID'si, satış işlemi için gereklidir
+    private String previewId;
+
+    // Önizlemenin geçerlilik süresi (dakika)
+    private Integer expiryMinutes = 10;
 }

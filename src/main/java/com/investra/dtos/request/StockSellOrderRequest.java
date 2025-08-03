@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 import java.math.BigDecimal;
 
 @Data
@@ -22,6 +21,12 @@ public class StockSellOrderRequest {
     private ExecutionType executionType; // LIMIT VE MARKET
     private Integer quantity;
     private BigDecimal price; // SADECE LIMIT EMIRLERINDE GEREKLI
+
+    // Önizleme ID'si, satış işlemi sırasında gereklidir
+    private String previewId;
+
+    // Eski kontrol - geriye uyumluluk için tutuyoruz, ancak artık previewId kullanılacak
+    @Deprecated
     private Boolean previewConfirmed = false;
 
     public void validatePrice() {
