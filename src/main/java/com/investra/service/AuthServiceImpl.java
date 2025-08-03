@@ -52,6 +52,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Response<LoginResponse> login(LoginRequest loginRequest) {
+        String email = loginRequest.getEmail();
+        log.info("Giriş isteği alındı. email: {}", email);
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -61,18 +64,25 @@ public class AuthServiceImpl implements AuthService {
             );
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            log.debug("Authentication başarılı. email: {}", userDetails.getUsername());
 
             User user = userRepository.findByEmail(userDetails.getUsername())
-                    .orElseThrow(() -> new UserNotFoundException(userDetails.getUsername()));
+                    .orElseThrow(() -> {
+                        log.error("Kullanıcı bulunamadı. email: {}", userDetails.getUsername());
+                        return new UserNotFoundException(userDetails.getUsername());
+                    });
 
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
+            log.info("Son giriş tarihi güncellendi. email: {}", user.getEmail());
 
             String token = jwtUtil.generateToken(user.getEmail());
+            log.debug("JWT token üretildi. email: {}", user.getEmail());
 
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setToken(token);
             loginResponse.setFirstLogin(user.isFirstLogin());
+            log.info("Giriş başarılı. email: {}", user.getEmail());
 
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.OK.value())
@@ -81,11 +91,13 @@ public class AuthServiceImpl implements AuthService {
                     .build();
 
         } catch (InvalidCredentialsException e) {
+            log.warn("Geçersiz giriş denemesi. email: {}", email);
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
                     .message("E-posta veya şifre hatalı")
                     .build();
         } catch (Exception e) {
+            log.error("Giriş işlemi sırasında beklenmeyen bir hata oluştu. email: {}, hata: {}", email, e.getMessage(), e);
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("Giriş işlemi sırasında bir hata oluştu: " + e.getMessage())
@@ -98,22 +110,34 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         AuthUser authUser = (AuthUser) authentication.getPrincipal();
 
+        log.info("Şifre değiştirme isteği alındı. email: {}", authUser.getUsername());
+
         User user = userRepository.findByEmail(authUser.getUsername())
-                .orElseThrow(() -> new UserNotFoundException(authUser.getUsername()));
+                .orElseThrow(() -> {
+                    log.error("Şifre değiştirme sırasında kullanıcı bulunamadı. email: {}", authUser.getUsername());
+                    return new UserNotFoundException(authUser.getUsername());
+                });
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            log.warn("Mevcut şifre hatalı. email: {}", authUser.getUsername());
             throw new InvalidCredentialsException("Mevcut şifre hatalı");
         }
 
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            log.warn("Yeni şifre ve tekrarı uyuşmuyor. email: {}", authUser.getUsername());
             throw new InvalidCredentialsException("Yeni şifre ve şifre tekrarı eşleşmiyor");
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        log.debug("Yeni şifre encode edildi. email: {}", authUser.getUsername());
+
         // İlk kez giriş yapmışsa, artık ilk giriş değil
         if (user.isFirstLogin()) {
             user.setFirstLogin(false);
+            log.debug("Kullanıcının ilk giriş durumu güncellendi. email: {}", authUser.getUsername());
         }
         userRepository.save(user);
+        log.info("Şifre başarıyla değiştirildi. email: {}", authUser.getUsername());
+
         return Response.<Void>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Şifreniz başarıyla değiştirildi")
@@ -122,6 +146,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Response<Void> forgotPassword(String email) {
+        log.info("Şifre sıfırlama talebi alındı. email: {}", email);
+
         boolean emailExists = userRepository.findByEmail(email).isPresent();
 
         if (!emailExists) {
@@ -140,7 +166,7 @@ public class AuthServiceImpl implements AuthService {
                     user.setPasswordResetTokenExpiry(tokenExpiry);
                     userRepository.save(user);
 
-                    log.info("Token oluşturuldu: {}", resetToken);
+                    log.debug("Şifre sıfırlama token'ı oluşturuldu ve kaydedildi. email: {}, token: {}", user.getEmail(), resetToken);
 
                     String resetLink = FRONTEND_URL + "/auth" + RESET_PASSWORD_URL + resetToken;
 
@@ -153,6 +179,7 @@ public class AuthServiceImpl implements AuthService {
                         templateVariables.put("actionText", "Şifremi Sıfırla");
                         templateVariables.put("expiryTime", "24 saat");
 
+                        log.debug("Şifre sıfırlama email içeriği hazırlanıyor. email: {}", user.getEmail());
                         String emailContent = emailTemplateService.processTemplate("password-reset", templateVariables);
 
                         NotificationDTO notificationDTO = NotificationDTO.builder()
@@ -163,38 +190,52 @@ public class AuthServiceImpl implements AuthService {
                                 .isHtml(true)
                                 .build();
 
-                        log.info("Email gönderiliyor: {}", user.getEmail());
+                        log.info("Şifre sıfırlama email gönderiliyor. email: {}", user.getEmail());
                         notificationService.sendEmail(notificationDTO);
-                        log.info("Email başarıyla gönderildi");
+                        log.info("Şifre sıfırlama email başarıyla gönderildi. email: {}", user.getEmail());
 
                     } catch (NotificationException e) {
-                        log.error("Email gönderme hatası: {}", e.getMessage(), e);
+                        log.error("Email gönderimi sırasında hata oluştu. email: {}, hata: {}", user.getEmail(), e.getMessage(), e);
                         throw new NotificationException("Şifre sıfırlama e-postası gönderilirken bir hata oluştu: " + e.getMessage());
                     }
+
+                    log.info("Şifre sıfırlama işlemi tamamlandı. email: {}", user.getEmail());
                     return Response.<Void>builder()
                             .statusCode(HttpStatus.OK.value())
                             .message("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
                             .build();
                 })
-                .orElseThrow(() -> new IllegalStateException("Bu hata asla oluşmamalı - Kontrol zaten yapıldı"));
+                .orElseThrow(() -> {
+                    log.error("Beklenmeyen hata: Kullanıcı bulunamamasına rağmen map bloğuna girildi. email: {}", email);
+                    return new IllegalStateException("Bu hata asla oluşmamalı - Kontrol zaten yapıldı");
+                });
     }
 
     @Override
     public Response<Void> resetPassword(ResetPasswordRequest request, String token) {
+        log.info("resetPassword çağrıldı. token: {}", token);
+
         if (!request.getPassword().equals(request.getConfirmPassword())) {
+            log.warn("Şifre ve şifre tekrarı uyuşmuyor.");
             throw new InvalidCredentialsException("Yeni şifre ve şifre tekrarı eşleşmiyor");
         }
         return userRepository.findByPasswordResetToken(token)
                 .filter(user -> {
-                    return user.getPasswordResetTokenExpiry() != null &&
-                           user.getPasswordResetTokenExpiry().isAfter(LocalDateTime.now());
+                    boolean isValid = user.getPasswordResetTokenExpiry() != null &&
+                            user.getPasswordResetTokenExpiry().isAfter(LocalDateTime.now());
+                    if (!isValid) {
+                        log.warn("Token süresi dolmuş. token: {}, email: {}", token, user.getEmail());
+                    }
+                    return isValid;
                 })
                 .map(user -> {
+                    log.debug("Token geçerli. Şifre güncelleniyor. email: {}", user.getEmail());
                     user.setPassword(passwordEncoder.encode(request.getPassword()));
 
                     user.setPasswordResetToken(null);
                     user.setPasswordResetTokenExpiry(null);
                     userRepository.save(user);
+                    log.info("Şifre başarıyla sıfırlandı. email: {}", user.getEmail());
 
                     return Response.<Void>builder()
                             .statusCode(HttpStatus.OK.value())
