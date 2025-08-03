@@ -32,6 +32,7 @@ public enum ErrorCode {
     INSUFFICIENT_STOCK(5001, "Yetersiz hisse senedi miktarı"),
     INSUFFICIENT_FUNDS(5002, "Yetersiz bakiye"),
     INACTIVE_STOCK(5003, "Hisse senedi aktif değil"),
+    CALCULATION_ERROR(5004, "Hesaplama hatası"),
 
     // Bildirim hataları (6000-6999)
     NOTIFICATION_ERROR(6000, "Bildirim gönderimi başarısız"),
