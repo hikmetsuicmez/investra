@@ -17,7 +17,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Investra API")
                         .description("Investra platformu için kapsamlı REST API dökümantasyonu")
-                        .version("1.0"))
+                        .version("1.0.0"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(
                         new Components()
