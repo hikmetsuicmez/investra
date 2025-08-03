@@ -26,6 +26,8 @@ public enum ErrorCode {
     // İzin/Yetki hataları (4000-4999)
     UNAUTHORIZED(4000, "Yetkisiz erişim"),
     FORBIDDEN(4001, "Bu işlem için yetkiniz bulunmamaktadır"),
+    ACCESS_DENIED(4002, "Erişim reddedildi"),
+    INVALID_OR_EXPIRED_TOKEN(4003, "Geçersiz veya süresi dolmuş token"),
 
     // İşlem hataları (5000-5999)
     OPERATION_FAILED(5000, "İşlem başarısız"),
