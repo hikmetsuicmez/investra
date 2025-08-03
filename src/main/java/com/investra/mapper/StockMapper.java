@@ -1,7 +1,7 @@
 package com.investra.mapper;
 
 import com.investra.dtos.response.ClientStockHoldingResponse;
-import com.investra.dtos.response.StockSellOrderPreviewResponse;
+import com.investra.dtos.response.StockOrderPreviewResponse;
 import com.investra.entity.PortfolioItem;
 import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderType;
@@ -24,7 +24,7 @@ public class StockMapper {
                 .build();
     }
 
-    public static StockSellOrderPreviewResponse mapToStockSellOrderPreviewResponse(
+    public static StockOrderPreviewResponse mapToStockSellOrderPreviewResponse(
             String accountNumber,
             String stockName,
             String stockSymbol,
@@ -40,7 +40,7 @@ public class StockMapper {
             OrderType orderType,
             LocalDate tradeDate,
             String valueDate) {
-        return StockSellOrderPreviewResponse.builder()
+        return StockOrderPreviewResponse.builder()
                 .accountNumber(accountNumber)
                 .stockName(stockName)
                 .stockSymbol(stockSymbol)

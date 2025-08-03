@@ -3,7 +3,7 @@ package com.investra.controller;
 import com.investra.constants.ApiEndpoints;
 import com.investra.docs.StockSellApiDocs;
 import com.investra.dtos.request.ClientSearchRequest;
-import com.investra.dtos.request.StockSellOrderRequest;
+import com.investra.dtos.request.StockOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.service.StockSellService;
 import jakarta.validation.Valid;
@@ -33,12 +33,12 @@ public class StockSellController implements StockSellApiDocs {
     }
 
     @PostMapping(ApiEndpoints.Stock.PREVIEW_SELL_ORDER)
-    public ResponseEntity<Response<StockSellOrderPreviewResponse>> previewSellOrder(@RequestBody @Valid StockSellOrderRequest request) {
+    public ResponseEntity<Response<StockOrderPreviewResponse>> previewSellOrder(@RequestBody @Valid StockOrderRequest request) {
         return ResponseEntity.ok(stockSellService.previewSellOrder(request));
     }
 
     @PostMapping(ApiEndpoints.Stock.EXECUTE_SELL_ORDER)
-    public ResponseEntity<Response<StockSellOrderResultResponse>> executeSellOrder(@RequestBody @Valid StockSellOrderRequest request) {
+    public ResponseEntity<Response<StockSellOrderResultResponse>> executeSellOrder(@RequestBody @Valid StockOrderRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
         return ResponseEntity.ok(stockSellService.executeSellOrder(request,userEmail));

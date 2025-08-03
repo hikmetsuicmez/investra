@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class StockSellOrderPreviewResponse {
+public class StockOrderPreviewResponse {
     private String accountNumber;
     private String stockName;
     private String stockSymbol;

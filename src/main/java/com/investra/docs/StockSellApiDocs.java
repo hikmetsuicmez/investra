@@ -1,7 +1,7 @@
 package com.investra.docs;
 
 import com.investra.dtos.request.ClientSearchRequest;
-import com.investra.dtos.request.StockSellOrderRequest;
+import com.investra.dtos.request.StockOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,13 +35,13 @@ public interface StockSellApiDocs {
     @ApiResponse(responseCode = "400", description = "Geçersiz istek", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "Müşteri veya hisse senedi bulunamadı", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    ResponseEntity<Response<StockSellOrderPreviewResponse>> previewSellOrder(@Parameter StockSellOrderRequest request);
+    ResponseEntity<Response<StockOrderPreviewResponse>> previewSellOrder(@Parameter StockOrderRequest request);
 
     @Operation(summary = "Hisse Senedi Satış İşlemi", description = "Hisse senedi satış işlemini gerçekleştirir.")
     @ApiResponse(responseCode = "200", description = "Hisse senedi satış işlemi başarıyla gerçekleştirildi", content = @Content(schema = @Schema(implementation = Response.class)))
     @ApiResponse(responseCode = "400", description = "Geçersiz istek", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "Müşteri veya hisse senedi bulunamadı", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    ResponseEntity<Response<StockSellOrderResultResponse>> executeSellOrder(@Parameter StockSellOrderRequest request);
+    ResponseEntity<Response<StockSellOrderResultResponse>> executeSellOrder(@Parameter StockOrderRequest request);
 
 }

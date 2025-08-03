@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class StockSellOrderRequest {
+public class StockOrderRequest {
 
     private Long clientId;
     private Long accountId;

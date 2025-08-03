@@ -1,7 +1,7 @@
 package com.investra.service;
 
 import com.investra.dtos.request.ClientSearchRequest;
-import com.investra.dtos.request.StockSellOrderRequest;
+import com.investra.dtos.request.StockOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.entity.*;
 import com.investra.enums.OrderStatus;
@@ -11,15 +11,17 @@ import com.investra.mapper.ClientMapper;
 import com.investra.mapper.StockMapper;
 import com.investra.repository.*;
 import com.investra.service.helper.*;
-import com.investra.service.helper.EntityFinderService.OrderEntities;
-import com.investra.service.helper.OrderCalculationService.OrderCalculation;
+import com.investra.service.helper.record.OrderCalculation;
+import com.investra.service.helper.record.OrderEntities;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.query.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -94,13 +96,10 @@ public class StockSellServiceImpl implements StockSellService {
 
     @Override
     @Transactional
-    public Response<StockSellOrderPreviewResponse> previewSellOrder(StockSellOrderRequest request) {
+    public Response<StockOrderPreviewResponse> previewSellOrder(StockOrderRequest request) {
         try {
             // İsteği doğrula
             validatorService.validateSellOrderRequest(request);
-
-            // Borsa ve hisse senedi durumunu kontrol et
-            // validatorService.validateOrderExecution(request.getStockId());
 
             // Gerekli varlıkları bul ve doğrula
             OrderEntities entities = entityFinderService.findAndValidateEntities(request);
@@ -110,14 +109,14 @@ public class StockSellServiceImpl implements StockSellService {
                     entities.client(), entities.stock(), request);
 
             // Yanıt nesnesini oluştur
-            StockSellOrderPreviewResponse previewResponse = calculationService.createPreviewResponse(
+            StockOrderPreviewResponse previewResponse = calculationService.createPreviewResponse(
                     entities.account(), entities.stock(), request, calculation);
 
             // Önizlemeyi önbelleğe kaydet ve previewId döndür
             String previewId = previewCacheService.cachePreview(request, previewResponse);
             previewResponse.setPreviewId(previewId);
 
-            return Response.<StockSellOrderPreviewResponse>builder()
+            return Response.<StockOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.OK.value())
                     .message("Satış önizleme başarılı")
                     .data(previewResponse)
@@ -125,13 +124,13 @@ public class StockSellServiceImpl implements StockSellService {
         } catch (ValidationException | StockNotFoundException | ClientNotFoundException |
                  AccountNotFoundException | InsufficientStockException | InactiveStockException e) {
             log.warn("Önizleme hatası: {}", e.getMessage());
-            return Response.<StockSellOrderPreviewResponse>builder()
+            return Response.<StockOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
                     .message(e.getMessage())
                     .build();
         } catch (Exception e) {
             log.error("Önizleme sırasında beklenmeyen bir hata oluştu: {}", e.getMessage(), e);
-            return Response.<StockSellOrderPreviewResponse>builder()
+            return Response.<StockOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("Önizleme sırasında bir hata oluştu")
                     .build();
@@ -140,45 +139,16 @@ public class StockSellServiceImpl implements StockSellService {
 
     @Override
     @Transactional
-    public Response<StockSellOrderResultResponse> executeSellOrder(StockSellOrderRequest request, String userEmail) {
+    public Response<StockSellOrderResultResponse> executeSellOrder(StockOrderRequest request, String userEmail) {
         try {
-            // Önizleme doğrulaması
-            previewCacheService.validatePreview(request.getPreviewId(), request);
+            validatorService.createAndSaveSellOrder(request, userEmail);
+            List<Object> responses =  entityFinderService.processOrder(request, userEmail);
+            OrderEntities entities = (OrderEntities) responses.get(0);
+            OrderCalculation calculation = (OrderCalculation) responses.get(1);
+            TradeOrder tradeOrder = (TradeOrder) responses.get(2);
+            User submittedBy = (User) responses.get(3);
 
-            // İsteği doğrula
-            validatorService.validateSellOrderRequest(request);
-
-            // Borsa ve hisse senedi durumunu kontrol et
-            // validatorService.validateOrderExecution(request.getStockId());
-
-            // Kullanıcıyı bul
-            User submittedBy = entityFinderService.findUserByEmail(userEmail);
             log.info("Kullanıcı: {} tarafından satış işlemi başlatıldı.", submittedBy.getEmail());
-
-            // Gerekli varlıkları bul ve doğrula
-            OrderEntities entities = entityFinderService.findAndValidateEntities(request);
-
-            // Hesaplamaları yap
-            OrderCalculation calculation = calculationService.calculateOrderAmounts(
-                    entities.client(), entities.stock(), request);
-
-            // Satış emrini oluştur ve kaydet
-            TradeOrder tradeOrder = TradeOrder.builder()
-                    .client(entities.client())
-                    .account(entities.account())
-                    .stock(entities.stock())
-                    .orderType(OrderType.SELL)
-                    .quantity(request.getQuantity())
-                    .price(calculation.price())
-                    .totalAmount(calculation.totalAmount())
-                    .status(OrderStatus.EXECUTED)
-                    .executionType(request.getExecutionType())
-                    .user(submittedBy)
-                    .submittedAt(LocalDateTime.now())
-                    .executedAt(LocalDateTime.now().plusDays(2))
-                    .build();
-
-            tradeOrder = tradeOrderRepository.save(tradeOrder);
 
             // Portföy ve bakiye güncelleme işlemleri
             PortfolioItem updatedPortfolioItem = portfolioUpdateService.updatePortfolioAfterSell(
@@ -189,14 +159,12 @@ public class StockSellServiceImpl implements StockSellService {
                 log.info("Müşteri {} tüm {} hisselerini sattı, portföyden kaldırıldı.",
                         entities.client().getId(), entities.stock().getSymbol());
             }
-
             portfolioUpdateService.updateAccountBalanceAfterSell(entities.account(), calculation.netAmount());
 
             // Önizlemeyi önbellekten kaldır
             previewCacheService.removePreview(request.getPreviewId());
 
             log.info("Satış emri oluşturuldu: {}", tradeOrder.getId());
-
             // Yanıt oluştur
             StockSellOrderResultResponse response = StockSellOrderResultResponse.builder()
                     .orderId(tradeOrder.getId())

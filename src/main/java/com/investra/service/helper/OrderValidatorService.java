@@ -1,65 +1,55 @@
 package com.investra.service.helper;
 
-import com.investra.dtos.request.StockSellOrderRequest;
+import com.investra.dtos.request.StockOrderRequest;
+import com.investra.entity.PortfolioItem;
 import com.investra.entity.Stock;
-import com.investra.enums.ExecutionType;
+import com.investra.enums.OrderType;
 import com.investra.exception.InactiveStockException;
+import com.investra.exception.StockNotFoundException;
 import com.investra.exception.ValidationException;
+import com.investra.repository.PortfolioItemRepository;
 import com.investra.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-/**
- * Satış işlemi isteklerinin doğrulama işlemlerini yapar
- */
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class OrderValidatorService {
 
     private final StockRepository stockRepository;
+    private final PortfolioItemRepository portfolioItemRepository;
+    private final EntityFinderService entityFinderService;
+    private final OrderPreviewCacheService previewCacheService;
 
     private static final LocalTime MARKET_OPEN_TIME = LocalTime.of(10, 0);
     private static final LocalTime MARKET_CLOSE_TIME = LocalTime.of(18, 0);
 
-    /**
-     * Satış isteğinin geçerli olduğunu doğrular
-     * @throws ValidationException Doğrulama sırasında bir hata oluşursa
-     */
-    public void validateSellOrderRequest(StockSellOrderRequest request) {
+    public void validatePurchaseOrderRequest(StockOrderRequest request) {
+        validateOrderRequestInternal(request, "Alış işlemi istek doğrulama başarılı: {}" + OrderType.BUY);
+    }
+
+    public void validateSellOrderRequest(StockOrderRequest request) {
+        validateOrderRequestInternal(request, "Satış işlemi istek doğrulama başarılı: {}" + OrderType.SELL);
+        PortfolioItem portfolioItem = portfolioItemRepository.findByClientIdAndStockId(
+                request.getClientId(), request.getStockId())
+                .orElseThrow(() -> new StockNotFoundException("Müşterinin portföyünde hisse senedi bulunamadı"));
+        entityFinderService.validatePortfolioQuantity(portfolioItem, request.getQuantity());
+    }
+
+    private void validateOrderRequestInternal(StockOrderRequest request, String successLogMessage) {
         try {
-            if (request == null) {
-                throw new ValidationException("İstek boş olamaz");
-            }
+            validateOrderRequest(request);
+            validateClientAndStockId(request);
+            request.validatePrice();
+            //validateOrderExecution(request.getStockId());
 
-            if (request.getClientId() == null || request.getClientId() <= 0) {
-                throw new ValidationException("Geçerli bir müşteri ID'si gereklidir");
-            }
-
-            if (request.getStockId() == null || request.getStockId() <= 0) {
-                throw new ValidationException("Geçerli bir hisse senedi ID'si gereklidir");
-            }
-
-            if (request.getQuantity() <= 0) {
-                throw new ValidationException("Miktar 0'dan büyük olmalıdır");
-            }
-
-            if (request.getExecutionType() == null) {
-                throw new ValidationException("Emir türü belirtilmelidir");
-            }
-
-            if (request.getExecutionType() == ExecutionType.LIMIT) {
-                if (request.getPrice() == null || request.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-                    throw new ValidationException("Limit emrinde fiyat 0'dan büyük olmalıdır");
-                }
-            }
-
-            log.debug("İstek doğrulama başarılı: {}", request);
+            log.debug(successLogMessage, request);
         } catch (ValidationException e) {
             log.warn("İstek doğrulama hatası: {}", e.getMessage());
             throw e;
@@ -69,12 +59,28 @@ public class OrderValidatorService {
         }
     }
 
-    /**
-     * İşlem için gerekli şartların sağlanıp sağlanmadığını kontrol eder
-     * @param stockId Hisse senedi ID'si
-     * @throws ValidationException Borsa kapalıysa
-     * @throws InactiveStockException Hisse senedi aktif değilse
-     */
+    public void validateOrderRequest(StockOrderRequest request) {
+            if (request == null) {
+                throw new ValidationException("İstek boş olamaz");
+            }
+            if (request.getExecutionType() == null) {
+                throw new ValidationException("Emir türü belirtilmelidir");
+            }
+            if (request.getQuantity() <= 0) {
+                throw new ValidationException("Miktar 0'dan büyük olmalıdır");
+            }
+    }
+
+    private void validateClientAndStockId(StockOrderRequest request) {
+        if (request.getClientId() == null || request.getClientId() <= 0) {
+            throw new ValidationException("Geçerli bir müşteri ID'si gereklidir");
+        }
+
+        if (request.getStockId() == null || request.getStockId() <= 0) {
+            throw new ValidationException("Geçerli bir hisse senedi ID'si gereklidir");
+        }
+    }
+
     public void validateOrderExecution(Long stockId) {
         // Borsa açık mı kontrolü
         if (!isMarketOpen()) {
@@ -88,6 +94,13 @@ public class OrderValidatorService {
         if (!stock.getIsActive()) {
             throw new InactiveStockException("Hisse senedi aktif değil: " + stock.getSymbol());
         }
+    }
+
+    public void createAndSaveSellOrder(StockOrderRequest request, String userEmail) {
+        // Önizleme doğrulaması
+        previewCacheService.validatePreview(request.getPreviewId(), request);
+        // İsteği doğrula
+        validateSellOrderRequest(request);
     }
 
     private boolean isMarketOpen() {

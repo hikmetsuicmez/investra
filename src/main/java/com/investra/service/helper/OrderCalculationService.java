@@ -1,13 +1,15 @@
 package com.investra.service.helper;
 
-import com.investra.dtos.request.StockSellOrderRequest;
-import com.investra.dtos.response.StockSellOrderPreviewResponse;
+import com.investra.dtos.request.StockOrderRequest;
+import com.investra.dtos.response.StockOrderPreviewResponse;
 import com.investra.entity.Account;
 import com.investra.entity.Client;
 import com.investra.entity.Stock;
 import com.investra.enums.ClientType;
 import com.investra.enums.ExecutionType;
 import com.investra.exception.CalculationException;
+import com.investra.service.helper.record.OrderCalculation;
+import com.investra.service.helper.record.OrderEntities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -24,26 +26,26 @@ public class OrderCalculationService {
     private static final BigDecimal BSMV_FEE_RATE = new BigDecimal("0.05");  // %5
     private static final int DECIMAL_SCALE = 2;
 
-    public OrderCalculation calculateOrderAmounts(Client client, Stock stock, StockSellOrderRequest request) {
+    public OrderCalculation calculateOrderAmounts(Client client, Stock stock, StockOrderRequest request) {
         try {
             if (client == null || stock == null) {
                 throw new IllegalArgumentException("Müşteri veya hisse senedi bilgisi boş olamaz");
             }
-
             BigDecimal commissionRate = client.getClientType() == ClientType.INDIVIDUAL
                     ? INDIVIDUAL_COMMISION_RATE
                     : CORPORATE_COMMISION_RATE;
 
-            BigDecimal price = request.getExecutionType() == ExecutionType.MARKET
+            BigDecimal unitPrice = request.getExecutionType() == ExecutionType.MARKET
                     ? stock.getCurrentPrice()
                     : request.getPrice();
 
-            if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Geçersiz fiyat: " + price);
+            if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Geçersiz fiyat: " + unitPrice);
             }
+
             BigDecimal quantity = BigDecimal.valueOf(request.getQuantity());
 
-            BigDecimal commission = price
+            BigDecimal commission = unitPrice
                     .multiply(quantity)
                     .multiply(commissionRate)
                     .setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
@@ -55,7 +57,7 @@ public class OrderCalculationService {
             BigDecimal totalTaxAndCommission = commission.add(bsmv)
                     .setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
 
-            BigDecimal totalAmount = price
+            BigDecimal totalAmount = unitPrice
                     .multiply(quantity)
                     .setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
 
@@ -64,13 +66,14 @@ public class OrderCalculationService {
                     .setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
 
             return new OrderCalculation(
-                    price,
+                    unitPrice,
                     commission,
                     bsmv,
                     totalTaxAndCommission,
                     totalAmount,
                     netAmount
             );
+
         } catch (ArithmeticException e) {
             log.error("Hesaplama sırasında aritmetik hata oluştu: {}", e.getMessage());
             throw new CalculationException("Hesaplama sırasında aritmetik hata oluştu", e);
@@ -83,17 +86,17 @@ public class OrderCalculationService {
         }
     }
 
-    public StockSellOrderPreviewResponse createPreviewResponse(
+    public StockOrderPreviewResponse createPreviewResponse(
             Account account,
             Stock stock,
-            StockSellOrderRequest request,
+            StockOrderRequest request,
             OrderCalculation calculation) {
         try {
             if (account == null || stock == null || calculation == null) {
                 throw new IllegalArgumentException("Hesap, hisse senedi veya hesaplama bilgisi boş olamaz");
             }
 
-            return getStockSellOrderPreviewResponse(account, stock, request, calculation.price(),
+            return getStockOrderPreviewResponse(account, stock, request, calculation.unitPrice(),
                     calculation.totalAmount(), calculation.commission(), calculation.bsmv(),
                     calculation.totalTaxAndCommission(), calculation.netAmount(), calculation);
         } catch (Exception e) {
@@ -102,12 +105,12 @@ public class OrderCalculationService {
         }
     }
 
-    static StockSellOrderPreviewResponse getStockSellOrderPreviewResponse(Account account, Stock stock, StockSellOrderRequest request, BigDecimal price, BigDecimal bigDecimal, BigDecimal commission, BigDecimal bsmv, BigDecimal bigDecimal2, BigDecimal bigDecimal3, OrderCalculation calculation) {
-        return StockSellOrderPreviewResponse.builder()
+    static StockOrderPreviewResponse getStockOrderPreviewResponse(Account account, Stock stock, StockOrderRequest request, BigDecimal unitPrice, BigDecimal bigDecimal, BigDecimal commission, BigDecimal bsmv, BigDecimal bigDecimal2, BigDecimal bigDecimal3, OrderCalculation calculation) {
+        return StockOrderPreviewResponse.builder()
                 .accountNumber(account.getAccountNumber())
                 .stockName(stock.getName())
                 .stockSymbol(stock.getSymbol())
-                .price(price)
+                .price(unitPrice)
                 .quantity(request.getQuantity())
                 .tradeDate(LocalDate.now())
                 .valueDate("T+2")
@@ -121,11 +124,12 @@ public class OrderCalculationService {
                 .build();
     }
 
-    public record OrderCalculation(
-            BigDecimal price,
-            BigDecimal commission,
-            BigDecimal bsmv,
-            BigDecimal totalTaxAndCommission,
-            BigDecimal totalAmount,
-            BigDecimal netAmount) {}
+    public OrderCalculation getCalculation(StockOrderRequest request, OrderEntities entities) {
+        return calculateOrderAmounts(
+                entities.client(), entities.stock(), request);
+    }
+
 }
+
+
+

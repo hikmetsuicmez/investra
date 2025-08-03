@@ -1,13 +1,21 @@
 package com.investra.service.helper;
 
-import com.investra.dtos.request.StockSellOrderRequest;
+import com.investra.dtos.request.StockOrderRequest;
 import com.investra.entity.*;
+import com.investra.enums.OrderStatus;
+import com.investra.enums.OrderType;
 import com.investra.exception.*;
 import com.investra.repository.*;
+import com.investra.service.helper.record.OrderCalculation;
+import com.investra.service.helper.record.OrderEntities;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -19,8 +27,9 @@ public class EntityFinderService {
     private final StockRepository stockRepository;
     private final PortfolioItemRepository portfolioItemRepository;
     private final UserRepository userRepository;
+    private final OrderCalculationService calculationService;
 
-    public OrderEntities findAndValidateEntities(StockSellOrderRequest request) {
+    public OrderEntities findAndValidateEntities(StockOrderRequest request) {
         try {
             Client client = clientRepository.findById(request.getClientId())
                     .orElseThrow(() -> new ClientNotFoundException(request.getClientId()));
@@ -34,10 +43,6 @@ public class EntityFinderService {
             Account account = accountRepository.findByClientId(client.getId())
                     .orElseThrow(() -> new AccountNotFoundException("Müşteri hesabı bulunamadı: " + client.getId()));
 
-            if (portfolioItem.getQuantity() < request.getQuantity()) {
-                throw new InsufficientStockException("Yetersiz hisse senedi miktarı: " + request.getQuantity());
-            }
-
             return new OrderEntities(client, stock, portfolioItem, account);
         } catch (ClientNotFoundException | StockNotFoundException | AccountNotFoundException |
                 InsufficientStockException e) {
@@ -49,6 +54,12 @@ public class EntityFinderService {
         } catch (Exception e) {
             log.error("Varlıklar aranırken beklenmeyen bir hata oluştu: {}", e.getMessage());
             throw new DatabaseOperationException("Varlıklar aranırken beklenmeyen bir hata oluştu", e);
+        }
+    }
+
+    public void validatePortfolioQuantity(PortfolioItem portfolioItem, int requiredQuantity) {
+        if (portfolioItem.getQuantity() < requiredQuantity) {
+            throw new InsufficientStockException("Yetersiz hisse senedi miktarı: " + requiredQuantity);
         }
     }
 
@@ -67,5 +78,41 @@ public class EntityFinderService {
             throw new DatabaseOperationException("Kullanıcı aranırken beklenmeyen bir hata oluştu", e);
         }
     }
-    public record OrderEntities(Client client, Stock stock, PortfolioItem portfolioItem, Account account) {}
+
+    public OrderEntities getEntities(StockOrderRequest request) {
+        return findAndValidateEntities(request);
+    }
+
+    public TradeOrder buildTradeOrder(OrderEntities entities, StockOrderRequest request, OrderCalculation calculation, User submittedBy) {
+        return TradeOrder.builder()
+                .client(entities.client())
+                .account(entities.account())
+                .stock(entities.stock())
+                .orderType(OrderType.SELL)
+                .quantity(request.getQuantity())
+                .price(calculation.unitPrice())
+                .totalAmount(calculation.totalAmount())
+                .status(OrderStatus.EXECUTED)
+                .executionType(request.getExecutionType())
+                .user(submittedBy)
+                .submittedAt(LocalDateTime.now())
+                .executedAt(LocalDateTime.now().plusDays(2))
+                .build();
+    }
+
+    public List<Object> processOrder(StockOrderRequest request, String userEmail) {
+        List<Object> responses = new ArrayList<>();
+
+        OrderEntities entities = getEntities(request);
+        responses.add(entities);
+        OrderCalculation calculation = calculationService.getCalculation(request, entities);
+        responses.add(calculation);
+        TradeOrder tradeOrder = buildTradeOrder(entities, request, calculation, findUserByEmail(userEmail));
+        responses.add(tradeOrder);
+        User submittedBy = findUserByEmail(userEmail);
+        responses.add(submittedBy);
+        return responses;
+
+    }
 }
+
