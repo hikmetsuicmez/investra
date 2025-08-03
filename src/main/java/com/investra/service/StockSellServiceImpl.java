@@ -46,14 +46,27 @@ public class StockSellServiceImpl implements StockSellService {
 
     @Override
     public Response<List<ClientSearchResponse>> searchClients(ClientSearchRequest request) {
+        log.info("searchClients() metodu başlatıldı. Arama terimi: {}", request.getSearchTerm());
+
         var strategy = getStringOptionalFunction(request);
+        if (strategy == null) {
+            log.warn("Uygun bir arama stratejisi bulunamadı. Arama terimi: {}", request.getSearchTerm());
+        }
         List<Client> clients = strategy != null
                 ? strategy.apply(request.getSearchTerm()).map(List::of).orElse(List.of())
                 : List.of();
+        if (clients.isEmpty()) {
+            log.info("Arama sonucunda eşleşen müşteri bulunamadı. Arama terimi: {}", request.getSearchTerm());
+        } else {
+            log.debug("Arama sonucunda {} adet müşteri bulundu.", clients.size());
+        //    log.debug("Arama sonucunda {} müşteri bulundu.", clients.getFirst());
+        }
 
         List<ClientSearchResponse> responseClients = clients.stream()
                 .map(ClientMapper::mapToClientSearchResponse)
                 .toList();
+        log.info("Müşteri arama işlemi tamamlandı. Sonuç adedi: {}", responseClients.size());
+        //log.info("Müşteri arama işlemi tamamlandı. Bulunan kişi: {}", responseClients.getFirst());
 
         return Response.<List<ClientSearchResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -78,15 +91,29 @@ public class StockSellServiceImpl implements StockSellService {
 
     @Override
     public Response<List<ClientStockHoldingResponse>> getClientStockHoldings(Long clientId) {
+        log.info("getClientStockHoldings() metodu başlatıldı. clientId: {}", clientId);
+
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new ClientNotFoundException(clientId));
+                .orElseThrow(() -> {
+                    log.warn("clientId: {} ile eşleşen bir müşteri bulunamadı", clientId);
+                    return new ClientNotFoundException(clientId);
+                });
+        log.debug("Müşteri bulundu: {} - {}", client.getId(), client.getFullName());
 
         List<PortfolioItem> portfolioItems = portfolioItemRepository.findByClientId(client.getId());
+
+        if (portfolioItems.isEmpty()) {
+            log.info("clientId: {} için portföyde kayıtlı hisse senedi bulunamadı.", clientId);
+        } else {
+            log.debug("clientId: {} için {} adet portföy girdisi bulundu.", clientId, portfolioItems.size());
+        }
 
 
         List<ClientStockHoldingResponse> stockHoldings = portfolioItems.stream()
                 .map(StockMapper::mapToClientStockHoldingResponse)
                 .toList();
+
+        log.info("clientId: {} için hisse senedi listesi başarıyla oluşturuldu.", clientId);
 
         return Response.<List<ClientStockHoldingResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -98,24 +125,42 @@ public class StockSellServiceImpl implements StockSellService {
     @Override
     @Transactional
     public Response<StockSellOrderPreviewResponse> previewSellOrder(StockSellOrderRequest request) {
+        log.info("Satış önizleme işlemi başlatıldı. İstek: {}", request);
 
         Client client = clientRepository.findById(request.getClientId())
-                .orElseThrow(() -> new ClientNotFoundException(request.getClientId()));
+                .orElseThrow(() -> {
+                    log.error("Client bulunamadı. ID: {}", request.getClientId());
+                    return new ClientNotFoundException(request.getClientId());
+                });
 
         Stock stock = stockRepository.findById(request.getStockId())
-                .orElseThrow(() -> new StockNotFoundException("Geçersiz hisse senedi ID: " + request.getStockId()));
+                .orElseThrow(() -> {
+                    log.error("Hisse senedi bulunamadı. ID: {}", request.getStockId());
+                    return new StockNotFoundException("Geçersiz hisse senedi ID: " + request.getStockId());
+                });
 
         PortfolioItem portfolioItem = portfolioItemRepository.findByClientIdAndStockId(client.getId(), stock.getId())
-                .orElseThrow(() -> new StockNotFoundException("Müşterinin portföyünde hisse senedi bulunamadı"));
+                .orElseThrow(() -> {
+                    log.error("Portföyde hisse senedi bulunamadı. Client ID: {}, Stock ID: {}", client.getId(), stock.getId());
+                    return new StockNotFoundException("Müşterinin portföyünde hisse senedi bulunamadı");
+                });
+        log.debug("Portföy bilgisi: {}", portfolioItem);
 
         Account account = accountRepository.findByClientId(client.getId())
-                .orElseThrow(() -> new AccountNotFoundException("Müşteri hesabı bulunamadı: " + client.getId()));
+                .orElseThrow(() -> {
+                    log.error("Müşteri hesabı bulunamadı. Client ID: {}", client.getId());
+                    return new AccountNotFoundException("Müşteri hesabı bulunamadı: " + client.getId());
+                });
+        log.debug("Müşteri hesabı bulundu: {}", account);
 
         if (portfolioItem.getQuantity() < request.getQuantity()) {
+            log.warn("Satış için istenen miktar portföydeki miktardan fazla. Portföy: {}, İstenen: {}",
+                    portfolioItem.getQuantity(), request.getQuantity());
             throw new InsufficientStockException("Yetersiz hisse senedi miktarı: " + request.getQuantity());
         }
 
         validateSellOrderRequest(request);
+        log.debug("İstek doğrulaması başarılı.");
 
         BigDecimal commissionRate = client.getClientType() == ClientType.INDIVIDUAL
                 ? INDIVIDUAL_COMMISION_RATE
@@ -137,6 +182,8 @@ public class StockSellServiceImpl implements StockSellService {
                 .multiply(BigDecimal.valueOf(request.getQuantity()));
 
         BigDecimal netAmount = totalAmount.subtract(totalTaxAndCommission);
+        log.debug("Komisyon: {}, BSMV: {}, Toplam Vergi+Komisyon: {}, Net Tutar: {}",
+                commission, bsmv, totalTaxAndCommission, netAmount);
 
         StockSellOrderPreviewResponse StockSellOrderPreviewResponse =
                 mapToStockSellOrderPreviewResponse(
@@ -156,6 +203,8 @@ public class StockSellServiceImpl implements StockSellService {
                         LocalDate.now(),
                         null
                 );
+        log.info("Satış önizleme işlemi başarıyla tamamlandı. Client ID: {}, Stock ID: {}",
+                client.getId(), stock.getId());
 
         return Response.<StockSellOrderPreviewResponse>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -168,30 +217,52 @@ public class StockSellServiceImpl implements StockSellService {
     @Transactional
     public Response<StockSellOrderResultResponse> executeSellOrder(StockSellOrderRequest request, String userEmail) {
         if (!request.getPreviewConfirmed()) {
+            log.warn("Kullanıcı önizleme onayı vermeden satış işlemi başlatmaya çalıştı. Kullanıcı: {}", userEmail);
             throw new BadRequestException("Satış önizlemesi onaylanmadı. Lütfen önizlemeyi onaylayın.");
         }
+        log.info("Satış işlemi başlatıldı. Kullanıcı: {}, İstek: {}", userEmail, request);
+
         validateSellOrderRequest(request);
+        log.debug("Satış isteği doğrulandı. İstek detayları: {}", request);
 
         StockSellOrderPreviewResponse previewResponse =
                 previewSellOrder(request).getData();
+        log.debug("Satış önizleme başarıyla oluşturuldu: {}", previewResponse);
 
         User submittedBy = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı: " + userEmail));
-        log.info("Kullanıcı: {} tarafından satış işlemi başlatıldı.", submittedBy.getEmail());
+                .orElseThrow(() -> {
+                    log.error("Kullanıcı bulunamadı: {}", userEmail);
+                    return new UserNotFoundException("Kullanıcı bulunamadı: " + userEmail);
+                });
+
+        log.info("Kullanıcı: {} tarafından satış işlemi başlatıldı.", submittedBy.getEmail()); //Bence bunu kaldırmalıyız
 
         Client client = clientRepository.findById(request.getClientId())
-                .orElseThrow(() -> new ClientNotFoundException(request.getClientId()));
+                .orElseThrow(() -> {
+                    log.error("Müşteri bulunamadı. ClientId: {}", request.getClientId());
+                    return new ClientNotFoundException(request.getClientId());
+                });
 
         Stock stock = stockRepository.findById(request.getStockId())
-                .orElseThrow(() -> new StockNotFoundException("Geçersiz hisse senedi ID: " + request.getStockId()));
+                .orElseThrow(() -> {
+                    log.error("Geçersiz hisse senedi ID: {}", request.getStockId());
+                    return new StockNotFoundException("Geçersiz hisse senedi ID: " + request.getStockId());
+                });
 
         PortfolioItem portfolioItem = portfolioItemRepository.findByClientIdAndStockId(client.getId(), stock.getId())
-                .orElseThrow(() -> new StockNotFoundException("Müşterinin portföyünde hisse senedi bulunamadı"));
+                .orElseThrow(() -> {
+                    log.error("Portföyde hisse senedi bulunamadı. ClientId: {}, StockId: {}", client.getId(), stock.getId());
+                    return new StockNotFoundException("Müşterinin portföyünde hisse senedi bulunamadı");
+                });
 
         Account account = accountRepository.findByClientId(client.getId())
-                .orElseThrow(() -> new AccountNotFoundException("Müşteri hesabı bulunamadı: " + client.getId()));
+                .orElseThrow(() -> {
+                    log.error("Müşteri hesabı bulunamadı. ClientId: {}", client.getId());
+                    return new AccountNotFoundException("Müşteri hesabı bulunamadı: " + client.getId());
+                });
 
         if (portfolioItem.getQuantity() < request.getQuantity()) {
+            log.warn("Yetersiz hisse miktarı. Talep: {}, Mevcut: {}", request.getQuantity(), portfolioItem.getQuantity());
             throw new InsufficientStockException("Yetersiz hisse senedi miktarı: " + request.getQuantity());
         }
 
@@ -215,6 +286,8 @@ public class StockSellServiceImpl implements StockSellService {
                 .multiply(BigDecimal.valueOf(request.getQuantity()));
 
         BigDecimal netAmount = totalAmount.subtract(totalTaxAndCommission);
+
+        log.debug("Hesaplamalar yapıldı. Komisyon: {}, BSMV: {}, Net Tutar: {}", commission, bsmv, netAmount);
 
         TradeOrder order = TradeOrder.builder()
                 .client(client)
@@ -236,10 +309,13 @@ public class StockSellServiceImpl implements StockSellService {
             validateOrderExecution(order);
             order.setStatus(OrderStatus.EXECUTED);
             order.setExecutedAt(LocalDateTime.now());
+
             updatePortfolio(order);
             updateAccountBalance(account, netAmount);
             deletePortfolioItemIfZeroQuantity(portfolioItem);
+
             TradeOrder savedOrder = tradeOrderRepository.save(order);
+            log.info("Satış işlemi başarıyla tamamlandı. OrderId: {}, Kullanıcı: {}", savedOrder.getId(), userEmail);
 
             StockSellOrderResultResponse resultResponse = StockSellOrderResultResponse.builder()
                     .orderId(savedOrder.getId())
@@ -256,6 +332,9 @@ public class StockSellServiceImpl implements StockSellService {
                     .build();
 
         } catch (Exception e) {
+            log.error("Satış işlemi sırasında hata oluştu. Order geçersiz kılındı. Kullanıcı: {}, Hata: {}",
+                    userEmail, e.getMessage(), e);
+
             order.setStatus(OrderStatus.REJECTED);
             tradeOrderRepository.save(order);
 
