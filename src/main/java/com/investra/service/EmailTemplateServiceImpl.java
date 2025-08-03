@@ -24,25 +24,24 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
             Context context = new Context();
 
             if (variables != null) {
-                //log.trace("Şablona aktarılacak {} adet değişken bulundu.", variables.size());
-                //         variables.forEach((key, value) -> log.trace("Değişken - {}: {}", key, value));
-                //         variables.forEach(context::setVariable);
+                log.trace("Şablona aktarılacak {} adet değişken bulundu.", variables.size());
+                         variables.forEach((key, value) -> log.trace("Değişken - {}: {}", key, value));
+                         variables.forEach(context::setVariable);
                 variables.forEach(context::setVariable);
-            }/*else {
+            }else {
             log.debug("Şablon için değişken listesi boş ya da null.");
             }
-             */
+
             context.setVariable("currentYear", Year.now().getValue());
             log.debug("currentYear değişkeni context'e eklendi: {}", Year.now().getValue());
 
-            /*String fullTemplateName = "email/" + templateName;
+            String fullTemplateName = "email/" + templateName;
             log.info("Şablon işleniyor: {}", fullTemplateName);
             String result = templateEngine.process(fullTemplateName, context);
 
             log.info("Şablon başarıyla işlendi: {}", fullTemplateName);
             return result;
-            */
-            return templateEngine.process("email/" + templateName, context);
+
         } catch (Exception e) {
             log.error("Email şablonu işlenirken hata oluştu ({}): {}", templateName, e.getMessage(), e);
             throw new RuntimeException("Email şablonu işlenirken hata oluştu: " + e.getMessage(), e);
