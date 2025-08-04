@@ -1,7 +1,6 @@
 package com.investra.repository;
 
 import com.investra.entity.Client;
-import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,10 +13,22 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByTaxId(String taxId);
 
-    // Mavi Kart Numarası ile arama
     Optional<Client> findByBlueCardNo(String blueCardNo);
+
+    Optional<Client> findByEmail(String email);
+
+    Optional<Client> findByPassportNo(String passportNo);
+
+    Optional<Client> findByTaxNumber(String taxNumber);
+
+    Optional<Client> findFirstByNationalityNumberOrPassportNoOrBlueCardNoOrTaxNumberOrRegistrationNumber(
+            String nationalityNumber,
+            String passportNo,
+            String blueCardNo,
+            String taxNumber,
+            String registrationNumber
+    );
 
     @Query("SELECT c FROM Client c WHERE LOWER(c.fullName) = LOWER(:name)")
     Optional<Client> findByName(@Param("name") String name);
-
 }

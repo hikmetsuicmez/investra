@@ -46,6 +46,17 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
         userRepository.save(admin);
 
+        User trader = User.builder()
+                .firstName("Trader")
+                .lastName("Trade")
+                .password(passwordEncoder.encode("trader123"))
+                .email("trader@investra.com")
+                .role(Role.TRADER)
+                .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+        userRepository.save(trader);
+
         // Müşteri Oluşturma
         Client client = Client.builder()
                 .user(admin)

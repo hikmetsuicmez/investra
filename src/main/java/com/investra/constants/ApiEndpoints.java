@@ -37,4 +37,12 @@ public class ApiEndpoints {
         public static final String EXECUTE_BUY_ORDER = "/execute"; // Alış işlemi
     }
 
+    public static final class Client {
+        private Client() {}
+        public static final String BASE = "/api/v1/clients";
+        public static final String CREATE = "/create-client";
+        public static final String GET_CLIENT_INFO_BY_ID = "/client/{nationalityNumber}";
+
+    }
+
 }

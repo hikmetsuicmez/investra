@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,6 +60,7 @@ public class AdminServiceImpl implements AdminService {
             log.debug("User nesnesi oluşturuluyor ve kaydediliyor");
             User user = toEntity(request, encodedPassword, generatedEmployeeNumber);
             user.setActive(true);
+            user.setCreatedAt(LocalDateTime.now());
             userRepository.save(user);
             log.info("Yeni kullanıcı veritabanına kaydedildi. employeeNumber: {}", generatedEmployeeNumber);
 
