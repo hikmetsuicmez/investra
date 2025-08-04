@@ -116,7 +116,7 @@ public class PortfolioUpdateService {
                         .portfolio(portfolio)
                         .stock(stock)
                         .quantity(quantity)
-                        .avgPrice(stock.getCurrentPrice()) // Ortalama fiyat olarak güncel fiyatı alıyoruz
+                        .avgPrice(stock.getPrice()) // Ortalama fiyat olarak güncel fiyatı alıyoruz
                         .lastUpdated(LocalDateTime.now())
                         .build();
                 log.debug("Yeni portföy öğesi oluşturuldu. Müşteri: {}, Hisse: {}, Miktar: {}",
