@@ -51,7 +51,7 @@ public class StockService {
      * Belirli bir hisse senedini kodu ile getirir
      */
     public Optional<Stock> getStockByCode(String stockCode) {
-        Optional<Stock> stockOpt = stockRepository.findByCode(stockCode);
+        Optional<Stock> stockOpt = stockRepository.findByCode((stockCode));
 
         if (stockOpt.isEmpty()) {
             log.info("Veritabanında {} kodlu hisse senedi bulunamadı, API'den alınıyor", stockCode);

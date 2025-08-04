@@ -113,7 +113,7 @@ public class DataInitializer implements CommandLineRunner {
                 .name("Türk Hava Yolları")
                 .symbol("THYAO")
                 .group(StockGroup.TECHNOLOGY)
-                .currentPrice(new BigDecimal("210.00"))
+                .price(new BigDecimal("210.00"))
                 .isActive(true)
                 .source(StockSource.BIST)
                 .createdAt(LocalDateTime.now())
