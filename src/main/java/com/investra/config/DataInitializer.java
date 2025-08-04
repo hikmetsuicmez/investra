@@ -103,8 +103,19 @@ public class DataInitializer implements CommandLineRunner {
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        Stock stock3 = Stock.builder()
+                .name("Türk Hava Yolları")
+                .symbol("THYAO")
+                .group(StockGroup.TECHNOLOGY)
+                .currentPrice(new BigDecimal("210.00"))
+                .isActive(true)
+                .source(StockSource.BIST)
+                .createdAt(LocalDateTime.now())
+                .build();
+
         stockRepository.save(stock1);
         stockRepository.save(stock2);
+        stockRepository.save(stock3);
 
         PortfolioItem item1 = PortfolioItem.builder()
                 .portfolio(portfolio)

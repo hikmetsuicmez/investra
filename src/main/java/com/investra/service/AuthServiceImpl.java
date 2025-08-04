@@ -72,35 +72,49 @@ public class AuthServiceImpl implements AuthService {
                         return new UserNotFoundException(userDetails.getUsername());
                     });
 
+            // Son giriş tarihini güncelle
             user.setLastLogin(LocalDateTime.now());
+
+            // firstLogin değerini kontrol et ve saklayalım
+            boolean isFirstLogin = user.isFirstLogin();
+
+            // Eğer bu ilk girişse, artık ilk giriş olmadığını işaretleyelim
+            if (isFirstLogin) {
+                user.setFirstLogin(false);
+                log.info("İlk giriş işareti kaldırıldı. email: {}", user.getEmail());
+            }
+
             userRepository.save(user);
-            log.info("Son giriş tarihi güncellendi. email: {}", user.getEmail());
+            log.info("Kullanıcı bilgileri güncellendi. email: {}", user.getEmail());
 
             String token = jwtUtil.generateToken(user.getEmail());
             log.debug("JWT token üretildi. email: {}", user.getEmail());
 
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setToken(token);
-            loginResponse.setFirstLogin(user.isFirstLogin());
+            loginResponse.setFirstLogin(isFirstLogin); // Orijinal firstLogin değerini döndür
             log.info("Giriş başarılı. email: {}", user.getEmail());
 
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.OK.value())
+                    .isSuccess(true)  // Bu eksikti!
                     .message("Giriş başarılı")
                     .data(loginResponse)
                     .build();
 
-        } catch (InvalidCredentialsException e) {
+        } catch (BadCredentialsException | InvalidCredentialsException e) {
             log.warn("Geçersiz giriş denemesi. email: {}", email);
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
+                    .isSuccess(false)
                     .message("E-posta veya şifre hatalı")
                     .build();
         } catch (Exception e) {
             log.error("Giriş işlemi sırasında beklenmeyen bir hata oluştu. email: {}, hata: {}", email, e.getMessage(), e);
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .message("Giriş işlemi sırasında bir hata oluştu: " + e.getMessage())
+                    .isSuccess(false)
+                    .message("Giriş işlemi sırasında bir hata oluştu")
                     .build();
         }
     }
@@ -112,36 +126,54 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("Şifre değiştirme isteği alındı. email: {}", authUser.getUsername());
 
-        User user = userRepository.findByEmail(authUser.getUsername())
-                .orElseThrow(() -> {
-                    log.error("Şifre değiştirme sırasında kullanıcı bulunamadı. email: {}", authUser.getUsername());
-                    return new UserNotFoundException(authUser.getUsername());
-                });
+        try {
+            User user = userRepository.findByEmail(authUser.getUsername())
+                    .orElseThrow(() -> {
+                        log.error("Şifre değiştirme sırasında kullanıcı bulunamadı. email: {}", authUser.getUsername());
+                        return new UserNotFoundException(authUser.getUsername());
+                    });
 
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            log.warn("Mevcut şifre hatalı. email: {}", authUser.getUsername());
-            throw new InvalidCredentialsException("Mevcut şifre hatalı");
+            if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                log.warn("Mevcut şifre hatalı. email: {}", authUser.getUsername());
+                throw new InvalidCredentialsException("Mevcut şifre hatalı");
+            }
+
+            if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+                log.warn("Yeni şifre ve tekrarı uyuşmuyor. email: {}", authUser.getUsername());
+                throw new InvalidCredentialsException("Yeni şifre ve şifre tekrarı eşleşmiyor");
+            }
+
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            log.debug("Yeni şifre encode edildi. email: {}", authUser.getUsername());
+
+            // İlk kez giriş yapmışsa, artık ilk giriş değil
+            if (user.isFirstLogin()) {
+                user.setFirstLogin(false);
+                log.debug("Kullanıcının ilk giriş durumu güncellendi. email: {}", authUser.getUsername());
+            }
+            userRepository.save(user);
+            log.info("��ifre başarıyla değiştirildi. email: {}", authUser.getUsername());
+
+            return Response.<Void>builder()
+                    .statusCode(HttpStatus.OK.value())
+                    .isSuccess(true)
+                    .message("Şifreniz başarıyla değiştirildi")
+                    .build();
+        } catch (InvalidCredentialsException e) {
+            log.warn("Şifre değiştirme hatası: {}", e.getMessage());
+            return Response.<Void>builder()
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .isSuccess(false)
+                    .message(e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            log.error("Şifre değiştirme sırasında beklenmeyen hata: {}", e.getMessage(), e);
+            return Response.<Void>builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .isSuccess(false)
+                    .message("Şifre değiştirme sırasında bir hata oluştu")
+                    .build();
         }
-
-        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            log.warn("Yeni şifre ve tekrarı uyuşmuyor. email: {}", authUser.getUsername());
-            throw new InvalidCredentialsException("Yeni şifre ve şifre tekrarı eşleşmiyor");
-        }
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        log.debug("Yeni şifre encode edildi. email: {}", authUser.getUsername());
-
-        // İlk kez giriş yapmışsa, artık ilk giriş değil
-        if (user.isFirstLogin()) {
-            user.setFirstLogin(false);
-            log.debug("Kullanıcının ilk giriş durumu güncellendi. email: {}", authUser.getUsername());
-        }
-        userRepository.save(user);
-        log.info("Şifre başarıyla değiştirildi. email: {}", authUser.getUsername());
-
-        return Response.<Void>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Şifreniz başarıyla değiştirildi")
-                .build();
     }
 
     @Override
@@ -151,7 +183,7 @@ public class AuthServiceImpl implements AuthService {
         boolean emailExists = userRepository.findByEmail(email).isPresent();
 
         if (!emailExists) {
-            log.info("Şifre sıfırlama isteği yapılan email bulunamadı: {}", email);
+            log.info("Şifre s��fırlama isteği yapılan email bulunamadı: {}", email);
             throw new UserNotFoundException("Bu e-posta adresi ile kayıtlı bir kullanıcı bulunamadı");
         }
 
@@ -202,6 +234,7 @@ public class AuthServiceImpl implements AuthService {
                     log.info("Şifre sıfırlama işlemi tamamlandı. email: {}", user.getEmail());
                     return Response.<Void>builder()
                             .statusCode(HttpStatus.OK.value())
+                            .isSuccess(true)
                             .message("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
                             .build();
                 })
@@ -239,6 +272,7 @@ public class AuthServiceImpl implements AuthService {
 
                     return Response.<Void>builder()
                             .statusCode(HttpStatus.OK.value())
+                            .isSuccess(true)
                             .message("Şifreniz başarıyla sıfırlandı")
                             .build();
                 })
