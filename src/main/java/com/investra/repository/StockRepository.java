@@ -19,7 +19,4 @@ public interface StockRepository extends JpaRepository<Stock,Long> {
 
     // Sektöre göre hisse senetlerini arar
     List<Stock> findBySectorContainingIgnoreCase(String sector);
-
-    // Aktif olan tüm hisse senetlerini getirir
-    List<Stock> findByIsActiveTrue();
 }
