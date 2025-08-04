@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,6 +49,7 @@ public class AdminServiceImpl implements AdminService {
 
             User user = toEntity(request, encodedPassword, generatedEmployeeNumber);
             user.setActive(true);
+            user.setCreatedAt(LocalDateTime.now());
             userRepository.save(user);
 
             Map<String, Object> templateVariables = new HashMap<>();

@@ -13,4 +13,16 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     // Mavi Kart Numarası ile arama
     Optional<Client> findByBlueCardNo(String blueCardNo);
+    Optional<Client> findByEmail(String email);
+    Optional<Client> findByPassportNo(String passportNo);
+    Optional<Client> findByTaxNumber(String taxNumber);
+    Optional<Client> findFirstByNationalityNumberOrPassportNoOrBlueCardNoOrTaxNumberOrRegistrationNumber(
+            String nationalityNumber,
+            String passportNo,
+            String blueCardNo,
+            String taxNumber,
+            String registrationNumber
+    );
+
+
 }
