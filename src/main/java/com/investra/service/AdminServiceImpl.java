@@ -41,16 +41,28 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public Response<CreateUserResponse> createUser(CreateUserRequest request) {
         String generatedEmployeeNumber = employeeNumberGenerator.generateNext();
+        log.info("createUser çağrıldı. employeeNumber: {}, email: {}, tckn: {}",
+                generatedEmployeeNumber, request.getEmail(), request.getNationalityNumber());
+
         try {
-            duplicateResourceCheck(() -> userRepository.findByNationalityNumber(request.getNationalityNumber()).isPresent(), "Bu TCKN ile kayıtlı bir kullanıcı mevcut");
-            duplicateResourceCheck(() -> userRepository.findByEmail(request.getEmail()).isPresent(), "Bu email ile kayıtlı bir kullanıcı mevcut");
+            log.debug("TCKN kontrolü yapılıyor");
+            duplicateResourceCheck(() -> userRepository.findByNationalityNumber(request.getNationalityNumber()).isPresent(),
+                    "Bu TCKN ile kayıtlı bir kullanıcı mevcut");
+
+            log.debug("Email kontrolü yapılıyor");
+            duplicateResourceCheck(() -> userRepository.findByEmail(request.getEmail()).isPresent(),
+                    "Bu email ile kayıtlı bir kullanıcı mevcut");
+
+            log.debug("Şifre oluşturuluyor");
             String rawPassword = PasswordGenerator.generatePassword(10);
             String encodedPassword = passwordEncoder.encode(rawPassword);
 
+            log.debug("User nesnesi oluşturuluyor ve kaydediliyor");
             User user = toEntity(request, encodedPassword, generatedEmployeeNumber);
             user.setActive(true);
             user.setCreatedAt(LocalDateTime.now());
             userRepository.save(user);
+            log.info("Yeni kullanıcı veritabanına kaydedildi. employeeNumber: {}", generatedEmployeeNumber);
 
             Map<String, Object> templateVariables = new HashMap<>();
             templateVariables.put("title", "Investra'ya Hoş Geldiniz!");
@@ -60,6 +72,7 @@ public class AdminServiceImpl implements AdminService {
             templateVariables.put("password", rawPassword);
             templateVariables.put("loginUrl", FRONTEND_URL + "/auth/login");
 
+            log.debug("Email içeriği hazırlanıyor");
             String emailContent = emailTemplateService.processTemplate("user-welcome", templateVariables);
 
             NotificationDTO notificationDTO = NotificationDTO.builder()
@@ -71,6 +84,7 @@ public class AdminServiceImpl implements AdminService {
                     .build();
 
             try {
+                log.debug("Email gönderimi başlatılıyor: {}", user.getEmail());
                 notificationService.sendEmail(notificationDTO);
                 log.info("Email başarıyla gönderildi: {}", user.getEmail());
             } catch (Exception e) {
@@ -80,28 +94,47 @@ public class AdminServiceImpl implements AdminService {
 
             CreateUserResponse response = toResponse(request, rawPassword, generatedEmployeeNumber);
 
+            log.info("Kullanıcı başarıyla oluşturuldu. employeeNumber: {}", generatedEmployeeNumber);
             return Response.<CreateUserResponse>builder()
                     .statusCode(201)
-                    .message("Personel başarıyla eklendi")
+                    .message("Kullanıcı başarıyla eklendi")
                     .data(response)
                     .build();
         } catch (IllegalArgumentException e) {
+            log.warn("Kullanıcı oluşturulamadı: {}", e.getMessage());
             return Response.<CreateUserResponse>builder()
                     .statusCode(400)
                     .message(e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            log.error("Beklenmeyen bir hata oluştu: {}", e.getMessage(), e);
+            return Response.<CreateUserResponse>builder()
+                    .statusCode(500)
+                    .message("Beklenmeyen bir hata oluştu")
                     .build();
         }
     }
 
     @Override
     public Response<UpdateUserResponse> updateUser(String employeeNumber, UpdateUserRequest request) {
+        log.info("updateUser çağrıldı. employeeNumber: {}, request: {}", employeeNumber, request);
+
         try {
             User user = userRepository.findByEmployeeNumber(employeeNumber)
-                    .orElseThrow(() -> new IllegalArgumentException("Güncellenecek kullanıcı bulunamadı"));
+                    .orElseThrow(() -> {
+                        String msg = "Güncellenecek kullanıcı bulunamadı. employeeNumber: " + employeeNumber;
+                        log.warn(msg);
+                        return new IllegalArgumentException(msg);
+                    });
+            log.debug("Kullanıcı bulundu. employeeNumber: {} - Güncelleme başlatılıyor", employeeNumber);
 
             updateFields(user, request);
             userRepository.save(user);
+            log.debug("Kullanıcı veritabanına kaydedildi. employeeNumber: {}", employeeNumber);
+
             UpdateUserResponse response = toUpdateResponse(user);
+            log.info("Kullanıcı başarıyla güncellendi. employeeNumber: {}", employeeNumber);
+
             return Response.<UpdateUserResponse>builder()
                     .statusCode(200)
                     .message("Kullanıcı bilgileri güncellendi")
@@ -109,20 +142,34 @@ public class AdminServiceImpl implements AdminService {
                     .build();
 
         } catch (IllegalArgumentException e) {
+            log.error("Kullanıcı güncellenemedi: {}", e.getMessage());
             return Response.<UpdateUserResponse>builder()
                     .statusCode(404)
                     .message(e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            log.error("Beklenmeyen bir hata oluştu. employeeNumber: {}, hata: {}", employeeNumber, e.getMessage(), e);
+            return Response.<UpdateUserResponse>builder()
+                    .statusCode(500)
+                    .message("Beklenmeyen bir hata oluştu")
                     .build();
         }
     }
 
     @Override
     public Response<Void> deleteUser(String employeeNumber) {
+        log.info("deleteUser çağrıldı. employeeNumber: {}", employeeNumber);
+
         try {
             User user = userRepository.findByEmployeeNumber(employeeNumber)
-                    .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı"));
+                    .orElseThrow(() -> {
+                        String msg = "Kullanıcı bulunamadı. employeeNumber: " + employeeNumber;
+                        log.warn(msg);
+                        return new IllegalArgumentException(msg);
+                    });
 
             if (!user.isActive()) {
+                log.info("Kullanıcı zaten pasif durumda. employeeNumber: {}", employeeNumber);
                 return Response.<Void>builder()
                         .statusCode(400)
                         .message("Kullanıcı pasif durumda")
@@ -131,20 +178,25 @@ public class AdminServiceImpl implements AdminService {
 
             user.setActive(false);
             userRepository.save(user);
+            log.info("Kullanıcı başarıyla pasif hale getirildi. employeeNumber: {}", employeeNumber);
 
             return Response.<Void>builder()
                     .statusCode(200)
                     .message("Kullanıcı pasif hale getirildi")
                     .build();
         } catch (IllegalArgumentException e) {
+            log.error("Kullanıcı pasifleştirme sırasında hata oluştu: {}", e.getMessage());
             return Response.<Void>builder()
                     .statusCode(404)
                     .message(e.getMessage())
                     .build();
+        } catch (Exception e) {
+            log.error("Bilinmeyen bir hata oluştu. employeeNumber: {}, hata: {}", employeeNumber, e.getMessage(), e);
+            return Response.<Void>builder()
+                    .statusCode(500)
+                    .message("Beklenmeyen bir hata oluştu")
+                    .build();
         }
     }
-
-
-
 
 }

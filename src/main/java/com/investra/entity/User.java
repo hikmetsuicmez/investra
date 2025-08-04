@@ -34,6 +34,7 @@ public class User {
     @Column(unique = true)
     private String nationalityNumber;
 
+    @Builder.Default
     private boolean firstLogin = true;  // Varsayılan olarak ilk giriş true olsun
 
     @Enumerated(EnumType.STRING)

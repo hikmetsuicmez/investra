@@ -49,6 +49,8 @@ public class TradeOrder {
     @Column(nullable = false)
     private Integer quantity;
 
+    private String orderNumber;
+
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal totalAmount;
 

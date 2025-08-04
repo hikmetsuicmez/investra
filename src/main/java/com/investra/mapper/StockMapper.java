@@ -1,8 +1,10 @@
 package com.investra.mapper;
 
 import com.investra.dtos.response.ClientStockHoldingResponse;
+import com.investra.dtos.response.StockResponse;
 import com.investra.dtos.response.StockSellOrderPreviewResponse;
 import com.investra.entity.PortfolioItem;
+import com.investra.entity.Stock;
 import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderType;
 import com.investra.enums.StockGroup;
@@ -59,4 +61,15 @@ public class StockMapper {
                 .build();
     }
 
+    public static StockResponse toStockResponse(Stock stock) {
+
+        return StockResponse.builder()
+                .id(stock.getId())
+                .name(stock.getName())
+                .symbol(stock.getSymbol())
+                .currentPrice(stock.getCurrentPrice())
+                .stockGroup(stock.getGroup().name())
+                .isActive(stock.getIsActive())
+                .build();
+    }
 }

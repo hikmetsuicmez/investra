@@ -27,10 +27,14 @@ public class ApiEndpoints {
 
         public static final String BASE = "/api/v1/stocks";
         public static final String SELL = "/sell"; // Hisse senedi satışı
+        public static final String BUY = "/buy"; // Hisse senedi alımı
         public static final String SEARCH_CLIENT = "/search-client"; // Hisse senedi arama
-        public static final String CLIENT_STOCK_HOLDINGS = "/client/{clientId}/stocks"; // Hisse senedi detayları
+        public static final String CLIENT_STOCK_HOLDINGS = "/client/{clientId}/stocks"; // Müşterinin Hisse senedi detayları
+        public static final String AVAILABLE_STOCKS = "/available"; // Mevcut hisse senetleri
         public static final String PREVIEW_SELL_ORDER = "/preview"; // Satış önizleme
+        public static final String PREVIEW_BUY_ORDER = "/preview"; // Alış önizleme
         public static final String EXECUTE_SELL_ORDER = "/execute"; // Satış işlemi
+        public static final String EXECUTE_BUY_ORDER = "/execute"; // Alış işlemi
     }
 
     public static final class Client {
