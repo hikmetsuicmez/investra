@@ -42,15 +42,12 @@ public abstract class AbstractStockTradeService implements StockTradeService {
                 .build();
     }
 
-    /**
-     * Müşteri arama stratejisini belirler - tüm alt sınıflar için ortak arama tipleri
-     */
     protected Function<String, Optional<Client>> getStringOptionalFunction(ClientSearchRequest request) {
         Map<String, Function<String, Optional<Client>>> searchStrategy = Map.of(
                 "TCKN", clientRepository::findByNationalityNumber,
                 "VERGI_NO", clientRepository::findByTaxId,
                 "MAVI_KART_NO", clientRepository::findByBlueCardNo,
-                "NAME", this::findClientByName
+                "ISIM", this::findClientByName
         );
 
         return searchStrategy.get(request.getSearchType());
