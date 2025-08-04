@@ -1,19 +1,16 @@
 package com.investra.service;
 
-import com.investra.dtos.request.ClientSearchRequest;
 import com.investra.dtos.request.StockSellOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.entity.*;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
 import com.investra.exception.*;
-import com.investra.mapper.ClientMapper;
 import com.investra.mapper.StockMapper;
 import com.investra.repository.*;
 import com.investra.service.helper.*;
 import com.investra.service.helper.EntityFinderService.OrderEntities;
 import com.investra.service.helper.OrderCalculationService.OrderCalculation;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,17 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
-public class StockSellServiceImpl implements StockSellService {
+public class StockSellServiceImpl extends AbstractStockTradeService implements StockSellService {
 
-    private final ClientRepository clientRepository;
-    private final AccountRepository accountRepository;
     private final PortfolioItemRepository portfolioItemRepository;
     private final TradeOrderRepository tradeOrderRepository;
 
@@ -42,54 +33,60 @@ public class StockSellServiceImpl implements StockSellService {
     private final PortfolioUpdateService portfolioUpdateService;
     private final OrderPreviewCacheService previewCacheService;
 
-    @Override
-    public Response<List<ClientSearchResponse>> searchClients(ClientSearchRequest request) {
-        var strategy = getStringOptionalFunction(request);
-        List<Client> clients = strategy != null
-                ? strategy.apply(request.getSearchTerm()).map(List::of).orElse(List.of())
-                : List.of();
-
-        List<ClientSearchResponse> responseClients = clients.stream()
-                .map(ClientMapper::mapToClientSearchResponse)
-                .toList();
-
-        return Response.<List<ClientSearchResponse>>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Müşteri bulundu")
-                .data(responseClients)
-                .build();
-    }
-
-    private Function<String, Optional<Client>> getStringOptionalFunction(ClientSearchRequest request) {
-        var searchStrategies = Map.of(
-                "TCKN", clientRepository::findByNationalityNumber,
-                "VERGI_N0", clientRepository::findByTaxId,
-                "MAVI_KART_NO", clientRepository::findByBlueCardNo,
-                "NAME", (Function<String, Optional<Client>>) term ->
-                        clientRepository.findAll().stream()
-                                .filter(client -> client.getFullName().toLowerCase().contains(term.toLowerCase()))
-                                .findFirst()
-
-        );
-        return searchStrategies.get(request.getSearchType());
+    public StockSellServiceImpl(
+            ClientRepository clientRepository,
+            PortfolioItemRepository portfolioItemRepository,
+            TradeOrderRepository tradeOrderRepository,
+            OrderValidatorService validatorService,
+            EntityFinderService entityFinderService,
+            OrderCalculationService calculationService,
+            PortfolioUpdateService portfolioUpdateService,
+            OrderPreviewCacheService previewCacheService) {
+        super(clientRepository);
+        this.portfolioItemRepository = portfolioItemRepository;
+        this.tradeOrderRepository = tradeOrderRepository;
+        this.validatorService = validatorService;
+        this.entityFinderService = entityFinderService;
+        this.calculationService = calculationService;
+        this.portfolioUpdateService = portfolioUpdateService;
+        this.previewCacheService = previewCacheService;
     }
 
     @Override
     public Response<List<ClientStockHoldingResponse>> getClientStockHoldings(Long clientId) {
-        Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new ClientNotFoundException(clientId));
+        try {
+            Client client = clientRepository.findById(clientId)
+                    .orElseThrow(() -> new ClientNotFoundException(clientId));
 
-        List<PortfolioItem> portfolioItems = portfolioItemRepository.findByClientId(client.getId());
+            List<PortfolioItem> portfolioItems = portfolioItemRepository.findByClientId(client.getId());
 
-        List<ClientStockHoldingResponse> stockHoldings = portfolioItems.stream()
-                .map(StockMapper::mapToClientStockHoldingResponse)
-                .toList();
+            List<ClientStockHoldingResponse> stockHoldings = portfolioItems.stream()
+                    .map(StockMapper::mapToClientStockHoldingResponse)
+                    .toList();
 
-        return Response.<List<ClientStockHoldingResponse>>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Müşteri bulundu")
-                .data(stockHoldings)
-                .build();
+            return Response.<List<ClientStockHoldingResponse>>builder()
+                    .statusCode(HttpStatus.OK.value())
+                    .isSuccess(true)
+                    .message("Müşteri portföy bilgileri getirildi")
+                    .data(stockHoldings)
+                    .build();
+        } catch (ClientNotFoundException e) {
+            log.warn("Müşteri bulunamadı: {}", e.getMessage());
+            return Response.<List<ClientStockHoldingResponse>>builder()
+                    .statusCode(HttpStatus.NOT_FOUND.value())
+                    .isSuccess(false)
+                    .message(e.getMessage())
+                    .errorCode(ErrorCode.CLIENT_NOT_FOUND)
+                    .build();
+        } catch (Exception e) {
+            log.error("Müşteri portföy bilgileri getirilirken hata oluştu: {}", e.getMessage(), e);
+            return Response.<List<ClientStockHoldingResponse>>builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .isSuccess(false)
+                    .message("Portföy bilgileri getirilirken hata oluştu")
+                    .errorCode(ErrorCode.UNEXPECTED_ERROR)
+                    .build();
+        }
     }
 
     @Override
@@ -100,7 +97,7 @@ public class StockSellServiceImpl implements StockSellService {
             validatorService.validateSellOrderRequest(request);
 
             // Borsa ve hisse senedi durumunu kontrol et
-            // validatorService.validateOrderExecution(request.getStockId());
+            validatorService.validateOrderExecution(request.getStockId());
 
             // Gerekli varlıkları bul ve doğrula
             OrderEntities entities = entityFinderService.findAndValidateEntities(request);
@@ -119,21 +116,25 @@ public class StockSellServiceImpl implements StockSellService {
 
             return Response.<StockSellOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.OK.value())
+                    .isSuccess(true)
                     .message("Satış önizleme başarılı")
                     .data(previewResponse)
                     .build();
-        } catch (ValidationException | StockNotFoundException | ClientNotFoundException |
-                 AccountNotFoundException | InsufficientStockException | InactiveStockException e) {
+        } catch (BaseException e) {
             log.warn("Önizleme hatası: {}", e.getMessage());
             return Response.<StockSellOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .isSuccess(false)
                     .message(e.getMessage())
+                    .errorCode(e.getErrorCode())
                     .build();
         } catch (Exception e) {
             log.error("Önizleme sırasında beklenmeyen bir hata oluştu: {}", e.getMessage(), e);
             return Response.<StockSellOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .isSuccess(false)
                     .message("Önizleme sırasında bir hata oluştu")
+                    .errorCode(ErrorCode.UNEXPECTED_ERROR)
                     .build();
         }
     }
@@ -142,8 +143,17 @@ public class StockSellServiceImpl implements StockSellService {
     @Transactional
     public Response<StockSellOrderResultResponse> executeSellOrder(StockSellOrderRequest request, String userEmail) {
         try {
-            // Önizleme doğrulaması
-            previewCacheService.validatePreview(request.getPreviewId(), request);
+            // Preview onayı kontrolü
+            if (request.getPreviewId() == null) {
+                throw new ValidationException("Preview ID gereklidir");
+            }
+
+            // Önizleme istediğinin önbellekte olup olmadığı kontrol edilir
+            StockSellOrderRequest cachedRequest = previewCacheService.getPreviewRequest(request.getPreviewId());
+
+            if (cachedRequest == null) {
+                throw new ValidationException("Geçersiz veya süresi dolmuş önizleme ID'si");
+            }
 
             // İsteği doğrula
             validatorService.validateSellOrderRequest(request);
@@ -176,6 +186,8 @@ public class StockSellServiceImpl implements StockSellService {
                     .user(submittedBy)
                     .submittedAt(LocalDateTime.now())
                     .executedAt(LocalDateTime.now().plusDays(2))
+                    .netAmount(calculation.netAmount())
+                    .orderNumber(calculationService.generateOrderNumber())
                     .build();
 
             tradeOrder = tradeOrderRepository.save(tradeOrder);
@@ -189,11 +201,10 @@ public class StockSellServiceImpl implements StockSellService {
                 log.info("Müşteri {} tüm {} hisselerini sattı, portföyden kaldırıldı.",
                         entities.client().getId(), entities.stock().getSymbol());
             }
-
             portfolioUpdateService.updateAccountBalanceAfterSell(entities.account(), calculation.netAmount());
 
-            // Önizlemeyi önbellekten kaldır
-            previewCacheService.removePreview(request.getPreviewId());
+            // Önizlemeyi önbellekten kald��r
+            previewCacheService.removeOrderPreview(request.getPreviewId());
 
             log.info("Satış emri oluşturuldu: {}", tradeOrder.getId());
 
@@ -221,6 +232,7 @@ public class StockSellServiceImpl implements StockSellService {
 
             return Response.<StockSellOrderResultResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .isSuccess(true)
                     .message(e.getMessage())
                     .data(errorResponse)
                     .build();

@@ -14,4 +14,5 @@ public class ValidationException extends BaseException {
     public ValidationException(String message, Throwable cause) {
         super(message, ErrorCode.VALIDATION_ERROR, HttpStatus.BAD_REQUEST, cause);
     }
+
 }
