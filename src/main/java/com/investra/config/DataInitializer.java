@@ -84,9 +84,17 @@ public class DataInitializer implements CommandLineRunner {
         // Müşteriye takas hesabı oluşturma
         Account takasAccount = Account.builder()
                 .client(client)
-                .accountNumber("TR12345678901234567890")
+                .nickname("Ana Takas Hesabı")  // nickName -> nickname
+                .iban("TR123456789012345678901234")
+                .accountNumberAtBroker("TAKAS001")
+                .brokerName("Örnek Menkul Değerler")
+                .brokerCode("ORNEK001")
+                .custodianName("Takasbank")
+                .custodianCode("TKSBNK")
                 .accountType(AccountType.SETTLEMENT)
                 .balance(new BigDecimal("100000.00"))
+                .availableBalance(new BigDecimal("100000.00"))  // Bu alan eksikti
+                .isPrimarySettlement(true)
                 .createdAt(LocalDateTime.now())
                 .currency(Currency.TRY)
                 .build();
