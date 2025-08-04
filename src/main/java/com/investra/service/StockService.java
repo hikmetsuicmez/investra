@@ -34,7 +34,7 @@ public class StockService {
      * Tüm hisse senetlerini getirir, önce veritabanından
      * yoksa API'den çeker ve veritabanına kaydeder
      */
-    @Cacheable("stocks")
+    @Cacheable(value = "stocks", key = "'all_stocks'")
     public List<Stock> getAllStocks() {
         List<Stock> stocks = stockRepository.findAll();
 
@@ -50,6 +50,7 @@ public class StockService {
     /**
      * Belirli bir hisse senedini kodu ile getirir
      */
+    @Cacheable(value = "stocks", key = "#stockCode")
     public Optional<Stock> getStockByCode(String stockCode) {
         Optional<Stock> stockOpt = stockRepository.findByCode((stockCode));
 

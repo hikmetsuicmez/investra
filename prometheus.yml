@@ -1,8 +1,10 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
   - job_name: 'spring-actuator'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['investra-app:8088']
+      - targets: ['investra-app:8089']
+    scrape_interval: 5s

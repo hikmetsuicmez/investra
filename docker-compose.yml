@@ -4,43 +4,77 @@ services:
     container_name: investra-app
     ports:
       - "8088:8088"
+      - "8089:8089"  # Actuator port
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_REDIS_HOST=redis
-      - SPRING_REDIS_PORT=6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DATABASE_URL=jdbc:sqlserver://192.168.144.76:1450;databaseName=Kizikos;encrypt=true;trustServerCertificate=true
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - INFINA_API_KEY=${INFINA_API_KEY}
+      - INFINA_API_URL=${INFINA_API_URL}
     depends_on:
       - redis
     networks:
       - investra-network
+    volumes:
+      - app-logs:/app/logs
 
   redis:
-    image: redis:latest
+    image: redis:7-alpine
+    container_name: investra-redis
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
     networks:
       - investra-network
+    command: redis-server --appendonly yes
 
   prometheus:
     image: prom/prometheus:latest
+    container_name: investra-prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
     ports:
       - "9090:9090"
     networks:
       - investra-network
+    depends_on:
+      app:
+        condition: service_started
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
+    container_name: investra-grafana
     ports:
       - "3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_started
     networks:
       - investra-network
+    restart: unless-stopped
 
 networks:
   investra-network:
@@ -49,3 +83,5 @@ networks:
 volumes:
   redis-data:
   grafana-data:
+  prometheus-data:
+  app-logs:

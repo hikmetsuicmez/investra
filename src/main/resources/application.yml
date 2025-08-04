@@ -6,7 +6,6 @@ spring:
   application:
     name: investra
 
-
   # Cache yapılandırması
   cache:
     type: redis
@@ -61,9 +60,9 @@ management:
       show-details: always
     prometheus:
       enabled: true
-  metrics:
-    export:
-      prometheus:
+  prometheus:
+    metrics:
+      export:
         enabled: true
 
 # JWT Secret key değeri
@@ -78,5 +77,5 @@ app:
 # Infina API Configuration
 infina:
   api:
-    base-url: https://apitest.infina.com.tr/infina-services/rest/srv/v1.1
-    key: XvusCI7S4hyr008JUcPyiAdMSzSHKmWa99VYFXeU
+    base-url: ${INFINA_API_URL:}
+    key: ${INFINA_API_KEY}
