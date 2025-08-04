@@ -35,7 +35,7 @@ public class OrderCalculationService {
                     : CORPORATE_COMMISION_RATE;
 
             BigDecimal price = request.getExecutionType() == ExecutionType.MARKET
-                    ? stock.getCurrentPrice()
+                    ? stock.getPrice()
                     : request.getPrice();
 
             if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {

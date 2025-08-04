@@ -20,7 +20,7 @@ public class StockMapper {
                 .stockGroup(portfolioItem.getStock().getGroup())
                 .availableQuantity(portfolioItem.getQuantity())
                 .avgPrice(portfolioItem.getAvgPrice())
-                .currentPrice(portfolioItem.getStock().getCurrentPrice())
+                .currentPrice(portfolioItem.getStock().getPrice())
                 .build();
     }
 
