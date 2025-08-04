@@ -1,13 +1,13 @@
 package com.investra.entity;
 
 import com.investra.enums.ClientStatus;
+import com.investra.enums.ClientType;
+import com.investra.enums.EstimatedTransactionVolume;
 import com.investra.enums.Gender;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,15 +25,46 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Ortak Alanlar
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
-    @Column(name = "vergi_no", unique = true)
-    private String vergiNo;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "client_type", nullable = false)
+    private ClientType clientType; // BIREYSEL veya KURUMSAL
 
-    @Column(name = "tckn", unique = true)
-    private String tckn;
+    @Column(name = "email", nullable = false)
+    private String email;
+
+    @Column(name = "phone", nullable = false)
+    private String phone;
+
+    @Column(name = "address", columnDefinition = "TEXT", nullable = false)
+    private String address;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private ClientStatus status;
+
+    @Column(name = "is_active")
+    private Boolean isActive;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    // bireysel müşteri
+    @Column(name = "full_name")
+    private String fullName;
+
+    @Column(name = "nationality_type") // true: TC, false: Yabancı
+    private Boolean nationalityType;
+
+    @Column(name = "tax_id", unique = true)
+    private String taxId; // T.C. kimlik no
 
     @Column(name = "passport_no", unique = true)
     private String passportNo;
@@ -41,63 +72,53 @@ public class Client {
     @Column(name = "blue_card_no", unique = true)
     private String blueCardNo;
 
-    @Column(name = "full_name")
-    private String fullName;
-
-    @Column(name = "nationality_type") // true: TC, false: Yabancı
-    private Boolean nationalityType;
-
-    @Column(name = "email")
-    private String email;
+    @Column(name = "nationality_number", unique = true)
+    private String nationalityNumber;
 
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @Column(name = "phone")
-    private String phone;
-
-    @Column(name = "address", columnDefinition = "TEXT")
-    private String address;
-
-    @Column(name = "occupation")
-    private String occupation;
-
-    @Column(name = "notes", columnDefinition = "TEXT")
-    private String notes;
+    @Column(name = "profession")
+    private String profession;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender")
     private Gender gender;
 
-    @Column(name = "education_status") // VARCHAR/TEXT
+    @Column(name = "education_status")
     private String educationStatus;
 
     @Column(name = "monthly_income")
-    private String monthlyIncome;
+    private BigDecimal monthlyIncome;
 
     @Column(name = "estimated_transaction_volume")
-    private String estimatedTransactionVolume;
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private ClientStatus status;
+    private EstimatedTransactionVolume estimatedTransactionVolume;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
 
-    @Column(name = "is_active")
-    private Boolean isActive;
+    // kurumsal müşteri
+    @Column(name = "company_name")
+    private String companyName;
 
-    @Column(name = "client_type")
-    private String clientType;
+    @Column(name = "tax_number", unique = true)
+    private String taxNumber;
+
+    @Column(name = "registration_number", unique = true)
+    private String registrationNumber;
 
     @Column(name = "company_type")
     private String companyType;
 
+    @Column(name = "sector")
+    private String sector;
+
+    @Column(name = "monthly_revenue")
+    private BigDecimal monthlyRevenue;
+
+    // İLİŞKİLER
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Portfolio> portfolios = new ArrayList<>();
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TradeOrder> tradeOrders = new ArrayList<>();
-
 }

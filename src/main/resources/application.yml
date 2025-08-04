@@ -74,3 +74,9 @@ app:
   frontendUrl: ${FRONTEND_URL}
 # Logo URL
   logo-url: /images/logo.png
+
+# Infina API Configuration
+infina:
+  api:
+    base-url: https://apitest.infina.com.tr/infina-services/rest/srv/v1.1
+    key: XvusCI7S4hyr008JUcPyiAdMSzSHKmWa99VYFXeU

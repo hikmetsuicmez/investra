@@ -43,8 +43,8 @@ public class Account {
     private AccountType accountType;
 
     //farklı currencylerde varsa hangisi primary belirtmek için
-    @Column(name = "is_primary_takas")
-    private boolean isPrimaryTakas;
+    @Column(name = "is_primary_settlement")
+    private boolean isPrimarySettlement;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

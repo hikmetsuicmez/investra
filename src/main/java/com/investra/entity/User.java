@@ -26,10 +26,15 @@ public class User {
     private String username;
     private String email;
     private String password;
-    private String sicilNo;
-    private String phoneNumber;
-    private String tckn;
 
+    @Column(unique = true)
+    private String employeeNumber;
+    private String phoneNumber;
+
+    @Column(unique = true)
+    private String nationalityNumber;
+
+    @Builder.Default
     private boolean firstLogin = true;  // Varsayılan olarak ilk giriş true olsun
 
     @Enumerated(EnumType.STRING)

@@ -14,11 +14,11 @@ public class CreateUserResponse {
 
     private String lastName;
 
-    private String sicilNo;
+    private String employeeNumber;
 
     private Role role;
 
-    private String tckn;
+    private String nationalityNumber;
 
     private String phoneNumber;
 
