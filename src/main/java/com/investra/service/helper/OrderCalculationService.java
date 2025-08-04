@@ -34,16 +34,16 @@ public class OrderCalculationService {
                     ? INDIVIDUAL_COMMISION_RATE
                     : CORPORATE_COMMISION_RATE;
 
-            BigDecimal price = request.getExecutionType() == ExecutionType.MARKET
-                    ? stock.getPrice()
-                    : request.getPrice();
+            BigDecimal orderPrice = executionType == ExecutionType.MARKET
+                    ? stock.getCurrentPrice()
+                    : BigDecimal.valueOf(price);
 
-            if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Geçersiz fiyat: " + price);
+            if (orderPrice == null || orderPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Geçersiz fiyat: " + orderPrice);
             }
             BigDecimal quantity = BigDecimal.valueOf(request.getQuantity());
 
-            BigDecimal commission = price
+            BigDecimal commission = orderPrice
                     .multiply(quantity)
                     .multiply(commissionRate)
                     .setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
@@ -55,7 +55,7 @@ public class OrderCalculationService {
             BigDecimal totalTaxAndCommission = commission.add(bsmv)
                     .setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
 
-            BigDecimal totalAmount = price
+            BigDecimal totalAmount = orderPrice
                     .multiply(quantity)
                     .setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
 
@@ -64,7 +64,7 @@ public class OrderCalculationService {
                     .setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
 
             return new OrderCalculation(
-                    price,
+                    orderPrice,
                     commission,
                     bsmv,
                     totalTaxAndCommission,
