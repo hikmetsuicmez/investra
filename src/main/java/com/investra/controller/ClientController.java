@@ -2,6 +2,7 @@ package com.investra.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.investra.constants.ApiEndpoints;
+import com.investra.docs.ClientApiDocs;
 import com.investra.dtos.request.CreateClientRequest;
 import com.investra.dtos.request.CreateCorporateClientRequest;
 import com.investra.dtos.request.CreateIndividualClientRequest;
@@ -24,7 +25,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping(ApiEndpoints.Client.BASE)
 @RequiredArgsConstructor
-public class ClientController {
+public class ClientController implements ClientApiDocs {
     @Autowired
     ObjectMapper objectMapper;
     private final ClientService clientService;
@@ -84,7 +85,5 @@ public class ClientController {
                         .build()
         );
     }
-
-
 }
 

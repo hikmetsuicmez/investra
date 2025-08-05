@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 
@@ -22,14 +24,19 @@ public interface ClientApiDocs {
     @ApiResponse(responseCode = "400", description = "Geçersiz istek veya müşteri tipi", content = @Content(schema = @Schema(implementation = Response.class)))
     @ApiResponse(responseCode = "401", description = "Yetkilendirme hatası", content = @Content(schema = @Schema(implementation = Response.class)))
     @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
-    ResponseEntity<Response<CreateClientResponse>> createClient(@Parameter(description = "Müşteri oluşturma verileri (JSON)", required = true) Map<String, Object> payload);
+    public ResponseEntity<Response<CreateClientResponse>> createUser(@Parameter Map<String, Object> payload);
 
     @Operation(summary = "Müşteriyi Kimlik Bilgisine Göre Getir", description = "TCKN, Pasaport No, Mavi Kart No, Vergi No veya Sicil No bilgisiyle müşteriyi sorgular.")
     @ApiResponse(responseCode = "200", description = "Müşteri başarıyla bulundu", content = @Content(schema = @Schema(implementation = Response.class)))
     @ApiResponse(responseCode = "404", description = "Müşteri bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
     @ApiResponse(responseCode = "400", description = "Geçersiz istek", content = @Content(schema = @Schema(implementation = Response.class)))
     @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
-    ResponseEntity<Response<ClientSearchResponse>> getClientByIdentifier(@Parameter(description = "T.C. Kimlik Numarası", required = false) @org.springframework.web.bind.annotation.RequestParam(required = false) String taxId, @Parameter(description = "Pasaport Numarası", required = false) @org.springframework.web.bind.annotation.RequestParam(required = false) String passportNo, @Parameter(description = "Mavi Kart Numarası", required = false) @org.springframework.web.bind.annotation.RequestParam(required = false) String blueCardNo, @Parameter(description = "Vergi Numarası", required = false) @org.springframework.web.bind.annotation.RequestParam(required = false) String taxNumber, @Parameter(description = "Sicil Numarası", required = false) @org.springframework.web.bind.annotation.RequestParam(required = false) String registrationNumber);
-
-
+    @Parameter(name = "nationalityNumber", description = "TCKN (Türkiye Cumhuriyeti Kimlik Numarası)", required = false)
+    public ResponseEntity<Response<ClientSearchResponse>> findClient(
+            @Parameter String nationalityNumber,
+            @Parameter String passportNo,
+            @Parameter String blueCardNo,
+            @Parameter String taxNumber,
+            @Parameter String registrationNumber
+    );
 }
