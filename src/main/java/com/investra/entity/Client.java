@@ -56,6 +56,7 @@ public class Client {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+
     // bireysel müşteri
     @Column(name = "full_name")
     private String fullName;
