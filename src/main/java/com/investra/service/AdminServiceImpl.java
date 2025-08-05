@@ -2,15 +2,15 @@ package com.investra.service;
 
 import com.investra.dtos.request.CreateUserRequest;
 import com.investra.dtos.request.UpdateUserRequest;
-import com.investra.dtos.response.CreateUserResponse;
-import com.investra.dtos.response.NotificationDTO;
-import com.investra.dtos.response.Response;
-import com.investra.dtos.response.UpdateUserResponse;
+import com.investra.dtos.response.*;
 import com.investra.entity.User;
 import com.investra.enums.NotificationType;
+import com.investra.exception.UserNotFoundException;
+import com.investra.mapper.UserMapper;
 import com.investra.repository.UserRepository;
 import com.investra.utils.PasswordGenerator;
 import com.investra.utils.EmployeeNumberGenerator;
+import jakarta.validation.constraints.AssertFalse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.investra.utils.AdminOperationsValidator.duplicateResourceCheck;
@@ -197,6 +198,47 @@ public class AdminServiceImpl implements AdminService {
                     .message("Beklenmeyen bir hata oluştu")
                     .build();
         }
+    }
+
+    @Override
+    public Response<List<UserDTO>> retrieveAllUsers() {
+        List<User> users = userRepository.findAll();
+        log.info("retrieveAllUsers çağrıldı. Toplam kullanıcı sayısı: {}", users.size());
+        if (users.isEmpty()) {
+            log.info("Kullanıcı bulunamadı");
+            return Response.<List<UserDTO>>builder()
+                    .statusCode(404)
+                    .message("Kullanıcı bulunamadı")
+                    .data(List.of())
+                    .build();
+        }
+        log.debug("Kullanıcılar başarıyla alındı. Toplam kullanıcı sayısı: {}", users.size());
+        List<UserDTO> userDTOS = users.stream()
+                .map(UserMapper::toUserDTO)
+                .toList();
+
+        log.info("Kullanıcı DTO'ları başarıyla oluşturuldu. Toplam kullanıcı sayısı: {}", userDTOS.size());
+
+        return Response.<List<UserDTO>>builder()
+                .statusCode(200)
+                .message("Kullanıcılar başarıyla alındı")
+                .data(userDTOS)
+                .build();
+    }
+
+    @Override
+    public Response<UserDTO> retrieveUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        log.info("retrieveUser çağrıldı. Kullanıcı ID: {}", userId);
+        log.debug("Kullanıcı bulundu. ID: {}, Email: {}", user.getId(), user.getEmail());
+
+        UserDTO userDTO = UserMapper.toUserDTO(user);
+        return Response.<UserDTO>builder()
+                .statusCode(200)
+                .message("Kullanıcı başarıyla alındı")
+                .data(userDTO)
+                .build();
     }
 
 }

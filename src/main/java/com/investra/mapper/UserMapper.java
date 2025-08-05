@@ -4,6 +4,7 @@ import com.investra.dtos.request.CreateUserRequest;
 import com.investra.dtos.request.UpdateUserRequest;
 import com.investra.dtos.response.CreateUserResponse;
 import com.investra.dtos.response.UpdateUserResponse;
+import com.investra.dtos.response.UserDTO;
 import com.investra.entity.User;
 
 import java.util.Optional;
@@ -49,6 +50,20 @@ public class UserMapper {
 
     public static UpdateUserResponse toUpdateResponse(User user) {
         return UpdateUserResponse.builder()
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .nationalityNumber(user.getNationalityNumber())
+                .employeeNumber(user.getEmployeeNumber())
+                .phoneNumber(user.getPhoneNumber())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
+    }
+
+    public static UserDTO toUserDTO(User user) {
+        return UserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .nationalityNumber(user.getNationalityNumber())

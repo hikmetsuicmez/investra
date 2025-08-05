@@ -85,9 +85,17 @@ public class DataInitializer implements CommandLineRunner {
         // Müşteriye takas hesabı oluşturma
         Account takasAccount = Account.builder()
                 .client(client)
-                .accountNumber("TR12345678901234567890")
+                .nickname("Ana Takas Hesabı")  // nickName -> nickname
+                .iban("TR123456789012345678901234")
+                .accountNumberAtBroker("TAKAS001")
+                .brokerName("Örnek Menkul Değerler")
+                .brokerCode("ORNEK001")
+                .custodianName("Takasbank")
+                .custodianCode("TKSBNK")
                 .accountType(AccountType.SETTLEMENT)
                 .balance(new BigDecimal("100000.00"))
+                .availableBalance(new BigDecimal("100000.00"))  // Bu alan eksikti
+                .isPrimarySettlement(true)
                 .createdAt(LocalDateTime.now())
                 .currency(Currency.TRY)
                 .build();
@@ -98,8 +106,11 @@ public class DataInitializer implements CommandLineRunner {
         Stock stock1 = Stock.builder()
                 .name("ABC Teknoloji")
                 .symbol("ABCTK")
+                .code("ABCTK")  // Hisse kodu
+                .sector("Teknoloji")  // Sektör bilgisi
+                .exchangeCode("BIST")  // Borsa kodu
                 .group(StockGroup.TECHNOLOGY)
-                .currentPrice(new BigDecimal("150.00"))
+                .price(new BigDecimal("150.00"))  // currentPrice -> price olarak değişti
                 .isActive(true)
                 .source(StockSource.BIST)
                 .createdAt(LocalDateTime.now())
@@ -108,8 +119,11 @@ public class DataInitializer implements CommandLineRunner {
         Stock stock2 = Stock.builder()
                 .name("Garanti Bankası")
                 .symbol("GARAN")
+                .code("GARAN")  // Hisse kodu
+                .sector("Bankacılık")  // Sektör bilgisi
+                .exchangeCode("BIST")  // Borsa kodu
                 .group(StockGroup.FINANCE)
-                .currentPrice(new BigDecimal("25.30"))
+                .price(new BigDecimal("25.30"))  // currentPrice -> price olarak değişti
                 .isActive(true)
                 .source(StockSource.BIST)
                 .createdAt(LocalDateTime.now())
@@ -119,7 +133,7 @@ public class DataInitializer implements CommandLineRunner {
                 .name("Türk Hava Yolları")
                 .symbol("THYAO")
                 .group(StockGroup.TECHNOLOGY)
-                .currentPrice(new BigDecimal("210.00"))
+                .price(new BigDecimal("210.00"))
                 .isActive(true)
                 .source(StockSource.BIST)
                 .createdAt(LocalDateTime.now())

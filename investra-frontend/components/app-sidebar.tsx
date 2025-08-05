@@ -12,7 +12,17 @@ import {
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import Link from "next/link";
-import { ArrowDownCircle, ArrowUpCircle, ChartLine, ChevronDown, List, ListChecks, Users, Wallet } from "lucide-react";
+import {
+	ArrowDownCircle,
+	ArrowUpCircle,
+	ChartLine,
+	ChevronDown,
+	List,
+	ListChecks,
+	Network,
+	Users,
+	Wallet,
+} from "lucide-react";
 
 // Example item config
 const items = [
@@ -32,6 +42,12 @@ const items = [
 				href: "/dashboard/customer-list",
 			},
 		],
+	},
+	{
+		label: "Personel Yönetimi",
+		icon: <Network />,
+		href: "/dashboard/employee-management",
+		subitems: [],
 	},
 	{
 		label: "Hisse Senedi İşlemleri",

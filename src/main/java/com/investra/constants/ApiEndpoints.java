@@ -20,6 +20,8 @@ public class ApiEndpoints {
          public static final String CREATE = "/create-user";
          public static final String UPDATE = "/update-user/{employeeNumber}";
          public static final String DELETE = "/delete-user/{employeeNumber}";
+         public static final String GET_ALL = "/get-all"; // Tüm kullanıcıları getir
+         public static final String GET_BY_ID = "/{userId}"; // Kullanıcıyı ID ile getir
     }
 
     public static final class Stock {
@@ -28,6 +30,9 @@ public class ApiEndpoints {
         public static final String BASE = "/api/v1/stocks";
         public static final String SELL = "/sell"; // Hisse senedi satışı
         public static final String BUY = "/buy"; // Hisse senedi alımı
+        public static final String GET_ALL = "/all"; // Tüm hisse senetlerini getir
+        public static final String GET_BY_CODE = "/{stockCode}"; // Hisse senedini koduna göre getir
+        public static final String REFRESH = "/refresh"; // Hisse senedi verilerini güncelle
         public static final String SEARCH_CLIENT = "/search-client"; // Hisse senedi arama
         public static final String CLIENT_STOCK_HOLDINGS = "/client/{clientId}/stocks"; // Müşterinin Hisse senedi detayları
         public static final String AVAILABLE_STOCKS = "/available"; // Mevcut hisse senetleri
@@ -49,4 +54,13 @@ public class ApiEndpoints {
 
     }
 
+    public static final class Account {
+        private Account() {}
+        public static final String BASE = "/api/v1/accounts";
+        public static final String CREATE = "/create";
+        public static final String GET_BY_ID = "/{accountId}";
+        public static final String GET_BY_CLIENT = "/client/{clientId}";
+        public static final String SEARCH_CLIENTS = "/search-clients";
+        public static final String RECENT_CLIENTS = "/recent-clients";
+    }
 }

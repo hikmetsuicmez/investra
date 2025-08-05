@@ -1,6 +1,5 @@
 package com.investra.repository;
 
-import com.investra.entity.Account;
 import com.investra.entity.Client;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,18 +24,19 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByTaxNumber(String taxNumber);
 
-    Optional<Client> findFirstByNationalityNumberOrPassportNoOrBlueCardNoOrTaxNumberOrRegistrationNumber(
-            String nationalityNumber,
-            String passportNo,
-            String blueCardNo,
-            String taxNumber,
-            String registrationNumber
-    );
+    Optional<Client> findByNationalityNumberContaining(String nationalityNumber);
 
-    // Eğer filtreli getirme yapılacaksa:
-    Page<Client> findByIsActive(Boolean isActive, Pageable pageable);
+    Optional<Client> findByTaxIdContaining(String taxId);
+
+    Optional<Client> findByPassportNoContaining(String passportNo);
+
+    Optional<Client> findByBlueCardNoContaining(String blueCardNo);
+
+    List<Client> findTop20ByOrderByCreatedAtDesc();
+
+    @Query("SELECT c FROM Client c ORDER BY c.createdAt DESC")
+    List<Client> findTopNByOrderByCreatedAtDesc(@Param("limit") int limit);
+
     @Query("SELECT c FROM Client c WHERE LOWER(c.fullName) = LOWER(:name)")
     Optional<Client> findByName(@Param("name") String name);
-
-
 }
