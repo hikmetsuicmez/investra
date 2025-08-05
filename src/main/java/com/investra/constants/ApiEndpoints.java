@@ -41,7 +41,11 @@ public class ApiEndpoints {
         private Client() {}
         public static final String BASE = "/api/v1/clients";
         public static final String CREATE = "/create-client";
-        public static final String GET_CLIENT_INFO_BY_ID = "/client/{nationalityNumber}";
+        public static final String GET_CLIENT_INFO_BY_ID = "/client";
+        public static final String DELETE = "/delete-client";
+        public static final String PASSIVE_LIST = "/clients/passive-clients";
+        public static final String ACTIVE_LIST = "/clients/active-clients";
+
 
     }
 

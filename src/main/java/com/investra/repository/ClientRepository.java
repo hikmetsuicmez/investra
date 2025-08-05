@@ -1,10 +1,14 @@
 package com.investra.repository;
 
+import com.investra.entity.Account;
 import com.investra.entity.Client;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ClientRepository extends JpaRepository<Client, Long> {
@@ -29,6 +33,10 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
             String registrationNumber
     );
 
+    // Eğer filtreli getirme yapılacaksa:
+    Page<Client> findByIsActive(Boolean isActive, Pageable pageable);
     @Query("SELECT c FROM Client c WHERE LOWER(c.fullName) = LOWER(:name)")
     Optional<Client> findByName(@Param("name") String name);
+
+
 }

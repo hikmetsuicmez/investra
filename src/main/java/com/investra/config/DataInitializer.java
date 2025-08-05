@@ -66,6 +66,7 @@ public class DataInitializer implements CommandLineRunner {
                 .blueCardNo("1234567890")
                 .email("johndoe@gmail.com")
                 .phone("555-1234")
+                .isActive(true)
                 .status(ClientStatus.ACTIVE)
                 .clientType(ClientType.INDIVIDUAL)
                 .createdAt(LocalDateTime.now())
