@@ -3,6 +3,7 @@ package com.investra.service;
 import com.investra.dtos.request.StockBuyOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.entity.*;
+import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
 import com.investra.exception.*;
@@ -210,7 +211,12 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             tradeOrder = tradeOrderRepository.save(tradeOrder);
 
             // Eğer alış emri bekleyen veya gerçekleşen ise, available balance azaltılır
-            if (tradeOrder.getStatus() == OrderStatus.PENDING || tradeOrder.getStatus() == OrderStatus.EXECUTED) {
+            if (tradeOrder.getExecutionType() == ExecutionType.MARKET &&
+                (tradeOrder.getStatus() == OrderStatus.PENDING || tradeOrder.getStatus() == OrderStatus.EXECUTED)) {
+                tradeOrderService.updateAccountBalanceForBuyOrder(entities.account(), calculation.netAmount());
+            } else if (tradeOrder.getExecutionType() == ExecutionType.LIMIT &&
+                      tradeOrder.getStatus() == OrderStatus.EXECUTED) {
+                // Limit emirlerde sadece emir gerçekleştiğinde bakiyeyi güncelle
                 tradeOrderService.updateAccountBalanceForBuyOrder(entities.account(), calculation.netAmount());
             }
 

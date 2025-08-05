@@ -94,6 +94,10 @@ public class TradeOrder {
     public void assignRandomStatus() {
         int randomValue = (int) (Math.random() * 100);
 
+        if (this.executionType == ExecutionType.LIMIT) {
+            this.status = OrderStatus.PENDING;
+            return;
+        }
         if (randomValue < 60) {
             // %60 ihtimalle bekleyen emir
             this.status = OrderStatus.PENDING;

@@ -17,6 +17,8 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long>{
 
     List<TradeOrder> findByUserAndStatusOrderBySubmittedAtDesc(User user, OrderStatus status);
 
+    List<TradeOrder> findByStatus(OrderStatus status);
+
     List<TradeOrder> findByStatusAndSettlementStatusAndSettlementDateBefore(
             OrderStatus status, SettlementStatus settlementStatus, LocalDateTime settlementDate);
 

@@ -6,6 +6,7 @@ import com.investra.entity.Notification;
 import com.investra.entity.Stock;
 import com.investra.entity.TradeOrder;
 import com.investra.entity.User;
+import com.investra.enums.ExecutionType;
 import com.investra.enums.NotificationType;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
@@ -39,8 +40,10 @@ public class TradeOrderService {
     private final StockRepository stockRepository;
     private final PortfolioService portfolioService;
 
-    // Bekleyen emirleri işleme - 15 saniye sonra gerçekleştirecek (test için)
-    //     * Her 5 saniye çalışır (test için)
+    /**
+     * Bekleyen emirleri işleme - 15 saniye sonra gerçekleştirecek (test için)
+     * Her 5 saniye çalışır (test için)
+     */
     @Scheduled(fixedRate = 5000) // Her 5 saniye kontrol et
     public void processWaitingOrders() {
         log.info("Bekleyen emirlerin işlenmesi kontrol ediliyor... [{}]", LocalDateTime.now());
@@ -50,22 +53,69 @@ public class TradeOrderService {
         log.info("Cutoff zamanı: {}", cutoffTime);
 
         try {
-            List<TradeOrder> pendingOrders = tradeOrderRepository.findAll().stream()
-                    .filter(order -> order.getStatus() == OrderStatus.PENDING)
-                    .filter(order -> order.getSubmittedAt() != null && order.getSubmittedAt().isBefore(cutoffTime))
-                    .toList();
+            // PENDING durumundaki emirleri bul
+            List<TradeOrder> pendingOrders = tradeOrderRepository.findByStatus(OrderStatus.PENDING);
 
             log.info("Bekleyen emir sayısı: {}", pendingOrders.size());
 
             for (TradeOrder order : pendingOrders) {
-                processWaitingOrder(order);
-            }
-
-            if (!pendingOrders.isEmpty()) {
-                log.info("{} adet bekleyen emir işlendi", pendingOrders.size());
+                // Emir tipine göre işlem yap
+                if (order.getExecutionType() == ExecutionType.MARKET) {
+                    // Market emirleri için zaman kontrolü yap
+                    if (order.getSubmittedAt() != null && order.getSubmittedAt().isBefore(cutoffTime)) {
+                        processWaitingOrder(order);
+                        log.info("Market emri işlendi: {}", order.getId());
+                    }
+                } else if (order.getExecutionType() == ExecutionType.LIMIT) {
+                    // Limit emirleri için fiyat kontrolü yap
+                    processPendingLimitOrder(order);
+                }
             }
         } catch (Exception e) {
             log.error("Bekleyen emirleri işlerken hata oluştu: {}", e.getMessage(), e);
+        }
+    }
+
+    // Bekleyen bir limit emrini işler. Limit emirlerde, fiyat koşulları kontrol edilir ve uygun koşullar sağlandığında işlem gerçekleştirilir.
+    @Transactional
+    public void processPendingLimitOrder(TradeOrder order) {
+        try {
+            // Hisse senedinin güncel fiyatını al
+            Stock stock = stockRepository.findById(order.getStock().getId())
+                    .orElseThrow(() -> new RuntimeException("Hisse senedi bulunamadı: " + order.getStock().getId()));
+
+            BigDecimal currentPrice = stock.getPrice();
+            BigDecimal limitPrice = order.getPrice();
+
+            // Fiyat koşullarını kontrol et
+            boolean priceConditionMet = false;
+
+            if (order.getOrderType() == OrderType.BUY) {
+                // Alış limiti: Piyasa fiyatı <= Limit fiyatı
+                priceConditionMet = currentPrice.compareTo(limitPrice) <= 0;
+                if (priceConditionMet) {
+                    log.info("Alış limit emri için fiyat koşulu sağlandı. Piyasa: {}, Limit: {}",
+                            currentPrice, limitPrice);
+                }
+            } else if (order.getOrderType() == OrderType.SELL) {
+                // Satış limiti: Piyasa fiyatı >= Limit fiyatı
+                priceConditionMet = currentPrice.compareTo(limitPrice) >= 0;
+                if (priceConditionMet) {
+                    log.info("Satış limit emri için fiyat koşulu sağlandı. Piyasa: {}, Limit: {}",
+                            currentPrice, limitPrice);
+                }
+            }
+
+            // Koşullar sağlanıyorsa emri işle
+            if (priceConditionMet) {
+                processWaitingOrder(order);
+                log.info("Limit emri başarıyla işlendi: ID={}, Fiyat={}", order.getId(), currentPrice);
+            } else {
+                log.debug("Limit emri için fiyat koşulları henüz sağlanmadı: ID={}, Piyasa Fiyatı={}, Limit Fiyatı={}",
+                        order.getId(), currentPrice, limitPrice);
+            }
+        } catch (Exception e) {
+            log.error("Limit emri {} işlenirken hata: {}", order.getId(), e.getMessage(), e);
         }
     }
 
@@ -202,7 +252,7 @@ public class TradeOrderService {
             if (user != null) {
                 try {
                     sendOrderSettledNotification(user, stock.getSymbol(), freshOrder.getOrderType());
-                    log.info("Bildirim gönderildi: {}", user.getUsername());
+                    log.info("Bildirim gönderildi: {}", user.getEmail());
                 } catch (Exception e) {
                     log.error("Bildirim gönderme hatası (işlem etkilenmez): {}", e.getMessage());
                 }
@@ -219,28 +269,50 @@ public class TradeOrderService {
 
     // Emir gerçekleştiğinde bildirim gönderir
     private void sendOrderExecutedNotification(User user, TradeOrder order) {
-        Notification notification = Notification.builder()
-                .recipient(user.getUsername())
-                .subject("Emir Gerçekleşti")
-                .content(order.getStock().getSymbol() + " hissesi için " + order.getOrderType().name() +
-                        " emriniz başarıyla gerçekleştirildi.")
-                .type(NotificationType.INFO)
-                .build();
+        if (user == null || order == null || order.getStock() == null) {
+            log.warn("Bildirim gönderilemedi: Eksik kullanıcı veya emir bilgisi");
+            return;
+        }
 
-        notificationRepository.save(notification);
+        try {
+            Notification notification = Notification.builder()
+                    .recipient(user.getEmail()) // Kullanıcı adı yerine e-posta adresi kullanılıyor
+                    .subject("Emir Gerçekleşti")
+                    .content(order.getStock().getSymbol() + " hissesi için " + order.getOrderType().name() +
+                            " emriniz başarıyla gerçekleştirildi.")
+                    .type(NotificationType.INFO)
+                    .isHtml(false)
+                    .build();
+
+            notificationRepository.save(notification);
+            log.info("Bildirim başarıyla gönderildi: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Bildirim gönderme hatası: {}", e.getMessage(), e);
+        }
     }
 
     //  Emir takası tamamlandığında bildirim gönderir
     private void sendOrderSettledNotification(User user, String stockSymbol, OrderType orderType) {
-        Notification notification = Notification.builder()
-                .recipient(user.getUsername())
-                .subject("Emir Takası Tamamlandı")
-                .content(stockSymbol + " hissesi için " + orderType.name() +
-                        " emirinizin takası tamamlandı ve hesap bakiyeniz güncellendi.")
-                .type(NotificationType.INFO)
-                .build();
+        if (user == null || stockSymbol == null || orderType == null) {
+            log.warn("Bildirim gönderilemedi: Eksik bilgi");
+            return;
+        }
 
-        notificationRepository.save(notification);
+        try {
+            Notification notification = Notification.builder()
+                    .recipient(user.getEmail()) // Kullanıcı adı yerine e-posta adresi kullanılıyor
+                    .subject("Emir Takası Tamamlandı")
+                    .content(stockSymbol + " hissesi için " + orderType.name() +
+                            " emirinizin takası tamamlandı ve hesap bakiyeniz güncellendi.")
+                    .type(NotificationType.INFO)
+                    .isHtml(false)
+                    .build();
+
+            notificationRepository.save(notification);
+            log.info("Takas bildirimi başarıyla gönderildi: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Bildirim gönderme hatası: {}", e.getMessage(), e);
+        }
     }
 
     // Kullanıcının tüm emirlerini getirir
@@ -294,14 +366,16 @@ public class TradeOrderService {
         TradeOrder cancelledOrder = tradeOrderRepository.save(order);
 
         Notification notification = Notification.builder()
-                .recipient(user.getUsername())
+                .recipient(user.getEmail()) // Kullanıcı adı yerine e-posta adresi kullanılıyor
                 .subject("Emir İptal Edildi")
                 .content(order.getStock().getSymbol() + " hissesi için " + order.getOrderType().name() +
                         " emiriniz iptal edildi.")
                 .type(NotificationType.INFO)
+                .isHtml(false) // isHtml alanı eklendi
                 .build();
 
         notificationRepository.save(notification);
+        log.info("İptal bildirimi başarıyla gönderildi: {}", user.getEmail());
 
         return cancelledOrder;
     }
