@@ -1,6 +1,8 @@
 package com.investra.repository;
 
 import com.investra.entity.Client;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,15 +24,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByTaxNumber(String taxNumber);
 
-    Optional<Client> findFirstByNationalityNumberOrPassportNoOrBlueCardNoOrTaxNumberOrRegistrationNumber(
-            String nationalityNumber,
-            String passportNo,
-            String blueCardNo,
-            String taxNumber,
-            String registrationNumber
-    );
-
-    // Hesap açılışı akışı için eklenen metodlar
     Optional<Client> findByNationalityNumberContaining(String nationalityNumber);
 
     Optional<Client> findByTaxIdContaining(String taxId);

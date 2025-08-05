@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class ClientSearchRequest {
     private String searchTerm; // Müşteri no, Kimlik Numarası, Müşteri Adı, Soyadı gibi alanlarda arama yapılabilir.
     private String searchType; // Arama türü: "clientNo", "identityNo", "firstName", "lastName" gibi değerler alabilir.
+    private Boolean isActive; // müşterinin aktif ya da pasifler arasında aranacağı seçilir
 }

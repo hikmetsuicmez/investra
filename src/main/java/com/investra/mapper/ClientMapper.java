@@ -4,8 +4,10 @@ import com.investra.dtos.request.CreateClientRequest;
 import com.investra.dtos.request.CreateCorporateClientRequest;
 import com.investra.dtos.request.CreateIndividualClientRequest;
 import com.investra.dtos.request.CreateUserRequest;
+import com.investra.dtos.response.ClientDTO;
 import com.investra.dtos.response.ClientSearchResponse;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import com.investra.dtos.response.CreateClientResponse;
@@ -101,6 +103,7 @@ public class ClientMapper {
             return null;
         }
         return ClientSearchResponse.builder()
+                .id(request.getId())
                 .taxId(request.getTaxId())
                 .nationalityNumber(request.getNationalityNumber())
                 .phoneNumber(request.getPhone())
@@ -111,6 +114,41 @@ public class ClientMapper {
                 .build();
 
     }
+
+    public static ClientDTO toClientDTO (Client client){
+        return ClientDTO.builder()
+                .id(client.getId())
+                .clientType(client.getClientType())
+                .email(client.getEmail())
+                .phone(client.getPhone())
+                .address(client.getAddress())
+                .notes(client.getNotes())
+                .status(client.getStatus())
+                .isActive(client.getIsActive())
+                .createdAt(client.getCreatedAt())
+                // Bireysel müşteri alanları
+                .fullName(client.getFullName())
+                .nationalityType(client.getNationalityType())
+                .taxId(client.getTaxId())
+                .passportNo(client.getPassportNo())
+                .blueCardNo(client.getBlueCardNo())
+                .nationalityNumber(client.getNationalityNumber())
+                .birthDate(client.getBirthDate())
+                .profession(client.getProfession())
+                .gender(client.getGender())
+                .educationStatus(client.getEducationStatus())
+                .monthlyIncome(client.getMonthlyIncome())
+                .estimatedTransactionVolume(client.getEstimatedTransactionVolume())
+                // Kurumsal müşteri alanları
+                .companyName(client.getCompanyName())
+                .taxNumber(client.getTaxNumber())
+                .registrationNumber(client.getRegistrationNumber())
+                .companyType(client.getCompanyType())
+                .sector(client.getSector())
+                .monthlyRevenue(client.getMonthlyRevenue())
+                .build();
+    }
+
 
 
 }

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long>{
 
@@ -27,4 +28,7 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long>{
     List<TradeOrder> findByClient(Client client);
 
     List<TradeOrder> findByAccount(Account account);
+
+    List<TradeOrder> findAllByClientId(Long clientId);
+
 }

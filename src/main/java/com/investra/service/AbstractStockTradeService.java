@@ -30,6 +30,12 @@ public abstract class AbstractStockTradeService implements StockTradeService {
                 ? strategy.apply(request.getSearchTerm()).map(List::of).orElse(List.of())
                 : List.of();
 
+        if (request.getIsActive() != null) {
+            clients = clients.stream()
+                    .filter(client -> request.getIsActive().equals(client.getIsActive()))
+                    .toList();
+        }
+
         List<ClientSearchResponse> responseClients = clients.stream()
                 .map(ClientMapper::mapToClientSearchResponse)
                 .toList();
@@ -45,8 +51,10 @@ public abstract class AbstractStockTradeService implements StockTradeService {
     protected Function<String, Optional<Client>> getStringOptionalFunction(ClientSearchRequest request) {
         Map<String, Function<String, Optional<Client>>> searchStrategy = Map.of(
                 "TCKN", clientRepository::findByNationalityNumber,
-                "VERGI_NO", clientRepository::findByTaxId,
+                "VERGI_ID", clientRepository::findByTaxId,
                 "MAVI_KART_NO", clientRepository::findByBlueCardNo,
+                "PASSPORT_NO", clientRepository::findByPassportNo,
+                "VERGI_NO", clientRepository::findByTaxNumber,
                 "ISIM", this::findClientByName
         );
 
