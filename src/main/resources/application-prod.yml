@@ -1,0 +1,106 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: investra
+
+  # Production Redis yapılandırması
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+  # Cache yapılandırması
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 dakika
+
+  # Production veritabanı
+  datasource:
+    url: ${DATABASE_URL:jdbc:sqlserver://host.docker.internal:1433;databaseName=Investra;encrypt=true;trustServerCertificate=true}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # Hibernate production ayarları
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Production'da validate kullan
+    show-sql: false  # Production'da SQL loglarını kapat
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServer2016Dialect
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Mail ayarları
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+      from: ${MAIL_FROM:Investra Destek <investradestek@gmail.com>}
+
+# Production Actuator yapılandırması
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  server:
+    port: 8089  # Actuator'ı farklı portta çalıştır
+
+# Production logging
+logging:
+  level:
+    com.investra: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/investra.log
+
+# JWT Secret
+secreteJwtString: ${JWT_SECRET}
+
+# App configuration
+app:
+  frontendUrl: ${FRONTEND_URL:http://localhost:3000}
+  logo-url: /images/logo.png
+
+# Infina API Configuration
+infina:
+  api:
+    base-url: ${INFINA_API_URL:https://apitest.infina.com.tr/infina-services/rest/srv/v1.1}
+    key: ${INFINA_API_KEY}

@@ -6,6 +6,12 @@ spring:
   application:
     name: investra
 
+  # Cache yapılandırması
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 dakika (milisaniye cinsinden)
+
   datasource:
     url: jdbc:sqlserver://192.168.144.76:1450;databaseName=Kizikos;encrypt=true;trustServerCertificate=true
     username: ${DB_USERNAME}
@@ -36,6 +42,29 @@ spring:
             required: true
       from: Investra Destek <investradestek@gmail.com>
 
+  # Redis yapılandırması
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+
+# Actuator yapılandırması
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
 # JWT Secret key değeri
 secreteJwtString: ${JWT_SECRET}
 
@@ -48,5 +77,5 @@ app:
 # Infina API Configuration
 infina:
   api:
-    base-url: https://apitest.infina.com.tr/infina-services/rest/srv/v1.1
-    key: XvusCI7S4hyr008JUcPyiAdMSzSHKmWa99VYFXeU
+    base-url: ${INFINA_API_URL:}
+    key: ${INFINA_API_KEY}
