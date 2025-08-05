@@ -1,6 +1,7 @@
 package com.investra.controller;
 
 import com.investra.constants.ApiEndpoints;
+import com.investra.docs.TradeOrderApiDocs;
 import com.investra.dtos.response.Response;
 import com.investra.entity.TradeOrder;
 import com.investra.enums.OrderStatus;
@@ -18,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping(ApiEndpoints.TradeOrder.BASE)
 @RequiredArgsConstructor
-public class TradeOrderController {
+public class TradeOrderController implements TradeOrderApiDocs {
 
     private final TradeOrderService tradeOrderService;
 
