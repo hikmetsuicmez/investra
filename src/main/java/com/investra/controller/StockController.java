@@ -1,5 +1,7 @@
 package com.investra.controller;
 
+import com.investra.constants.ApiEndpoints;
+import com.investra.docs.StockApiDocs;
 import com.investra.dtos.response.Response;
 import com.investra.entity.Stock;
 import com.investra.service.StockService;
@@ -13,15 +15,15 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/stocks")
+@RequestMapping(ApiEndpoints.Stock.BASE)
 @RequiredArgsConstructor
 @Slf4j
-public class StockController {
+public class StockController implements StockApiDocs {
 
     private final StockService stockService;
 
     // Tüm hisse senetlerini getirir
-    @GetMapping
+    @GetMapping(ApiEndpoints.Stock.GET_ALL)
     public ResponseEntity<Response<List<Stock>>> getAllStocks() {
         log.info("Tüm hisse senetleri için istek alındı");
         List<Stock> stocks = stockService.getAllStocks();
@@ -36,7 +38,7 @@ public class StockController {
     }
 
     // Belirli bir hisse senedini kodu ile getirir
-    @GetMapping("/{stockCode}")
+    @GetMapping(ApiEndpoints.Stock.GET_BY_CODE)
     public ResponseEntity<Response<Stock>> getStockByCode(@PathVariable String stockCode) {
         log.info("{} kodlu hisse senedi için istek alındı", stockCode);
         Optional<Stock> stockOpt = stockService.getStockByCode(stockCode);
@@ -60,7 +62,7 @@ public class StockController {
     }
 
     // Hisse senedi verilerini API'den manuel olarak yeniler
-    @PostMapping("/refresh")
+    @PostMapping(ApiEndpoints.Stock.REFRESH)
     public ResponseEntity<Response<List<Stock>>> refreshStocks() {
         log.info("Hisse senedi verilerini yenileme isteği alındı");
         List<Stock> stocks = stockService.refreshStocksFromApi();
