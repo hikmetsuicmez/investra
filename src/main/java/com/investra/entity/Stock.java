@@ -1,5 +1,6 @@
 package com.investra.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.investra.enums.StockGroup;
 import com.investra.enums.StockSource;
 import jakarta.persistence.*;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @AllArgsConstructor
@@ -54,8 +56,44 @@ public class Stock {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Transient
+    private String createdAtString;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Transient
+    private String updatedAtString;
+
+    public String getCreatedAt() {
+        if (createdAt != null) {
+            return createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
+        return null;
+    }
+
+    public String getUpdatedAt() {
+        if (updatedAt != null) {
+            return updatedAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
+        return null;
+    }
+
+    public LocalDateTime getCreatedAtDate() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAtDate() {
+        return updatedAt;
+    }
+
+    public void setCreatedAtDate(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAtDate(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
     @PrePersist
     protected void onCreate() {
