@@ -5,6 +5,7 @@ import com.investra.dtos.request.UpdateUserRequest;
 import com.investra.dtos.response.CreateUserResponse;
 import com.investra.dtos.response.Response;
 import com.investra.dtos.response.UpdateUserResponse;
+import com.investra.dtos.response.UserDTO;
 import com.investra.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,6 +14,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 
 @Tag(name = "Yönetici API'ları", description = "Yönetici işlemleri ile ilgili uç noktalar")
 public interface AdminApiDocs {
@@ -50,4 +53,25 @@ public interface AdminApiDocs {
     @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @Parameter(name = "employeeNumber", description = "Silinecek kullanıcının çalışan numarası")
     ResponseEntity<Response<Void>> deleteUser(@Parameter String employeeNumber);
+
+    @Operation(
+            summary = "Tüm Kullanıcıları Getir",
+            description = "Sistemdeki tüm kullanıcıları getirir."
+    )
+    @ApiResponse(responseCode = "200", description = "Kullanıcılar başarıyla getirildi.", content = @Content(schema = @Schema(implementation = List.class)))
+    @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    public ResponseEntity<Response<List<UserDTO>>> retrieveAllUsers();
+
+    @Operation(
+            summary = "Kullanıcıyı ID ile Getir",
+            description = "Belirli bir kullanıcıyı ID ile getirir."
+    )
+    @ApiResponse(responseCode = "200", description = "Kullanıcı başarıyla getirildi.", content = @Content(schema = @Schema(implementation = UserDTO.class)))
+    @ApiResponse(responseCode = "400", description = "Geçersiz istek.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    public ResponseEntity<Response<UserDTO>> retrieveUser(@Parameter(description = "Kullanıcının ID'si") Long userId);
 }

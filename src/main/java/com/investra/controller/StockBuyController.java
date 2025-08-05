@@ -1,6 +1,7 @@
 package com.investra.controller;
 
 import com.investra.constants.ApiEndpoints;
+import com.investra.docs.StockBuyApiDocs;
 import com.investra.dtos.request.ClientSearchRequest;
 import com.investra.dtos.request.StockBuyOrderRequest;
 import com.investra.dtos.response.*;
@@ -18,7 +19,7 @@ import java.util.List;
 @RequestMapping(ApiEndpoints.Stock.BASE + ApiEndpoints.Stock.BUY)
 @RequiredArgsConstructor
 @Slf4j
-public class StockBuyController {
+public class StockBuyController implements StockBuyApiDocs {
 
     private final StockBuyService stockBuyService;
 

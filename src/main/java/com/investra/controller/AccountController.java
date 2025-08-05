@@ -1,6 +1,7 @@
 package com.investra.controller;
 
 import com.investra.constants.ApiEndpoints;
+import com.investra.docs.AccountApiDocs;
 import com.investra.dtos.request.AccountCreationRequest;
 import com.investra.dtos.request.ClientSearchForAccountRequest;
 import com.investra.dtos.response.AccountResponse;
@@ -19,7 +20,7 @@ import java.util.List;
 @RequestMapping(ApiEndpoints.Account.BASE)
 @RequiredArgsConstructor
 @Slf4j
-public class AccountController {
+public class AccountController implements AccountApiDocs {
 
     private final AccountService accountService;
 

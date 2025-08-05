@@ -11,5 +11,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmployeeNumber(String employeeNumber);
     Optional<User> findByPasswordResetToken(String token);
     Optional<User> findTopByOrderByEmployeeNumberDesc();
-
 }
