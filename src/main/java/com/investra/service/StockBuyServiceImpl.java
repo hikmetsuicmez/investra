@@ -1,5 +1,7 @@
 package com.investra.service;
 
+import com.investra.dtos.OrderCreateDto;
+import com.investra.dtos.OrderDTO;
 import com.investra.dtos.request.StockBuyOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.entity.*;
@@ -35,6 +37,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
     private final OrderCalculationService calculationService;
     private final PortfolioUpdateService portfolioUpdateService;
     private final OrderPreviewCacheService previewCacheService;
+    private final OrderService orderService; // Emir servisi ekle
 
     public StockBuyServiceImpl(
             ClientRepository clientRepository,
@@ -46,7 +49,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             EntityFinderService entityFinderService,
             OrderCalculationService calculationService,
             PortfolioUpdateService portfolioUpdateService,
-            OrderPreviewCacheService previewCacheService) {
+            OrderPreviewCacheService previewCacheService,
+            OrderService orderService) {
         super(clientRepository);
         this.stockRepository = stockRepository;
         this.accountRepository = accountRepository;
@@ -57,6 +61,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
         this.calculationService = calculationService;
         this.portfolioUpdateService = portfolioUpdateService;
         this.previewCacheService = previewCacheService;
+        this.orderService = orderService;
     }
 
     @Override
@@ -188,6 +193,23 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             TradeOrder tradeOrder = createTradeOrder(entities, calculation, currentUser, request);
             tradeOrder = tradeOrderRepository.save(tradeOrder);
 
+            // Emir kaydı oluştur
+            OrderCreateDto orderCreateDto = OrderCreateDto.builder()
+                    .clientId(entities.client().getId())
+                    .accountId(entities.account().getId())
+                    .stockId(entities.stock().getId())
+                    .stockSymbol(entities.stock().getSymbol())
+                    .stockName(entities.stock().getName())
+                    .quantity(request.getQuantity())
+                    .price(calculation.price())
+                    .orderType(OrderType.BUY)
+                    .executionType(request.getExecutionType())
+                    .tradeOrderId(tradeOrder.getId())
+                    .build();
+
+            // Emir kaydını oluştur
+            orderService.createOrder(orderCreateDto, userEmail);
+
             // Portföy güncellenir
             portfolioUpdateService.updatePortfolioForBuy(
                     entities.client(),
@@ -298,10 +320,30 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 .quantity(calculation.quantity())
                 .totalAmount(calculation.totalAmount())
                 .netAmount(calculation.netAmount())
-                .status(OrderStatus.EXECUTED)
+                .status(OrderStatus.SETTLED)
                 .user(currentUser)
                 .build();
     }
 
+    // Alış işlemi için OrderCreateDto oluşturur
+    private OrderCreateDto createOrderCreateDto(
+            OrderEntities entities,
+            OrderCalculation calculation,
+            StockBuyOrderRequest request) {
+
+        return OrderCreateDto.builder()
+                .orderNumber(calculationService.generateOrderNumber())
+                .clientId(entities.client().getId())
+                .accountId(entities.account().getId())
+                .stockId(entities.stock().getId())
+                .orderType(OrderType.BUY)
+                .executionType(request.getExecutionType())
+                .price(calculation.price())
+                .quantity(calculation.quantity())
+                .totalAmount(calculation.totalAmount())
+                .netAmount(calculation.netAmount())
+                .status(OrderStatus.PENDING) // Başlangıçta beklemede
+                .build();
+    }
 
 }

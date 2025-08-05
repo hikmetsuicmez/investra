@@ -5,4 +5,5 @@ public enum NotificationType {
     ERROR,
     WARNING,
     INFO,
+    ORDER, // Emir bildirimleri için eklendi
 }

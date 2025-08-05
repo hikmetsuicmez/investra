@@ -1,5 +1,6 @@
 package com.investra.service;
 
+import com.investra.dtos.OrderCreateDto;
 import com.investra.dtos.request.StockSellOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.entity.*;
@@ -32,6 +33,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
     private final OrderCalculationService calculationService;
     private final PortfolioUpdateService portfolioUpdateService;
     private final OrderPreviewCacheService previewCacheService;
+    private final OrderService orderService; // Emir servisi eklendi
 
     public StockSellServiceImpl(
             ClientRepository clientRepository,
@@ -41,7 +43,8 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
             EntityFinderService entityFinderService,
             OrderCalculationService calculationService,
             PortfolioUpdateService portfolioUpdateService,
-            OrderPreviewCacheService previewCacheService) {
+            OrderPreviewCacheService previewCacheService,
+            OrderService orderService) {
         super(clientRepository);
         this.portfolioItemRepository = portfolioItemRepository;
         this.tradeOrderRepository = tradeOrderRepository;
@@ -50,6 +53,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
         this.calculationService = calculationService;
         this.portfolioUpdateService = portfolioUpdateService;
         this.previewCacheService = previewCacheService;
+        this.orderService = orderService; // Emir servisi initialize edildi
     }
 
     @Override
@@ -172,38 +176,35 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
             OrderCalculation calculation = calculationService.calculateOrderAmounts(
                     entities.client(), entities.stock(), request);
 
-            // Satış emrini oluştur ve kaydet
-            TradeOrder tradeOrder = TradeOrder.builder()
-                    .client(entities.client())
-                    .account(entities.account())
-                    .stock(entities.stock())
-                    .orderType(OrderType.SELL)
-                    .quantity(request.getQuantity())
-                    .price(calculation.price())
-                    .totalAmount(calculation.totalAmount())
-                    .status(OrderStatus.EXECUTED)
-                    .executionType(request.getExecutionType())
-                    .user(submittedBy)
-                    .submittedAt(LocalDateTime.now())
-                    .executedAt(LocalDateTime.now().plusDays(2))
-                    .netAmount(calculation.netAmount())
-                    .orderNumber(calculationService.generateOrderNumber())
-                    .build();
-
+            // TradeOrder kaydı oluşturulur
+            TradeOrder tradeOrder = createTradeOrder(entities, calculation, submittedBy, request);
             tradeOrder = tradeOrderRepository.save(tradeOrder);
 
-            // Portföy ve bakiye güncelleme işlemleri
-            PortfolioItem updatedPortfolioItem = portfolioUpdateService.updatePortfolioAfterSell(
-                    entities.portfolioItem(), request.getQuantity());
+            // Emir kaydı oluştur
+            OrderCreateDto orderCreateDto = OrderCreateDto.builder()
+                    .clientId(entities.client().getId())
+                    .accountId(entities.account().getId())
+                    .stockId(entities.stock().getId())
+                    .stockSymbol(entities.stock().getSymbol())
+                    .stockName(entities.stock().getName())
+                    .quantity(request.getQuantity())
+                    .price(calculation.price())
+                    .orderType(OrderType.SELL)
+                    .executionType(request.getExecutionType())
+                    .tradeOrderId(tradeOrder.getId())
+                    .build();
 
-            // Portföy öğesi null ise (tüm hisseler satıldıysa) log kaydı düş
-            if (updatedPortfolioItem == null) {
-                log.info("Müşteri {} tüm {} hisselerini sattı, portföyden kaldırıldı.",
-                        entities.client().getId(), entities.stock().getSymbol());
-            }
-            portfolioUpdateService.updateAccountBalanceAfterSell(entities.account(), calculation.netAmount());
+            // Emir kaydını oluştur
+            orderService.createOrder(orderCreateDto, userEmail);
 
-            // Önizlemeyi önbellekten kald��r
+            // Portföy güncellenir
+            portfolioUpdateService.updatePortfolioForSell(
+                    entities.client(),
+                    entities.account(),
+                    entities.stock(),
+                    request.getQuantity(),
+                    calculation.netAmount());
+
             previewCacheService.removeOrderPreview(request.getPreviewId());
 
             log.info("Satış emri oluşturuldu: {}", tradeOrder.getId());

@@ -1,12 +1,12 @@
 package com.investra.enums;
 
-public enum OrderType {
-    BUY("Alış"),
-    SELL("Satış");
+public enum SettlementStatus {
+    PENDING("Takas Bekliyor"),
+    COMPLETED("Takas Tamamlandı");
 
     private final String displayName;
 
-    OrderType(String displayName) {
+    SettlementStatus(String displayName) {
         this.displayName = displayName;
     }
 

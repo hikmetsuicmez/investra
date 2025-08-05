@@ -70,5 +70,7 @@ public class TradeOrder {
 
     @Column(name = "executed_at")
     private LocalDateTime executedAt;
-}
 
+    // Takas tamamlanma tarihi
+    private LocalDateTime settledAt;
+}
