@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Send } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { validateEmail } from "@/lib/auth";
+import { validateEmail } from "@/lib/validate-email";
 
 export default function ForgotPassword() {
 	const [email, setEmail] = useState("");

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { KeyRound, Lock, User, UserLock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { validateEmail } from "@/lib/auth";
+import { validateEmail } from "@/lib/validate-email";
 
 export default function Login() {
 	const [showPassword, setShowPassword] = useState(false);
