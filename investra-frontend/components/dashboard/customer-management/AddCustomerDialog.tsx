@@ -41,6 +41,7 @@ export interface IndividualCustomerInfo {
 	monthlyRevenue: string;
 	estimatedTransactionVolume: string;
 	notes: string;
+	isActive: boolean;
 }
 
 type CompanyType = "as" | "ltd" | "kooperatif" | "kollektif" | "komandit";
@@ -57,6 +58,7 @@ export interface CorporateCustomerInfo {
 	phone: string;
 	monthlyRevenue: string;
 	companyNotes: string;
+	isActive: boolean;
 }
 
 export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDialogProps) {
@@ -76,6 +78,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 		monthlyRevenue: "",
 		estimatedTransactionVolume: "",
 		notes: "",
+		isActive: true,
 	});
 
 	const [corporateInfo, setCorporateInfo] = useState<CorporateCustomerInfo>({
@@ -90,11 +93,22 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 		phone: "",
 		monthlyRevenue: "",
 		companyNotes: "",
+		isActive: true,
 	});
 
-	function removeEmptyFields<T extends Record<string, any>>(obj: T): Partial<T> {
+	function removeEmptyFields<T>(obj: T): Partial<T> {
+		const entries = Object.entries(obj as Record<string, unknown>);
+
 		return Object.fromEntries(
-			Object.entries(obj).filter(([_, value]) => value !== "" && value !== null && value !== undefined)
+			entries.filter(([_, value]) => {
+				if (value === "" || value === null || value === undefined) {
+					return false;
+				}
+				if (value instanceof Date) {
+					return true;
+				}
+				return true;
+			})
 		) as Partial<T>;
 	}
 

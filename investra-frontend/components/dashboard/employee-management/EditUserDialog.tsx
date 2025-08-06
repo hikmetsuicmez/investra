@@ -6,7 +6,6 @@ import {
 	AlertDialogContent,
 	AlertDialogHeader,
 	AlertDialogTitle,
-	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogCancel,
 	AlertDialogAction,

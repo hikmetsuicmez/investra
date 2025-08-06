@@ -17,7 +17,6 @@ import {
 	ArrowUpCircle,
 	ChartLine,
 	ChevronDown,
-	List,
 	ListChecks,
 	Network,
 	Users,

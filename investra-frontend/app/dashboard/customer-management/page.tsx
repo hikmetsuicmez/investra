@@ -1,15 +1,42 @@
 "use client";
 
-import AddCustomerDialog from "@/components/dashboard/customer-management/AddCustomerDialog";
+import AddCustomerDialog, {
+	CorporateCustomerInfo,
+	IndividualCustomerInfo,
+} from "@/components/dashboard/customer-management/AddCustomerDialog";
 import CustomerTable from "@/components/dashboard/customer-management/CustomerTable";
-import AddEmployeeDialog from "@/components/dashboard/employee-management/AddEmployeeDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CustomerManagement() {
 	const [openDialog, setOpenDialog] = useState(false);
+	const [customers, setCustomers] = useState<(IndividualCustomerInfo | CorporateCustomerInfo)[]>([]);
+
+	async function fetchCustomers() {
+		try {
+			const [activeRes, passiveRes] = await Promise.all([
+				fetch("/api/clients/active-clients"),
+				fetch("/api/clients/passive-clients"),
+			]);
+
+			if (!activeRes.ok || !passiveRes.ok) {
+				throw new Error("Failed to fetch one or both customer lists");
+			}
+
+			const activeData = await activeRes.json();
+			const passiveData = await passiveRes.json();
+
+			setCustomers([...(activeData.data || []), ...(passiveData.data || [])]);
+		} catch (error) {
+			console.error("Error fetching customers:", error);
+		}
+	}
+
+	useEffect(() => {
+		fetchCustomers();
+	}, []);
 
 	return (
 		<div className="flex-col h-screen bg-gray-100 p-6">
@@ -23,7 +50,7 @@ export default function CustomerManagement() {
 
 			<Card className="flex-grow flex flex-col overflow-hidden">
 				<CardContent className="flex-grow overflow-auto">
-					<CustomerTable customers={[]} />
+					<CustomerTable customers={customers} />
 				</CardContent>
 			</Card>
 
