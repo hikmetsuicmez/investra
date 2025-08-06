@@ -2,6 +2,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CorporateCustomerInfo, IndividualCustomerInfo } from "./AddCustomerDialog";
+import DeleteCustomerDialog from "./DeleteCustomerDialog";
 
 function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustomerInfo): {
 	name: string;
@@ -36,8 +37,7 @@ export default function CustomerTable({
 }: {
 	customers: (IndividualCustomerInfo | CorporateCustomerInfo)[];
 }) {
-	const displayCustomers = customers.map(mapToCustomerDisplay);
-
+	console.log(customers);
 	return (
 		<Table className="text-lg">
 			<TableHeader>
@@ -46,17 +46,21 @@ export default function CustomerTable({
 					<TableHead>Müşteri tipi</TableHead>
 					<TableHead>Telefon Numarası</TableHead>
 					<TableHead>E-posta</TableHead>
-					<TableHead>Durum</TableHead>
+					<TableHead className="text-center">Durum</TableHead>
+					<TableHead></TableHead>
 				</TableRow>
 			</TableHeader>
 			<TableBody>
-				{displayCustomers.map((customer, index) => (
+				{customers.map((customer, index) => (
 					<TableRow key={index}>
-						<TableCell>{customer.name}</TableCell>
-						<TableCell>{customer.type}</TableCell>
+						<TableCell>{mapToCustomerDisplay(customer).name}</TableCell>
+						<TableCell>{mapToCustomerDisplay(customer).type}</TableCell>
 						<TableCell>{customer.phone}</TableCell>
 						<TableCell>{customer.email}</TableCell>
-						<TableCell>{customer.status}</TableCell>
+						<TableCell className="text-center">{customer.isActive ? "Aktif" : "Pasif"}</TableCell>
+						<TableCell>
+							<DeleteCustomerDialog customer={customer} disabled={!customer.isActive} />
+						</TableCell>
 					</TableRow>
 				))}
 			</TableBody>
