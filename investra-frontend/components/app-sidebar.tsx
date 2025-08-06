@@ -35,13 +35,8 @@ const items = [
 	{
 		label: "Müşteri Yönetimi",
 		icon: <Users />,
-		subitems: [
-			{
-				label: "Müşteri Listesi",
-				icon: <List />,
-				href: "/dashboard/customer-list",
-			},
-		],
+		href: "/dashboard/customer-management",
+		subitems: [],
 	},
 	{
 		label: "Personel Yönetimi",
