@@ -30,11 +30,7 @@ public class StockService {
     // Kod-fiyat eşleşmesi için in-memory cache
     private final Map<String, BigDecimal> stockPriceCache = new ConcurrentHashMap<>();
 
-    /**
-     * Tüm hisse senetlerini getirir, önce veritabanından
-     * yoksa API'den çeker ve veritabanına kaydeder
-     */
-    @Cacheable(value = "stocks", key = "'all_stocks'")
+    // Tüm hisse senetlerini getirir, önce veritabanından
     public List<Stock> getAllStocks() {
         List<Stock> stocks = stockRepository.findAll();
 
