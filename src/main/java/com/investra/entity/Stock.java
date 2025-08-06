@@ -1,5 +1,6 @@
 package com.investra.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.investra.enums.StockGroup;
 import com.investra.enums.StockSource;
 import jakarta.persistence.*;
@@ -52,6 +53,7 @@ public class Stock {
     private StockSource source;
 
     @Column(name = "created_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")

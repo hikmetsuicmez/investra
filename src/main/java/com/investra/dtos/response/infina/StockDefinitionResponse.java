@@ -10,38 +10,61 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StockDefinitionResponse {
 
-    @JsonProperty("Sonuc")
-    private boolean success;
+    @JsonProperty("result")
+    private ResultData result;
 
-    @JsonProperty("Hata")
-    private String error;
+    public boolean isSuccess() {
+        return result != null && result.getData() != null && result.getData().getHisseTanim() != null;
+    }
 
-    @JsonProperty("HisseListesi")
-    private List<StockDefinition> stockList;
+    public String getError() {
+        return null; // API yanıtında hata bilgisi yoksa null dönecek
+    }
+
+    public List<StockDefinition> getStockList() {
+        return isSuccess() ? result.getData().getHisseTanim() : null;
+    }
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ResultData {
+        @JsonProperty("header")
+        private Object header;
+
+        @JsonProperty("data")
+        private StockDefinitionData data;
+    }
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class StockDefinitionData {
+        @JsonProperty("HisseTanim")
+        private List<StockDefinition> hisseTanim;
+    }
 
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class StockDefinition {
+        // API'den gelen alanlar burada belirtilen adlarla eşleştirilecek
+        @JsonProperty("asset_code")
+        private String stockCode; // Muhtemelen asset_code veya benzer bir şey
 
-        @JsonProperty("HISSE_KODU")
-        private String stockCode;
+        @JsonProperty("asset_name")
+        private String stockName; // Muhtemelen asset_name veya benzer bir şey
 
-        @JsonProperty("HISSE_ADI")
-        private String stockName;
+        @JsonProperty("exchange_code")
+        private String exchangeCode; // Muhtemelen exchange_code veya benzer bir şey
 
-        @JsonProperty("BORSA_KODU")
-        private String exchangeCode;
+        @JsonProperty("sector_code")
+        private String sectorCode; // Muhtemelen sector_code veya benzer bir şey
 
-        @JsonProperty("SEKTOR_KODU")
-        private String sectorCode;
+        @JsonProperty("sector_name")
+        private String sectorName; // Muhtemelen sector_name veya benzer bir şey
 
-        @JsonProperty("SEKTOR_ADI")
-        private String sectorName;
+        @JsonProperty("market_cap")
+        private Double marketCap; // Muhtemelen market_cap veya benzer bir şey
 
-        @JsonProperty("PD")
-        private Double marketCap;
-
-        @JsonProperty("AKTIF")
-        private String active;
+        @JsonProperty("active")
+        private String active; // Muhtemelen active veya benzer bir şey
     }
 }

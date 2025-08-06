@@ -266,7 +266,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 .tradeDate(calculation.tradeDate())
                 .valueDate(calculation.valueDate())
                 .totalAmount(calculation.totalAmount())
-                .stockGroup(tradeOrder.getStock().getGroup().name())
+                .stockGroup(tradeOrder.getStock().getGroup() != null ? tradeOrder.getStock().getGroup().name() : "UNKNOWN")
                 .commission(calculation.commission())
                 .bsmv(calculation.bsmv())
                 .totalTaxAndCommission(calculation.totalTaxAndCommission())

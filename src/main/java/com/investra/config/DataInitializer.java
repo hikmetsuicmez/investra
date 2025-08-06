@@ -18,7 +18,6 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final ClientRepository clientRepository;
     private final PortfolioRepository portfolioRepository;
-    private final StockRepository stockRepository;
     private final PortfolioItemRepository portfolioItemRepository;
     private final TradeOrderRepository tradeOrderRepository;
     private final PasswordEncoder passwordEncoder;
@@ -30,7 +29,6 @@ public class DataInitializer implements CommandLineRunner {
         tradeOrderRepository.deleteAll();
         portfolioRepository.deleteAll();
         accountRepository.deleteAll();
-        stockRepository.deleteAll();
         clientRepository.deleteAll();
         userRepository.deleteAll();
 
@@ -102,67 +100,6 @@ public class DataInitializer implements CommandLineRunner {
 
         accountRepository.save(takasAccount);
 
-        // hisse senedi oluşturma
-        Stock stock1 = Stock.builder()
-                .name("ABC Teknoloji")
-                .symbol("ABCTK")
-                .code("ABCTK")  // Hisse kodu
-                .sector("Teknoloji")  // Sektör bilgisi
-                .exchangeCode("BIST")  // Borsa kodu
-                .group(StockGroup.TECHNOLOGY)
-                .price(new BigDecimal("150.00"))  // currentPrice -> price olarak değişti
-                .isActive(true)
-                .source(StockSource.BIST)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        Stock stock2 = Stock.builder()
-                .name("Garanti Bankası")
-                .symbol("GARAN")
-                .code("GARAN")  // Hisse kodu
-                .sector("Bankacılık")  // Sektör bilgisi
-                .exchangeCode("BIST")  // Borsa kodu
-                .group(StockGroup.FINANCE)
-                .price(new BigDecimal("25.30"))  // currentPrice -> price olarak değişti
-                .isActive(true)
-                .source(StockSource.BIST)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        Stock stock3 = Stock.builder()
-                .name("Türk Hava Yolları")
-                .symbol("THYAO")
-                .group(StockGroup.TECHNOLOGY)
-                .price(new BigDecimal("210.00"))
-                .isActive(true)
-                .source(StockSource.BIST)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        stockRepository.save(stock1);
-        stockRepository.save(stock2);
-        stockRepository.save(stock3);
-
-        PortfolioItem item1 = PortfolioItem.builder()
-                .portfolio(portfolio)
-                .account(takasAccount)
-                .stock(stock2)
-                .quantity(100)
-                .avgPrice(new BigDecimal("23.50"))
-                .lastUpdated(LocalDateTime.now())
-                .build();
-
-        PortfolioItem item2 = PortfolioItem.builder()
-                .portfolio(portfolio)
-                .account(takasAccount)
-                .stock(stock1)
-                .quantity(100)
-                .avgPrice(new BigDecimal("23.50"))
-                .lastUpdated(LocalDateTime.now())
-                .build();
-
-        portfolioItemRepository.save(item1);
-        portfolioItemRepository.save(item2);
 
     }
 }
