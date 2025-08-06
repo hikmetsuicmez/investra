@@ -11,41 +11,63 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StockPriceResponse {
 
-    @JsonProperty("Sonuc")
-    private boolean success;
+    @JsonProperty("result")
+    private ResultData result;
 
-    @JsonProperty("Hata")
-    private String error;
+    public boolean isSuccess() {
+        return result != null && result.getData() != null && result.getData().getHisseFiyat() != null;
+    }
 
-    @JsonProperty("FiyatListesi")
-    private List<StockPrice> priceList;
+    public String getError() {
+        return null; // API yanıtında hata bilgisi yoksa null dönecek
+    }
+
+    public List<StockPrice> getPriceList() {
+        return isSuccess() ? result.getData().getHisseFiyat() : null;
+    }
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ResultData {
+        @JsonProperty("header")
+        private Object header;
+
+        @JsonProperty("data")
+        private StockPriceData data;
+    }
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class StockPriceData {
+        @JsonProperty("HisseFiyat")
+        private List<StockPrice> hisseFiyat;
+    }
 
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class StockPrice {
+        @JsonProperty("record_id")
+        private String recordId;
 
-        @JsonProperty("HISSE_KODU")
-        private String stockCode;
+        @JsonProperty("asset_code")
+        private String stockCode; // API'den asset_code olarak geliyor, kodunuzda stockCode olarak kullanılıyor
 
-        @JsonProperty("FIYAT")
-        private BigDecimal price;
+        @JsonProperty("close_price")
+        private BigDecimal price; // API'den close_price olarak geliyor, kodunuzda price olarak kullanılıyor
 
-        @JsonProperty("FIYAT_TARIH")
-        private String priceDate;
+        @JsonProperty("record_date")
+        private String recordDate;
 
-        @JsonProperty("FIYAT_SAAT")
-        private String priceTime;
+        @JsonProperty("data_date")
+        private String dataDate;
 
-        @JsonProperty("YUZDE_DEGISIM")
-        private BigDecimal percentChange;
+        @JsonProperty("high_price")
+        private BigDecimal highPrice;
 
-        @JsonProperty("FIYAT_TL")
-        private BigDecimal priceTL;
+        @JsonProperty("low_price")
+        private BigDecimal lowPrice;
 
-        @JsonProperty("HACIM_LOT")
-        private BigDecimal volumeLot;
-
-        @JsonProperty("HACIM_TL")
-        private BigDecimal volumeTL;
+        @JsonProperty("open_price")
+        private BigDecimal openPrice;
     }
 }

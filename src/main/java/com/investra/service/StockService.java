@@ -6,8 +6,6 @@ import com.investra.entity.Stock;
 import com.investra.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +44,7 @@ public class StockService {
     /**
      * Belirli bir hisse senedini kodu ile getirir
      */
-    @Cacheable(value = "stocks", key = "#stockCode")
+    // @Cacheable(value = "stocks", key = "#stockCode")
     public Optional<Stock> getStockByCode(String stockCode) {
         Optional<Stock> stockOpt = stockRepository.findByCode((stockCode));
 
@@ -96,61 +94,82 @@ public class StockService {
      * Tüm hisse senedi tanımlarını API'den çekerek veritabanını günceller
      */
     @Transactional
-    @CacheEvict(value = "stocks", allEntries = true)
+    // @CacheEvict(value = "stocks", allEntries = true)
     public List<Stock> refreshStocksFromApi() {
         try {
-            log.info("Hisse senedi tanımları API'den yenileniyor");
+            log.info("Hisse senedi verileri API'den yenileniyor");
 
-            // Hisse tanımlarını API'den al
-            List<StockDefinitionResponse.StockDefinition> definitions = infinaApiService.getAllStockDefinitions();
+            // Sadece hisse fiyatlarını API'den al
+            List<StockPriceResponse.StockPrice> prices = infinaApiService.getAllStockPrices();
 
-            if (definitions.isEmpty()) {
-                log.warn("API'den hisse senedi tanımı alınamadı");
+            log.info("API'den alınan fiyat sayısı: {}", prices.size());
+
+            if (prices.isEmpty()) {
+                log.warn("API'den hisse senedi fiyatları alınamadı");
                 return stockRepository.findAll();
             }
 
-            // Hisse fiyatlarını API'den al
-            List<StockPriceResponse.StockPrice> prices = infinaApiService.getAllStockPrices();
+            // Limit olmadan tüm hisseleri işle, sadece null olanları filtrele
+            List<StockPriceResponse.StockPrice> filteredPrices = prices.stream()
+                    .filter(price -> price.getStockCode() != null) // null olan kodları filtrele
+                    .collect(Collectors.toList());
 
-            // Fiyatları code bazında map'e dönüştür
-            Map<String, BigDecimal> priceMap = prices.stream()
-                    .collect(Collectors.toMap(
-                            StockPriceResponse.StockPrice::getStockCode,
-                            StockPriceResponse.StockPrice::getPrice,
-                            (price1, price2) -> price1 // Duplicate durumunda ilkini al
-                    ));
+            log.info("İşlenecek hisse sayısı: {}", filteredPrices.size());
 
-            // Cache'i güncelle
+            // Önce tüm mevcut hisseleri al - bunlar korunacak
+            List<Stock> existingStocks = stockRepository.findAll();
+            log.info("Veritabanında mevcut hisse sayısı: {}", existingStocks.size());
+
+            // Mevcut hisse kodlarını al
+            List<String> existingCodes = existingStocks.stream()
+                    .map(Stock::getCode)
+                    .collect(Collectors.toList());
+
+            // Cache'i güncelle - TÜM hisse fiyatları için
             stockPriceCache.clear();
-            stockPriceCache.putAll(priceMap);
+            filteredPrices.stream()
+                .forEach(price -> stockPriceCache.put(price.getStockCode(), price.getPrice()));
 
-            // Hisseleri entity'ye dönüştür ve kaydet
-            List<Stock> stocks = definitions.stream()
-                    .filter(def -> "1".equals(def.getActive())) // Sadece aktif hisseleri al
-                    .map(def -> {
-                        Stock stock = stockRepository.findByCode(def.getStockCode())
-                                .orElse(new Stock());
+            // Mevcut hisselerin fiyatlarını güncelle
+            existingStocks.forEach(stock -> {
+                if (stock.getCode() != null) {
+                    filteredPrices.stream()
+                        .filter(price -> stock.getCode().equals(price.getStockCode()))
+                        .findFirst()
+                        .ifPresent(price -> stock.setPrice(price.getPrice()));
+                }
+            });
 
-                        stock.setCode(def.getStockCode());
-                        stock.setName(def.getStockName());
-                        stock.setSector(def.getSectorName());
-                        stock.setExchangeCode(def.getExchangeCode());
-
-                        // Fiyatı varsa ekle
-                        priceMap.computeIfPresent(def.getStockCode(), (code, price) -> {
-                            stock.setPrice(price);
-                            return price;
-                        });
+            // Yeni hisseleri entity'ye dönüştür (sadece veritabanında olmayanlar)
+            List<Stock> newStocks = filteredPrices.stream()
+                    .filter(price -> !existingCodes.contains(price.getStockCode())) // Sadece yeni kodları ekle
+                    .map(price -> {
+                        Stock stock = new Stock();
+                        stock.setCode(price.getStockCode());
+                        stock.setName(price.getStockCode()); // Geçici olarak kod ile doldur
+                        stock.setIsActive(true);
+                        stock.setPrice(price.getPrice());
+                        // Varsayılan olarak FINANCE StockGroup'u atanıyor
+                        stock.setGroup(com.investra.enums.StockGroup.FINANCE);
 
                         return stock;
                     })
                     .collect(Collectors.toList());
 
-            stockRepository.saveAll(stocks);
-            log.info("{} hisse senedi veritabanına kaydedildi", stocks.size());
+            log.info("Eklenecek yeni hisse senedi sayısı: {}", newStocks.size());
 
-            return stocks;
+            // Mevcut hisseleri güncelle
+            stockRepository.saveAll(existingStocks);
+            log.info("{} mevcut hisse senedi fiyatı güncellendi", existingStocks.size());
 
+            // Yeni hisseleri ekle (varsa)
+            if (!newStocks.isEmpty()) {
+                stockRepository.saveAll(newStocks);
+                log.info("{} yeni hisse senedi veritabanına kaydedildi", newStocks.size());
+            }
+
+            // Tüm güncellenmiş ve yeni hisseleri döndür
+            return stockRepository.findAll();
         } catch (Exception e) {
             log.error("Hisse senetleri API'den güncellenirken hata: {}", e.getMessage(), e);
             return stockRepository.findAll();
@@ -176,7 +195,7 @@ public class StockService {
             stockPriceCache.clear();
             prices.forEach(price -> stockPriceCache.put(price.getStockCode(), price.getPrice()));
 
-            log.info("{} hisse senedi fiyat�� güncellendi", prices.size());
+            log.info("{} hisse senedi fiyatı güncellendi", prices.size());
         } catch (Exception e) {
             log.error("Zamanlanmış fiyat güncellemesi sırasında hata: {}", e.getMessage(), e);
         }

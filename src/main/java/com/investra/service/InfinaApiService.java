@@ -26,7 +26,15 @@ public class InfinaApiService {
             log.info("Hisse senedi tanımları Infina API'sinden alınıyor");
             String url = infinaApiConfig.getStockDefinitionUrl();
 
+            log.info("API URL: {}", url); // URL'yi loglamak için eklendi
+
             StockDefinitionResponse response = restTemplate.getForObject(url, StockDefinitionResponse.class);
+
+            if (response != null) {
+                log.info("API yanıtı: success={}, error={}", response.isSuccess(), response.getError());
+            } else {
+                log.error("API'den boş yanıt alındı");
+            }
 
             if (response != null && response.isSuccess()) {
                 log.info("Toplam {} hisse senedi tanımı alındı",
