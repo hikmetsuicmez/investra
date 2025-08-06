@@ -3,6 +3,7 @@ package com.investra.service;
 import com.investra.dtos.request.StockBuyOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.entity.*;
+import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
 import com.investra.exception.*;
@@ -35,6 +36,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
     private final OrderCalculationService calculationService;
     private final PortfolioUpdateService portfolioUpdateService;
     private final OrderPreviewCacheService previewCacheService;
+    private final TradeOrderService tradeOrderService;
 
     public StockBuyServiceImpl(
             ClientRepository clientRepository,
@@ -46,7 +48,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             EntityFinderService entityFinderService,
             OrderCalculationService calculationService,
             PortfolioUpdateService portfolioUpdateService,
-            OrderPreviewCacheService previewCacheService) {
+            OrderPreviewCacheService previewCacheService,
+            TradeOrderService tradeOrderService) {
         super(clientRepository);
         this.stockRepository = stockRepository;
         this.accountRepository = accountRepository;
@@ -57,6 +60,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
         this.calculationService = calculationService;
         this.portfolioUpdateService = portfolioUpdateService;
         this.previewCacheService = previewCacheService;
+        this.tradeOrderService = tradeOrderService;
     }
 
     @Override
@@ -177,7 +181,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                     OrderType.BUY);
 
             // Hesap bakiyesi kontrol edilir
-            if (entities.account().getBalance().doubleValue() < calculation.netAmount().doubleValue()) {
+            if (entities.account().getAvailableBalance().doubleValue() < calculation.netAmount().doubleValue()) {
                 throw new InsufficientBalanceException("Yetersiz bakiye: " + ErrorCode.INSUFFICIENT_BALANCE);
             }
 
@@ -185,16 +189,46 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             User currentUser = entityFinderService.findUserByEmail(userEmail);
 
             // TradeOrder kaydı oluşturulur
-            TradeOrder tradeOrder = createTradeOrder(entities, calculation, currentUser, request);
+            TradeOrder tradeOrder = TradeOrder.builder()
+                    .client(entities.client())
+                    .account(entities.account())
+                    .stock(entities.stock())
+                    .orderType(OrderType.BUY)
+                    .quantity(request.getQuantity())
+                    .price(calculation.price())
+                    .totalAmount(calculation.totalAmount())
+                    .netAmount(calculation.netAmount())
+                    .status(OrderStatus.PENDING)
+                    .executionType(request.getExecutionType())
+                    .user(currentUser)
+                    .submittedAt(LocalDateTime.now())
+                    .orderNumber(calculationService.generateOrderNumber())
+                    .build();
+
+            // Rastgele bir duruma atama (bekleyen, gerçekleşen, iptal)
+            tradeOrder.assignRandomStatus();
+
             tradeOrder = tradeOrderRepository.save(tradeOrder);
 
-            // Portföy güncellenir
-            portfolioUpdateService.updatePortfolioForBuy(
-                    entities.client(),
-                    entities.account(),
-                    entities.stock(),
-                    request.getQuantity(),
-                    calculation.netAmount());
+            // Eğer alış emri bekleyen veya gerçekleşen ise, available balance azaltılır
+            if (tradeOrder.getExecutionType() == ExecutionType.MARKET &&
+                (tradeOrder.getStatus() == OrderStatus.PENDING || tradeOrder.getStatus() == OrderStatus.EXECUTED)) {
+                tradeOrderService.updateAccountBalanceForBuyOrder(entities.account(), calculation.netAmount());
+            } else if (tradeOrder.getExecutionType() == ExecutionType.LIMIT &&
+                      tradeOrder.getStatus() == OrderStatus.EXECUTED) {
+                // Limit emirlerde sadece emir gerçekleştiğinde bakiyeyi güncelle
+                tradeOrderService.updateAccountBalanceForBuyOrder(entities.account(), calculation.netAmount());
+            }
+
+            // Eğer emir gerçekleşti ise, portföy güncellenir
+            if (tradeOrder.getStatus() == OrderStatus.EXECUTED) {
+                portfolioUpdateService.updatePortfolioForBuy(
+                        entities.client(),
+                        entities.account(),
+                        entities.stock(),
+                        request.getQuantity(),
+                        calculation.netAmount());
+            }
 
             // İşlem sonucu yanıtı oluşturulur
             StockBuyOrderResultResponse response = createBuyOrderResultResponse(tradeOrder, calculation);

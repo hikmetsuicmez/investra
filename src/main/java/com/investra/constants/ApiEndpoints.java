@@ -63,4 +63,16 @@ public class ApiEndpoints {
         public static final String SEARCH_CLIENTS = "/search-clients";
         public static final String RECENT_CLIENTS = "/recent-clients";
     }
+
+    public static final class TradeOrder {
+        private TradeOrder() {}
+        public static final String BASE = "/api/v1/trade-orders";
+        public static final String GET_ALL = "/all"; // Tüm emirleri getir
+        public static final String GET_PENDING = "/pending"; // Bekleyen emirleri getir
+        public static final String GET_EXECUTED = "/executed"; // Gerçekleşen emirleri getir
+        public static final String GET_COMPLETED = "/completed"; // Tamamlanmış emirleri getir
+        public static final String GET_CANCELLED = "/cancelled"; // İptal edilen emirleri getir
+        public static final String ORDER_CANCELLED = "/{orderId}/cancel";
+
+    }
 }

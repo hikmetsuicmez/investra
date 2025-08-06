@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @AllArgsConstructor
@@ -56,8 +57,44 @@ public class Stock {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
+    @Transient
+    private String createdAtString;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Transient
+    private String updatedAtString;
+
+    public String getCreatedAt() {
+        if (createdAt != null) {
+            return createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
+        return null;
+    }
+
+    public String getUpdatedAt() {
+        if (updatedAt != null) {
+            return updatedAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
+        return null;
+    }
+
+    public LocalDateTime getCreatedAtDate() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAtDate() {
+        return updatedAt;
+    }
+
+    public void setCreatedAtDate(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAtDate(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
     @PrePersist
     protected void onCreate() {
