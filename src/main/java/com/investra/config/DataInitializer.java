@@ -22,13 +22,17 @@ public class DataInitializer implements CommandLineRunner {
     private final TradeOrderRepository tradeOrderRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository; // Transaction repository eklendi
 
     public void run(String... args) throws Exception {
 
+        // Silme sırası önemli: Foreign key constraint'leri nedeniyle
+        // Önce child table'ları (Transaction), sonra parent table'ları (Account) silmeliyiz
         portfolioItemRepository.deleteAll();
         tradeOrderRepository.deleteAll();
+        transactionRepository.deleteAll(); // Transaction'ları önce sil
         portfolioRepository.deleteAll();
-        accountRepository.deleteAll();
+        accountRepository.deleteAll(); // Account'ları sonra sil
         clientRepository.deleteAll();
         userRepository.deleteAll();
 
