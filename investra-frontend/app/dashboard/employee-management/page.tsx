@@ -31,7 +31,7 @@ export default function EmployeeManagement() {
 	}, []);
 
 	return (
-		<div className="flex-col h-screen bg-gray-100 p-6">
+		<div className="flex flex-col h-screen bg-gray-100 p-6">
 			<div className="flex justify-between items-center p-4 mb-4 flex-shrink-0">
 				<h1 className="text-2xl font-semibold">Personel Yönetimi</h1>
 				<Button className="flex items-center gap-2 bg-blue-600" onClick={() => setOpenDialog(true)}>
