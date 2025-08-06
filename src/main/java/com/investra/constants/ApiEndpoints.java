@@ -57,11 +57,13 @@ public class ApiEndpoints {
     public static final class Account {
         private Account() {}
         public static final String BASE = "/api/v1/accounts";
+        public static final String DEPOSIT = "/deposit"; // Hesaba bakiye yükleme
         public static final String CREATE = "/create";
         public static final String GET_BY_ID = "/{accountId}";
         public static final String GET_BY_CLIENT = "/client/{clientId}";
         public static final String SEARCH_CLIENTS = "/search-clients";
         public static final String RECENT_CLIENTS = "/recent-clients";
+
     }
 
     public static final class TradeOrder {

@@ -9,8 +9,8 @@ public class AccountNotFoundException extends BaseException {
     }
 
     public AccountNotFoundException(Long id) {
-        super(String.format("ID: '%d' olan hesap bulunamadı", id),
-              ErrorCode.ACCOUNT_NOT_FOUND,
-              HttpStatus.NOT_FOUND);
+        super(String.format("ID: '%d' olan müşteri bulunamadı", id),
+                ErrorCode.ACCOUNT_NOT_FOUND,
+                HttpStatus.NOT_FOUND);
     }
 }

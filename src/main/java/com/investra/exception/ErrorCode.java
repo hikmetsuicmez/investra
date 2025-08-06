@@ -41,6 +41,7 @@ public enum ErrorCode {
     PREVIEW_EXPIRED(5007, "Önizleme süresi dolmuş"),
     UNEXPECTED_ERROR(5008, "Beklenmeyen bir hata oluştu"),
     ACCOUNT_ALREADY_EXISTS(5009, "Hesap zaten mevcut"),
+    INVALID_AMOUNT(5010, "Geçersiz tutar"),
 
     // Bildirim hataları (6000-6999)
     NOTIFICATION_ERROR(6000, "Bildirim gönderimi başarısız"),
