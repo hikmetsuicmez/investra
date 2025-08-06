@@ -1,0 +1,69 @@
+"use client";
+
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CorporateCustomerInfo, IndividualCustomerInfo } from "./AddCustomerDialog";
+import DeleteCustomerDialog from "./DeleteCustomerDialog";
+
+function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustomerInfo): {
+	name: string;
+	type: string;
+	phone: string;
+	email: string;
+	status: string;
+} {
+	if (customer.clientType == "INDIVIDUAL") {
+		// It's an individual
+		return {
+			name: customer.fullName,
+			type: "Bireysel",
+			phone: customer.phone,
+			email: customer.email,
+			status: "Aktif", // or get from some other logic
+		};
+	} else {
+		// It's a corporate
+		return {
+			name: customer.companyName,
+			type: "Kurumsal",
+			phone: customer.phone,
+			email: customer.email,
+			status: "Aktif", // or get from some other logic
+		};
+	}
+}
+
+export default function CustomerTable({
+	customers,
+}: {
+	customers: (IndividualCustomerInfo | CorporateCustomerInfo)[];
+}) {
+	console.log(customers);
+	return (
+		<Table className="text-lg">
+			<TableHeader>
+				<TableRow>
+					<TableHead>Müşteri adı</TableHead>
+					<TableHead>Müşteri tipi</TableHead>
+					<TableHead>Telefon Numarası</TableHead>
+					<TableHead>E-posta</TableHead>
+					<TableHead className="text-center">Durum</TableHead>
+					<TableHead></TableHead>
+				</TableRow>
+			</TableHeader>
+			<TableBody>
+				{customers.map((customer, index) => (
+					<TableRow key={index}>
+						<TableCell>{mapToCustomerDisplay(customer).name}</TableCell>
+						<TableCell>{mapToCustomerDisplay(customer).type}</TableCell>
+						<TableCell>{customer.phone}</TableCell>
+						<TableCell>{customer.email}</TableCell>
+						<TableCell className="text-center">{customer.isActive ? "Aktif" : "Pasif"}</TableCell>
+						<TableCell>
+							<DeleteCustomerDialog customer={customer} disabled={!customer.isActive} />
+						</TableCell>
+					</TableRow>
+				))}
+			</TableBody>
+		</Table>
+	);
+}

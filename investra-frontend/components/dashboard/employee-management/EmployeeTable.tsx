@@ -4,7 +4,6 @@ import EditUserDialog from "./EditUserDialog";
 import DeleteUserDialog from "./DeleteUserDialog";
 
 export default function EmployeeTable({ employees }: { employees: User[] }) {
-	console.log(employees);
 	return (
 		<Table className="text-lg">
 			<TableHeader>
