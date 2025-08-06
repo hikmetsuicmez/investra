@@ -78,7 +78,7 @@ public class ClientMapper {
                     .blueCardNo(individual.getBlueCardNo())
                     .nationalityNumber(individual.getNationalityNumber())
                     .birthDate(individual.getBirthDate())
-                    .prosfession(individual.getProfession())
+                    .profession(individual.getProfession())
                     .gender(individual.getGender())
                     .educationStatus(individual.getEducationStatus())
                     .monthlyIncome(individual.getMonthlyIncome())
