@@ -1,6 +1,7 @@
 package com.investra.controller;
 
 import com.investra.constants.ApiEndpoints;
+import com.investra.docs.EndOfDayApiDocs;
 import com.investra.dtos.response.ClientValuationResponse;
 import com.investra.dtos.response.EndOfDayStatusResponse;
 import com.investra.dtos.response.Response;
@@ -20,7 +21,7 @@ import java.util.List;
 @RequestMapping(ApiEndpoints.EndOfDay.BASE)
 @RequiredArgsConstructor
 @Slf4j
-public class EndOfDayController {
+public class EndOfDayController implements EndOfDayApiDocs {
 
     private final EndOfDayService endOfDayService;
 
