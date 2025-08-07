@@ -104,7 +104,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @Cacheable(value = "accounts", key = "'client_' + #clientId")
+    //@Cacheable(value = "accounts", key = "'client_' + #clientId")
     public Response<List<AccountResponse>> getAccountsByClientId(Long clientId) {
         log.info("Müşterinin hesapları isteniyor. Müşteri ID: {}", clientId);
 
@@ -128,7 +128,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    @Cacheable(value = "accounts", key = "#id")
+    //@Cacheable(value = "accounts", key = "#id")
     public Response<AccountResponse> getAccountById(Long id) {
         log.info("Hesap detayları isteniyor. Hesap ID: {}", id);
 

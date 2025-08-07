@@ -40,7 +40,7 @@ public class Client {
     @Column(name = "phone", nullable = false)
     private String phone;
 
-    @Column(name = "address", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "address", columnDefinition = "TEXT")
     private String address;
 
     @Column(name = "notes", columnDefinition = "TEXT")

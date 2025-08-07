@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function SearchClientBySearchTerm() {
+export default function SearchClientBySearchTerm () {
   const [searchTerm, setSearchTerm] = useState("");
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,9 +21,8 @@ export default function SearchClientBySearchTerm() {
   const [searchType, setSearchType] = useState<
     "TCKN" | "VERGI_ID" | "MAVI_KART_NO" | "PASSPORT_NO" | "VERGI_NO" | "ISIM"
   >("TCKN");
-  const [isActive, setIsActive] = useState<"true" | "false">("true");
 
-  const router = useRouter(); // ✅ eklendi
+  const router = useRouter(); 
 
   async function handleSearch() {
     if (!searchTerm.trim()) return;
@@ -42,7 +41,7 @@ export default function SearchClientBySearchTerm() {
         body: JSON.stringify({
           searchTerm: searchTerm.trim(),
           searchType,
-          isActive: isActive === "true",
+          isActive: true,
         }),
       });
 
@@ -66,7 +65,7 @@ export default function SearchClientBySearchTerm() {
 
   function handleSelectCustomer() {
     if (client?.id) {
-      router.push(`/dashboard/account-search/${client.id}`);
+      router.push(`/dashboard/account-selection/${client.id}`);
 
     }
   }
@@ -92,16 +91,6 @@ export default function SearchClientBySearchTerm() {
             <SelectItem value="PASSPORT_NO">Pasaport No</SelectItem>
             <SelectItem value="VERGI_NO">Vergi No</SelectItem>
             <SelectItem value="ISIM">İsim</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={isActive} onValueChange={setIsActive}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Durum" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="true">Aktif</SelectItem>
-            <SelectItem value="false">Pasif</SelectItem>
           </SelectContent>
         </Select>
 
