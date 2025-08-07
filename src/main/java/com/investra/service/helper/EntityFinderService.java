@@ -42,7 +42,7 @@ public class EntityFinderService {
             return new OrderEntities(client, stock, portfolioItem, account);
         } catch (ClientNotFoundException | StockNotFoundException | AccountNotFoundException |
                 InsufficientStockException e) {
-            log.warn(e.getMessage());
+            log.warn("İş kuralı hatası: {} - İstek: {}", e.getMessage(), request);
             throw e;
         } catch (DataAccessException e) {
             log.error("Varlıklar aranırken veritabanı hatası oluştu: {}", e.getMessage());
@@ -66,6 +66,8 @@ public class EntityFinderService {
 
             // Hesabın bu müşteriye ait olduğu kontrol edilir
             if (!account.getClient().getId().equals(clientId)) {
+                log.warn("Validasyon hatası: Hesap (id={}) belirtilen müşteriyle (id={}) eşleşmiyor.",
+                        account.getClient().getId(), clientId);
                 throw new ValidationException("Hesap belirtilen müşteriye ait değil");
             }
 

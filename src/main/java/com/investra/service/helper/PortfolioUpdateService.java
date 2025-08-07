@@ -79,7 +79,7 @@ public class PortfolioUpdateService {
         try {
             account.setBalance(account.getBalance().subtract(amount));
             accountRepository.save(account);
-            log.debug("Hesap bakiyesi güncellendi: {} - {}", account.getAccountNumber(), amount);
+            log.info("Hesap bakiyesi güncellendi: {} - {}", account.getAccountNumber(), amount);
         } catch (DataAccessException e) {
             log.error("Hesap bakiyesi güncellenirken veritabanı hatası oluştu: {}", e.getMessage());
             throw new DatabaseOperationException("Hesap bakiyesi güncellenirken bir hata oluştu", e);
@@ -100,7 +100,7 @@ public class PortfolioUpdateService {
                 // Varsa miktarı güncellenir
                 portfolioItem.setQuantity(portfolioItem.getQuantity() + quantity);
                 portfolioItem.setLastUpdated(LocalDateTime.now());
-                log.debug("Portföy öğesi güncellendi. ID: {}, Yeni miktar: {}",
+                log.info("Portföy öğesi güncellendi. ID: {}, Yeni miktar: {}",
                         portfolioItem.getId(), portfolioItem.getQuantity());
             } else {
                 // Yoksa yeni bir portföy öğesi oluşturulur
@@ -119,7 +119,7 @@ public class PortfolioUpdateService {
                         .avgPrice(stock.getPrice()) // Ortalama fiyat olarak güncel fiyatı alıyoruz
                         .lastUpdated(LocalDateTime.now())
                         .build();
-                log.debug("Yeni portföy öğesi oluşturuldu. Müşteri: {}, Hisse: {}, Miktar: {}",
+                log.info("Yeni portföy öğesi oluşturuldu. Müşteri: {}, Hisse: {}, Miktar: {}",
                         client.getId(), stock.getSymbol(), quantity);
             }
 

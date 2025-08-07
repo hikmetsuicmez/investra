@@ -30,6 +30,7 @@ public class StockService {
 
     // Tüm hisse senetlerini getirir, önce veritabanından
     public List<Stock> getAllStocks() {
+        log.info("Hisse senedi verileri isteniyor");
         List<Stock> stocks = stockRepository.findAll();
 
         if (stocks.isEmpty()) {
@@ -46,6 +47,7 @@ public class StockService {
      */
     // @Cacheable(value = "stocks", key = "#stockCode")
     public Optional<Stock> getStockByCode(String stockCode) {
+        log.info("'{}' kodlu hisse senedi isteniyor", stockCode);
         Optional<Stock> stockOpt = stockRepository.findByCode((stockCode));
 
         if (stockOpt.isEmpty()) {
@@ -67,6 +69,7 @@ public class StockService {
         try {
             // Önce cache'den kontrol et
             BigDecimal cachedPrice = stockPriceCache.get(stock.getCode());
+            log.info("'{}' kodlu hissenin fiyatı güncelleniyor...", stock.getCode());
             if (cachedPrice != null) {
                 stock.setPrice(cachedPrice);
                 log.debug("Hisse senedi fiyatı cache'den alındı: {}", stock.getCode());
@@ -85,6 +88,7 @@ public class StockService {
 
                 log.debug("Hisse senedi fiyatı API'den güncellendi: {}", stock.getCode());
             }
+
         } catch (Exception e) {
             log.error("Hisse senedi fiyatı güncellenirken hata: {}", e.getMessage());
         }

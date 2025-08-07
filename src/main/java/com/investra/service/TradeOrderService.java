@@ -80,9 +80,14 @@ public class TradeOrderService {
     @Transactional
     public void processPendingLimitOrder(TradeOrder order) {
         try {
+            log.info("Limit emir işleme alındı: ID={}, OrderType={}, SubmittedAt={}",
+                    order.getId(), order.getOrderType(), order.getSubmittedAt());
             // Hisse senedinin güncel fiyatını al
             Stock stock = stockRepository.findById(order.getStock().getId())
-                    .orElseThrow(() -> new RuntimeException("Hisse senedi bulunamadı: " + order.getStock().getId()));
+                    .orElseThrow(() -> {
+                        log.error("Hisse senedi bulunamadı: StockId={}", order.getStock().getId());
+                        return new RuntimeException("Hisse senedi bulunamadı: " + order.getStock().getId());
+                    });
 
             BigDecimal currentPrice = stock.getPrice();
             BigDecimal limitPrice = order.getPrice();
@@ -136,9 +141,11 @@ public class TradeOrderService {
             order.setFundsReserved(true);
 
             tradeOrderRepository.save(order);
+            log.info("Emir durum güncellemesi başarıyla veritabanına kaydedildi: OrderID={}", order.getId());
 
             try {
                 sendOrderExecutedNotification(order.getUser(), order);
+                log.info("Emir başarı bildirimi gönderildi: OrderID={}, Email={}", order.getId(), order.getUser().getEmail());
             } catch (Exception e) {
                 log.error("Bildirim gönderme hatası (işlem etkilenmez): {}", e.getMessage());
             }
@@ -336,17 +343,26 @@ public class TradeOrderService {
     // Bekleyen bir emri iptal eder
     @Transactional
     public TradeOrder cancelOrder(Long orderId, String username) {
+        log.info("İptal talebi alındı. orderId={}, kullanıcı={}", orderId, username);
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+                .orElseThrow(() -> {
+                    log.warn("İptal işlemi başarısız: Kullanıcı bulunamadı. username={}", username);
+                    return new RuntimeException("Kullanıcı bulunamadı");
+                });
 
         TradeOrder order = tradeOrderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Emir bulunamadı"));
+                .orElseThrow(() -> {
+                    log.warn("İptal işlemi başarısız: Emir bulunamadı. orderId={}", orderId);
+                    return new RuntimeException("Emir bulunamadı");
+                });
 
         if (!order.getUser().getId().equals(user.getId())) {
+            log.warn("İptal işlemi başarısız: Emir kullanıcıya ait değil. orderId={}, kullanıcı={}", orderId, username);
             throw new RuntimeException("Bu emir size ait değil");
         }
 
         if (order.getStatus() != OrderStatus.PENDING) {
+            log.warn("İptal işlemi başarısız: Sadece bekleyen emirler iptal edilebilir. orderId={}, durum={}", orderId, order.getStatus());
             throw new RuntimeException("Sadece bekleyen emirler iptal edilebilir");
         }
 
@@ -360,6 +376,7 @@ public class TradeOrderService {
 
         // Alış emri iptal edildiğinde availableBalance'ı güncelle
         if (order.getOrderType() == OrderType.BUY) {
+            log.info("Alış emri iptal edildiği için bakiye geri yükleniyor. orderId={}, amount={}", orderId, order.getNetAmount());
             restoreAccountBalanceForCancelledBuyOrder(order.getAccount(), order.getNetAmount());
         }
 

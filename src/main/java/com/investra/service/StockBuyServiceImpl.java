@@ -67,6 +67,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
     public Response<List<StockResponse>> getAvailableStocks() {
         try {
             List<Stock> stocks = stockRepository.findByIsActiveTrue();
+            log.info("Aktif hisse senedi sayısı: {}", stocks.size());
+
             return Response.<List<StockResponse>>builder()
                     .statusCode(HttpStatus.OK.value())
                     .isSuccess(true)
@@ -108,6 +110,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                     OrderType.BUY);
 
             if (entities.account().getBalance().doubleValue() < calculation.netAmount().doubleValue()) {
+                log.warn("Yetersiz bakiye: hesap bakiyesi={}, gerekli tutar={}",
+                        entities.account().getBalance(), calculation.netAmount());
                 throw new InsufficientBalanceException(String.valueOf(ErrorCode.INSUFFICIENT_BALANCE));
             }
 
@@ -148,10 +152,15 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
     @Transactional
     public Response<StockBuyOrderResultResponse> executeBuyOrder(StockBuyOrderRequest request, String userEmail) {
         try {
+            log.info("Alış emri işlemi başlatıldı. Kullanıcı: {}, Müşteri ID: {}, Hesap ID: {}, Hisse ID: {}, Adet: {}, Emir Tipi: {}, Fiyat: {}",
+                    userEmail, request.getClientId(), request.getAccountId(), request.getStockId(),
+                    request.getQuantity(), request.getExecutionType(), request.getPrice());
+
             validatorService.validateOrderExecution(request.getStockId());
 
             // Preview ID kontrolü - sadece previewId'nin varlığını kontrol ediyoruz
             if (request.getPreviewId() == null || request.getPreviewId().trim().isEmpty()) {
+                log.warn("Boş preview ID ile işlem denemesi yapıldı. Kullanıcı: {}", userEmail);
                 throw new ValidationException("Preview ID boş olamaz");
             }
 
@@ -159,6 +168,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             Object cachedRequest = previewCacheService.getOrderPreview(request.getPreviewId());
 
             if (cachedRequest == null || !(cachedRequest instanceof StockBuyOrderRequest)) {
+                log.warn("Önizleme ID geçersiz veya süresi dolmuş. ID: {}, Kullanıcı: {}", request.getPreviewId(), userEmail);
                 throw new ValidationException("Geçersiz veya süresi dolmuş önizleme ID'si");
             }
 
@@ -182,6 +192,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             // Hesap bakiyesi kontrol edilir
             if (entities.account().getAvailableBalance().doubleValue() < calculation.netAmount().doubleValue()) {
+                log.warn("Yetersiz bakiye. Gerekli: {}, Mevcut: {}", calculation.netAmount(), entities.account().getAvailableBalance());
                 throw new InsufficientBalanceException("Yetersiz bakiye: " + ErrorCode.INSUFFICIENT_BALANCE);
             }
 
@@ -235,6 +246,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             // Önizleme önbellekten temizlenir
             previewCacheService.removeOrderPreview(request.getPreviewId());
+            log.info("Alım işlemi başarıyla tamamlandı. OrderNo: {}, Status: {}", tradeOrder.getOrderNumber(), tradeOrder.getStatus());
 
             return Response.<StockBuyOrderResultResponse>builder()
                     .statusCode(HttpStatus.OK.value())

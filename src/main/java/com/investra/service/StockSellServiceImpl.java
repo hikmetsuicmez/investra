@@ -56,6 +56,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
 
     @Override
     public Response<List<ClientStockHoldingResponse>> getClientStockHoldings(Long clientId) {
+        log.info("Müşteri portföy bilgileri getiriliyor. clientId={}", clientId);
         try {
             Client client = clientRepository.findById(clientId)
                     .orElseThrow(() -> new ClientNotFoundException(clientId));
@@ -65,6 +66,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
             List<ClientStockHoldingResponse> stockHoldings = portfolioItems.stream()
                     .map(StockMapper::mapToClientStockHoldingResponse)
                     .toList();
+            log.info("Müşteri portföy bilgileri başarıyla getirildi. clientId={}", clientId);
 
             return Response.<List<ClientStockHoldingResponse>>builder()
                     .statusCode(HttpStatus.OK.value())
@@ -94,6 +96,8 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
     @Override
     @Transactional
     public Response<StockSellOrderPreviewResponse> previewSellOrder(StockSellOrderRequest request) {
+        log.info("Satış emri önizlemesi başlatıldı. clientId={}, stockId={}, quantity={}",
+                request.getClientId(), request.getStockId(), request.getQuantity());
         try {
             // İsteği doğrula
             validatorService.validateSellOrderRequest(request);
@@ -147,6 +151,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
         try {
             // Preview onayı kontrolü
             if (request.getPreviewId() == null) {
+                log.warn("Preview ID boş gönderildi. Kullanıcı: {}", userEmail);
                 throw new ValidationException("Preview ID gereklidir");
             }
 
@@ -154,10 +159,12 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
             StockSellOrderRequest cachedRequest = previewCacheService.getPreviewRequest(request.getPreviewId());
 
             if (cachedRequest == null) {
+                log.warn("Önbellekte geçersiz veya süresi dolmuş Preview ID: {}. Kullanıcı: {}", request.getPreviewId(), userEmail);
                 throw new ValidationException("Geçersiz veya süresi dolmuş önizleme ID'si");
             }
 
             // İsteği doğrula
+            log.info("Satış isteği doğrulanıyor. Kullanıcı: {}", userEmail);
             validatorService.validateSellOrderRequest(request);
 
             // Kullanıcıyı bul
@@ -165,9 +172,11 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
             log.info("Kullanıcı: {} tarafından satış işlemi başlatıldı.", submittedBy.getEmail());
 
             // Gerekli varlıkları bul ve doğrula
+            log.info("Varlıklar yükleniyor...");
             OrderEntities entities = entityFinderService.findAndValidateEntities(request);
 
             // Hesaplamaları yap
+            log.info("Satış emri hesaplamaları yapılıyor...");
             OrderCalculation calculation = calculationService.calculateOrderAmounts(
                     entities.client(), entities.stock(), request);
 
@@ -191,9 +200,11 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
             tradeOrder.assignRandomStatus();
 
             tradeOrder = tradeOrderRepository.save(tradeOrder);
+            log.info("Satış emri kaydedildi. ID: {}, Durum: {}", tradeOrder.getId(), tradeOrder.getStatus());
 
             // Eğer satış emri gerçekleşti ise, portföyden hisseleri düş
             if (tradeOrder.getStatus() == OrderStatus.EXECUTED) {
+                log.info("Satış emri gerçekleşti. Portföy güncelleniyor...");
                 PortfolioItem updatedPortfolioItem = portfolioUpdateService.updatePortfolioAfterSell(
                         entities.portfolioItem(), request.getQuantity());
 
@@ -234,7 +245,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
 
             return Response.<StockSellOrderResultResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .isSuccess(true)
+                    .isSuccess(false)
                     .message(e.getMessage())
                     .data(errorResponse)
                     .build();

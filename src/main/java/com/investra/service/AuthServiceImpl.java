@@ -88,7 +88,6 @@ public class AuthServiceImpl implements AuthService {
             log.info("Kullanıcı bilgileri güncellendi. email: {}", user.getEmail());
 
             String token = jwtUtil.generateToken(user.getEmail());
-            log.debug("JWT token üretildi. email: {}", user.getEmail());
 
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setToken(token);
@@ -183,7 +182,7 @@ public class AuthServiceImpl implements AuthService {
         boolean emailExists = userRepository.findByEmail(email).isPresent();
 
         if (!emailExists) {
-            log.info("Şifre s��fırlama isteği yapılan email bulunamadı: {}", email);
+            log.info("Şifre sıfırlama isteği yapılan email bulunamadı: {}", email);
             throw new UserNotFoundException("Bu e-posta adresi ile kayıtlı bir kullanıcı bulunamadı");
         }
 
@@ -198,8 +197,6 @@ public class AuthServiceImpl implements AuthService {
                     user.setPasswordResetTokenExpiry(tokenExpiry);
                     userRepository.save(user);
 
-                    log.debug("Şifre sıfırlama token'ı oluşturuldu ve kaydedildi. email: {}, token: {}", user.getEmail(), resetToken);
-
                     String resetLink = FRONTEND_URL + "/auth" + RESET_PASSWORD_URL + resetToken;
 
                     try {
@@ -211,7 +208,7 @@ public class AuthServiceImpl implements AuthService {
                         templateVariables.put("actionText", "Şifremi Sıfırla");
                         templateVariables.put("expiryTime", "24 saat");
 
-                        log.debug("Şifre sıfırlama email içeriği hazırlanıyor. email: {}", user.getEmail());
+                        log.info("Şifre sıfırlama email içeriği hazırlanıyor. email: {}", user.getEmail());
                         String emailContent = emailTemplateService.processTemplate("password-reset", templateVariables);
 
                         NotificationDTO notificationDTO = NotificationDTO.builder()
@@ -222,7 +219,6 @@ public class AuthServiceImpl implements AuthService {
                                 .isHtml(true)
                                 .build();
 
-                        log.info("Şifre sıfırlama email gönderiliyor. email: {}", user.getEmail());
                         notificationService.sendEmail(notificationDTO);
                         log.info("Şifre sıfırlama email başarıyla gönderildi. email: {}", user.getEmail());
 
@@ -262,7 +258,6 @@ public class AuthServiceImpl implements AuthService {
                     return isValid;
                 })
                 .map(user -> {
-                    log.debug("Token geçerli. Şifre güncelleniyor. email: {}", user.getEmail());
                     user.setPassword(passwordEncoder.encode(request.getPassword()));
 
                     user.setPasswordResetToken(null);
