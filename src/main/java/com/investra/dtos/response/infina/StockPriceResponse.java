@@ -19,7 +19,7 @@ public class StockPriceResponse {
     }
 
     public String getError() {
-        return null; // API yanıtında hata bilgisi yoksa null dönecek
+        return null;
     }
 
     public List<StockPrice> getPriceList() {
@@ -46,28 +46,16 @@ public class StockPriceResponse {
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class StockPrice {
-        @JsonProperty("record_id")
-        private String recordId;
+        @JsonProperty("hisse_kodu")
+        private String stockCode;
 
-        @JsonProperty("asset_code")
-        private String stockCode; // API'den asset_code olarak geliyor, kodunuzda stockCode olarak kullanılıyor
+        @JsonProperty("fiyat")
+        private BigDecimal price;
 
-        @JsonProperty("close_price")
-        private BigDecimal price; // API'den close_price olarak geliyor, kodunuzda price olarak kullanılıyor
+        @JsonProperty("tarih")
+        private String date;
 
-        @JsonProperty("record_date")
-        private String recordDate;
-
-        @JsonProperty("data_date")
-        private String dataDate;
-
-        @JsonProperty("high_price")
-        private BigDecimal highPrice;
-
-        @JsonProperty("low_price")
-        private BigDecimal lowPrice;
-
-        @JsonProperty("open_price")
-        private BigDecimal openPrice;
+        @JsonProperty("saat")
+        private String time;
     }
 }

@@ -66,6 +66,18 @@ public class Stock {
     @Transient
     private String updatedAtString;
 
+    @Column(name = "isin")
+    private String isin;
+
+    @Column(name = "market")
+    private String market;
+
+    @Column(name = "sub_market")
+    private String subMarket;
+
+    @Column(name = "currency")
+    private String currency;
+
     public String getCreatedAt() {
         if (createdAt != null) {
             return createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
