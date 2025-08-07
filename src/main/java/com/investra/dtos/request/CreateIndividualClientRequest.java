@@ -43,9 +43,7 @@ public class CreateIndividualClientRequest extends CreateClientRequest {
     @Pattern(regexp = "^[0-9]{11}$", message = "Kimlik numarası 11 haneli bir sayı olmalıdır")
     private String nationalityNumber;
 
-    private LocalDate birthDate;
     private String profession;
-    private Gender gender;
     private String educationStatus;
 
     @Positive(message = "Aylık gelir pozitif bir değer olmalıdır")
