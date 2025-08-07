@@ -1,4 +1,4 @@
-package com.investra.service;
+package com.investra.service.impl;
 
 import com.investra.dtos.request.AccountCreationRequest;
 import com.investra.dtos.request.ClientSearchForAccountRequest;
@@ -13,6 +13,7 @@ import com.investra.exception.ClientNotFoundException;
 import com.investra.mapper.AccountMapper;
 import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
+import com.investra.service.AccountService;
 import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

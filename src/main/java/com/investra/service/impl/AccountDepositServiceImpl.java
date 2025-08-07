@@ -1,7 +1,7 @@
-package com.investra.service;
+package com.investra.service.impl;
 
-import com.investra.dtos.request.WithdrawalRequest;
-import com.investra.dtos.response.WithdrawalResponse;
+import com.investra.dtos.request.DepositRequest;
+import com.investra.dtos.response.DepositResponse;
 import com.investra.dtos.response.Response;
 import com.investra.entity.Account;
 import com.investra.entity.Client;
@@ -13,11 +13,11 @@ import com.investra.exception.AccountNotFoundException;
 import com.investra.exception.ClientNotFoundException;
 import com.investra.exception.InvalidAmountException;
 import com.investra.exception.UserNotFoundException;
-import com.investra.exception.InsufficientBalanceException;
 import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.TransactionRepository;
 import com.investra.repository.UserRepository;
+import com.investra.service.AccountDepositService;
 import com.investra.utils.ExceptionUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
+public class AccountDepositServiceImpl implements AccountDepositService {
 
     private final AccountRepository accountRepository;
     private final ClientRepository clientRepository;
@@ -41,7 +41,7 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
 
     @Override
     @Transactional
-    public Response<WithdrawalResponse> withdrawFromAccount(WithdrawalRequest request, String userEmail) {
+    public Response<DepositResponse> depositToAccount(DepositRequest request, String userEmail) {
         try {
             // Müşteri ve hesap kontrolleri
             Client client = findClientById(request.getClientId());
@@ -54,21 +54,17 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
             // Tutar kontrolü
             validateAmount(request.getAmount());
 
-            // Kullanılabilir bakiye kontrolü (EN ÖNEMLİ KONTROL)
-            validateAvailableBalance(account, request.getAmount());
-
             // İşlem tarihi kontrolü ve varsayılan değer atama
             LocalDate transactionDate = request.getTransactionDate() != null
                     ? request.getTransactionDate()
                     : LocalDate.now();
 
-            // Mevcut bakiyeleri kaydet
+            // Mevcut bakiyeyi kaydet
             BigDecimal previousBalance = account.getBalance();
-            BigDecimal previousAvailableBalance = account.getAvailableBalance();
 
-            // Hesap bakiyelerini güncelle
-            account.setBalance(previousBalance.subtract(request.getAmount()));
-            account.setAvailableBalance(previousAvailableBalance.subtract(request.getAmount()));
+            // Hesap bakiyesini güncelle
+            account.setBalance(previousBalance.add(request.getAmount()));
+            account.setAvailableBalance(account.getAvailableBalance().add(request.getAmount()));
 
             // Hesabı kaydet
             accountRepository.save(account);
@@ -78,7 +74,7 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
                     .client(client)
                     .account(account)
                     .user(user)
-                    .transactionType(TransactionType.WITHDRAWAL)
+                    .transactionType(TransactionType.DEPOSIT)
                     .amount(request.getAmount())
                     .previousBalance(previousBalance)
                     .newBalance(account.getBalance())
@@ -92,26 +88,24 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
             transaction = transactionRepository.save(transaction);
 
             // Yanıt oluştur
-            WithdrawalResponse response = createWithdrawalResponse(
+            DepositResponse response = createDepositResponse(
                     transaction.getId(), account, client, request.getAmount(),
                     previousBalance, account.getBalance(),
-                    previousAvailableBalance, account.getAvailableBalance(),
                     request.getDescription(), transactionDate, transaction.getExecutedAt());
 
-            log.info("Hesaptan bakiye çıkışı işlemi başarılı: Müşteri={}, Hesap={}, Tutar={}",
+            log.info("Hesaba bakiye yükleme işlemi başarılı: Müşteri={}, Hesap={}, Tutar={}",
                     client.getFullName(), account.getAccountNumber(), request.getAmount());
 
-            return Response.<WithdrawalResponse>builder()
+            return Response.<DepositResponse>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)
-                    .message("Bakiye çıkış işlemi başarıyla tamamlandı")
+                    .message("Bakiye yükleme işlemi başarıyla tamamlandı")
                     .data(response)
                     .build();
 
         } catch (Exception e) {
-            log.error("Bakiye çıkışı hatası: {}", e.getMessage(), e);
+            log.error("Bakiye yükleme hatası: {}", e.getMessage(), e);
 
-            return Response.<WithdrawalResponse>builder()
+            return Response.<DepositResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
                     .message(e.getMessage())
                     .errorCode(ExceptionUtil.getErrorCode(e))
@@ -148,22 +142,12 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
         }
     }
 
-    // Kullanılabilir bakiye kontrolü - EN ÖNEMLİ KONTROL
-    private void validateAvailableBalance(Account account, BigDecimal withdrawalAmount) {
-        if (account.getAvailableBalance().compareTo(withdrawalAmount) < 0) {
-            throw new InsufficientBalanceException(
-                String.format("Girilen tutar, kullanılabilir bakiyeden fazla olamaz. Kullanılabilir bakiye: %s, İstenen tutar: %s",
-                    account.getAvailableBalance(), withdrawalAmount));
-        }
-    }
-
-    private WithdrawalResponse createWithdrawalResponse(
+    private DepositResponse createDepositResponse(
             Long transactionId, Account account, Client client,
             BigDecimal amount, BigDecimal previousBalance, BigDecimal newBalance,
-            BigDecimal previousAvailableBalance, BigDecimal newAvailableBalance,
             String description, LocalDate transactionDate, LocalDateTime executedAt) {
 
-        return WithdrawalResponse.builder()
+        return DepositResponse.builder()
                 .transactionId(transactionId)
                 .accountNumber(account.getAccountNumber())
                 .clientName(client.getFullName())
@@ -171,8 +155,6 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
                 .amount(amount)
                 .previousBalance(previousBalance)
                 .newBalance(newBalance)
-                .previousAvailableBalance(previousAvailableBalance)
-                .newAvailableBalance(newAvailableBalance)
                 .description(description)
                 .transactionDate(transactionDate)
                 .executedAt(executedAt)

@@ -90,6 +90,15 @@ public class ApiEndpoints {
 
     }
 
+    public static final class Portfolio {
+        private Portfolio() {}
+        public static final String BASE = "/api/v1/portfolio";
+        public static final String CREATE = ""; // Portföy oluşturma
+        public static final String GET_ALL = ""; // Tüm portföyleri getir
+        public static final String GET_BY_CLIENT_ID = "/{clientId}"; // Müşteri ID ile portföyü getir
+        public static final String DELETE_BY_CLIENT_ID = "/{clientId}"; // Müşteri ID ile portföyü sil
+    }
+
     public static final class EndOfDay {
         private EndOfDay() {
         }
