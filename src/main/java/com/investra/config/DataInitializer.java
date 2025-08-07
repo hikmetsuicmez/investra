@@ -22,11 +22,13 @@ public class DataInitializer implements CommandLineRunner {
     private final TradeOrderRepository tradeOrderRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
 
     public void run(String... args) throws Exception {
 
         portfolioItemRepository.deleteAll();
         tradeOrderRepository.deleteAll();
+        transactionRepository.deleteAll();
         portfolioRepository.deleteAll();
         accountRepository.deleteAll();
         clientRepository.deleteAll();
