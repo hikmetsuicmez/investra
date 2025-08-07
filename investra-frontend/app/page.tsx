@@ -1,11 +1,15 @@
-import Link from "next/link";
+"use server";
 
-export default function Home() {
-	return (
-		<div className="flex flex-col gap-4 ">
-			<Link href={"/auth/login"}>Login</Link>
-			<Link href={"/auth/forgot-password"}>Forgot password</Link>
-			<Link href={"/auth/change-password"}>Change password</Link>
-		</div>
-	);
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+export default async function Home() {
+	const cookieStore = await cookies();
+	const hasToken = cookieStore.has("token");
+
+	if (hasToken) {
+		redirect("/dashboard");
+	} else {
+		redirect("/auth/login");
+	}
 }

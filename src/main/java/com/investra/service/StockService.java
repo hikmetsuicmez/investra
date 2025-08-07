@@ -6,6 +6,9 @@ import com.investra.entity.Stock;
 import com.investra.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.Cache;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +31,10 @@ public class StockService {
     // Kod-fiyat eşleşmesi için in-memory cache
     private final Map<String, BigDecimal> stockPriceCache = new ConcurrentHashMap<>();
 
-    // Tüm hisse senetlerini getirir, önce veritabanından
+    // üm hisse senetlerini getirir, önce veritabanından yoksa API'den çeker ve veritabanına kaydeder
+    @Cacheable(value = "stocks", key = "'all_stocks'")
     public List<Stock> getAllStocks() {
+        log.info("Cache MISS - Veritabanından hisse senetleri getiriliyor"); // Cache miss logı
         List<Stock> stocks = stockRepository.findAll();
 
         if (stocks.isEmpty()) {

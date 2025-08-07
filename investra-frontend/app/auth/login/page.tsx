@@ -9,6 +9,7 @@ import { KeyRound, Lock, User, UserLock, Eye, EyeOff, ArrowRight } from "lucide-
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { validateEmail } from "@/lib/validate-email";
+import { redirect } from "next/navigation";
 
 export default function Login() {
 	const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +23,7 @@ export default function Login() {
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 
-		if (!isFormValid) return; // extra safety
+		if (!isFormValid) return;
 
 		setIsSubmitting(true);
 
@@ -36,7 +37,10 @@ export default function Login() {
 
 		if (res.ok) {
 			setWrongCredentials(false);
-			window.location.href = "/"; // redirect on success
+
+			const { redirectTo } = await res.json();
+
+			redirect(redirectTo);
 		} else {
 			setWrongCredentials(true);
 		}
