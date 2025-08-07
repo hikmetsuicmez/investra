@@ -11,8 +11,8 @@ import com.investra.repository.*;
 import com.investra.service.helper.*;
 import com.investra.service.helper.EntityFinderService.OrderEntities;
 import com.investra.service.helper.OrderCalculationService.OrderCalculation;
+import com.investra.utils.ExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -130,7 +130,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                     .statusCode(HttpStatus.BAD_REQUEST.value())
                     .isSuccess(false)
                     .message(e.getMessage())
-                    .errorCode(e.getErrorCode())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Önizleme sırasında beklenmeyen bir hata oluştu: {}", e.getMessage(), e);
@@ -138,7 +138,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .isSuccess(false)
                     .message("Önizleme sırasında bir hata oluştu")
-                    .errorCode(ErrorCode.UNEXPECTED_ERROR)
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -226,6 +226,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                     .message("Satış emri başarıyla oluşturuldu")
                     .data(response)
                     .build();
+
         } catch (ValidationException | StockNotFoundException | ClientNotFoundException |
                  AccountNotFoundException | InsufficientStockException | InactiveStockException e) {
             log.warn("Satış işlemi hatası: {}", e.getMessage());
@@ -236,9 +237,9 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
 
             return Response.<StockSellOrderResultResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .isSuccess(true)
                     .message(e.getMessage())
                     .data(errorResponse)
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Satış işlemi sırasında beklenmeyen bir hata oluştu: {}", e.getMessage(), e);
@@ -251,6 +252,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("Satış işlemi sırasında bir hata oluştu")
                     .data(errorResponse)
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }

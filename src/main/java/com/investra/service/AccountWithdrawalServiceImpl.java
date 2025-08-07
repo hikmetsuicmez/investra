@@ -9,7 +9,6 @@ import com.investra.entity.Transaction;
 import com.investra.entity.User;
 import com.investra.enums.TransactionStatus;
 import com.investra.enums.TransactionType;
-import com.investra.exception.ErrorCode;
 import com.investra.exception.AccountNotFoundException;
 import com.investra.exception.ClientNotFoundException;
 import com.investra.exception.InvalidAmountException;
@@ -19,6 +18,7 @@ import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.TransactionRepository;
 import com.investra.repository.UserRepository;
+import com.investra.utils.ExceptionUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -113,9 +113,8 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
 
             return Response.<WithdrawalResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .isSuccess(false)
                     .message(e.getMessage())
-                    .errorCode(getErrorCode(e))
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -178,21 +177,5 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
                 .transactionDate(transactionDate)
                 .executedAt(executedAt)
                 .build();
-    }
-
-    private ErrorCode getErrorCode(Exception e) {
-        if (e instanceof ClientNotFoundException) {
-            return ErrorCode.CLIENT_NOT_FOUND;
-        } else if (e instanceof AccountNotFoundException) {
-            return ErrorCode.ACCOUNT_NOT_FOUND;
-        } else if (e instanceof UserNotFoundException) {
-            return ErrorCode.USER_NOT_FOUND;
-        } else if (e instanceof InvalidAmountException) {
-            return ErrorCode.INVALID_AMOUNT;
-        } else if (e instanceof InsufficientBalanceException) {
-            return ErrorCode.INSUFFICIENT_BALANCE;
-        } else {
-            return ErrorCode.UNEXPECTED_ERROR;
-        }
     }
 }

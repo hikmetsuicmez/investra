@@ -24,4 +24,12 @@ public class Response<T> {
     private ErrorCode errorCode;
     private Map<String, Serializable> meta;
 
+    // HTTP durum koduna göre isSuccess değerini belirleyen yardımcı metot.
+    public static class ResponseBuilder<T> {
+        public ResponseBuilder<T> statusCode(int statusCode) {
+            this.statusCode = statusCode;
+            this.isSuccess = (statusCode >= 200 && statusCode < 300);
+            return this;
+        }
+    }
 }

@@ -12,6 +12,7 @@ import com.investra.repository.*;
 import com.investra.service.helper.*;
 import com.investra.service.helper.EntityFinderService.OrderEntities;
 import com.investra.service.helper.OrderCalculationService.OrderCalculation;
+import com.investra.utils.ExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -71,16 +72,14 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             List<Stock> stocks = stockRepository.findByIsActiveTrue();
             return Response.<List<StockResponse>>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)
                     .data(stocks.stream().map(StockMapper::toStockResponse).toList())
                     .build();
         } catch (Exception e) {
             log.error("Mevcut hisse senetleri listelenirken hata oluştu: {}", e.getMessage());
             return Response.<List<StockResponse>>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .isSuccess(false)
                     .message("Mevcut hisse senetleri listelenirken hata oluştu")
-                    .errorCode(ErrorCode.UNEXPECTED_ERROR)
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -123,7 +122,6 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             return Response.<StockBuyOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)
                     .message("Hisse senedi alış önizlemesi başarıyla oluşturuldu")
                     .data(response)
                     .build();
@@ -133,7 +131,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                     .statusCode(HttpStatus.BAD_REQUEST.value())
                     .isSuccess(false)
                     .message(e.getMessage())
-                    .errorCode(e.getErrorCode())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Unexpected error previewing buy order: {}", e.getMessage(), e);
@@ -141,7 +139,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .isSuccess(false)
                     .message("Hisse senedi alış önizlemesi oluşturulurken beklenmeyen bir hata oluştu")
-                    .errorCode(ErrorCode.UNEXPECTED_ERROR)
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -240,7 +238,6 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             return Response.<StockBuyOrderResultResponse>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)
                     .data(response)
                     .message("Hisse senedi alım işlemi başarıyla gerçekleştirildi")
                     .build();
@@ -249,17 +246,15 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             log.error("Error executing buy order: {}", e.getMessage());
             return Response.<StockBuyOrderResultResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .isSuccess(false)
                     .message(e.getMessage())
-                    .errorCode(e.getErrorCode())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Unexpected error executing buy order: {}", e.getMessage(), e);
             return Response.<StockBuyOrderResultResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .isSuccess(false)
                     .message("Hisse senedi alış işlemi gerçekleştirilirken beklenmeyen bir hata oluştu")
-                    .errorCode(ErrorCode.UNEXPECTED_ERROR)
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }

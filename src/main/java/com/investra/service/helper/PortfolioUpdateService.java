@@ -98,10 +98,11 @@ public class PortfolioUpdateService {
 
             if (portfolioItem != null) {
                 // Varsa miktarı güncellenir
-                portfolioItem.setQuantity(portfolioItem.getQuantity() + quantity);
+                int newQuantity = portfolioItem.getQuantity() + quantity;
+                portfolioItem.setQuantity(newQuantity);
                 portfolioItem.setLastUpdated(LocalDateTime.now());
-                log.debug("Portföy öğesi güncellendi. ID: {}, Yeni miktar: {}",
-                        portfolioItem.getId(), portfolioItem.getQuantity());
+                log.debug("Portföy öğesi güncellendi. ID: {}, Önceki miktar: {}, Yeni miktar: {}",
+                        portfolioItem.getId(), portfolioItem.getQuantity() - quantity, newQuantity);
             } else {
                 // Yoksa yeni bir portföy öğesi oluşturulur
                 Portfolio portfolio = portfolioRepository.findByClientId(client.getId())

@@ -5,12 +5,13 @@ import com.investra.dtos.request.UpdateUserRequest;
 import com.investra.dtos.response.*;
 import com.investra.entity.User;
 import com.investra.enums.NotificationType;
+import com.investra.exception.ErrorCode;
 import com.investra.exception.UserNotFoundException;
 import com.investra.mapper.UserMapper;
 import com.investra.repository.UserRepository;
+import com.investra.utils.ExceptionUtil;
 import com.investra.utils.PasswordGenerator;
 import com.investra.utils.EmployeeNumberGenerator;
-import jakarta.validation.constraints.AssertFalse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,11 +49,11 @@ public class AdminServiceImpl implements AdminService {
         try {
             log.debug("TCKN kontrolü yapılıyor");
             duplicateResourceCheck(() -> userRepository.findByNationalityNumber(request.getNationalityNumber()).isPresent(),
-                    "Bu TCKN ile kayıtlı bir kullanıcı mevcut");
+                    "Bu TCKN ile kayıtlı bir kullanıcı mevcut", ErrorCode.OPERATION_FAILED);
 
             log.debug("Email kontrolü yapılıyor");
             duplicateResourceCheck(() -> userRepository.findByEmail(request.getEmail()).isPresent(),
-                    "Bu email ile kayıtlı bir kullanıcı mevcut");
+                    "Bu email ile kayıtlı bir kullanıcı mevcut", ErrorCode.OPERATION_FAILED);
 
             log.debug("Şifre oluşturuluyor");
             String rawPassword = PasswordGenerator.generatePassword(10);
@@ -106,12 +107,14 @@ public class AdminServiceImpl implements AdminService {
             return Response.<CreateUserResponse>builder()
                     .statusCode(400)
                     .message(e.getMessage())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Beklenmeyen bir hata oluştu: {}", e.getMessage(), e);
             return Response.<CreateUserResponse>builder()
                     .statusCode(500)
                     .message("Beklenmeyen bir hata oluştu")
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -147,12 +150,14 @@ public class AdminServiceImpl implements AdminService {
             return Response.<UpdateUserResponse>builder()
                     .statusCode(404)
                     .message(e.getMessage())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Beklenmeyen bir hata oluştu. employeeNumber: {}, hata: {}", employeeNumber, e.getMessage(), e);
             return Response.<UpdateUserResponse>builder()
                     .statusCode(500)
                     .message("Beklenmeyen bir hata oluştu")
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -190,12 +195,14 @@ public class AdminServiceImpl implements AdminService {
             return Response.<Void>builder()
                     .statusCode(404)
                     .message(e.getMessage())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Bilinmeyen bir hata oluştu. employeeNumber: {}, hata: {}", employeeNumber, e.getMessage(), e);
             return Response.<Void>builder()
                     .statusCode(500)
                     .message("Beklenmeyen bir hata oluştu")
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -209,6 +216,7 @@ public class AdminServiceImpl implements AdminService {
             return Response.<List<UserDTO>>builder()
                     .statusCode(404)
                     .message("Kullanıcı bulunamadı")
+                    .errorCode(ErrorCode.USER_NOT_FOUND)
                     .data(List.of())
                     .build();
         }

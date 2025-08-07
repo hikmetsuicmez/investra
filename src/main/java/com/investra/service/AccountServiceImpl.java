@@ -97,7 +97,6 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<AccountResponse>builder()
                 .statusCode(HttpStatus.CREATED.value())
-                .isSuccess(true)
                 .message("Hesap başarıyla oluşturuldu")
                 .data(accountResponse)
                 .build();
@@ -121,7 +120,6 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<List<AccountResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
                 .message("Müşteri hesapları başarıyla getirildi")
                 .data(accountResponses)
                 .build();
@@ -142,7 +140,6 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<AccountResponse>builder()
                 .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
                 .message("Hesap detayları başarıyla getirildi")
                 .data(accountResponse)
                 .build();
@@ -210,7 +207,6 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<List<ClientForAccountResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
                 .message("Müşteri araması başarıyla tamamlandı")
                 .data(clientResponses)
                 .build();
@@ -238,7 +234,6 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<List<ClientForAccountResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
                 .message("Son eklenen müşteriler başarıyla getirildi")
                 .data(clientResponses)
                 .build();
