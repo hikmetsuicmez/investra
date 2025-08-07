@@ -201,7 +201,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
 
                 if (updatedPortfolioItem == null) {
                     log.info("Müşteri {} tüm {} hisselerini sattı, portföyden kaldırıldı.",
-                            entities.client().getId(), entities.stock().getSymbol());
+                            entities.client().getId(), entities.stock().getCode());
                 }
 
                 // NOT: T+2 süreci sonunda bakiye güncellenecek

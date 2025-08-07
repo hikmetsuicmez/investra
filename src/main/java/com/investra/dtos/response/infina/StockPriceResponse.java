@@ -14,18 +14,6 @@ public class StockPriceResponse {
     @JsonProperty("result")
     private ResultData result;
 
-    public boolean isSuccess() {
-        return result != null && result.getData() != null && result.getData().getHisseFiyat() != null;
-    }
-
-    public String getError() {
-        return null; // API yanıtında hata bilgisi yoksa null dönecek
-    }
-
-    public List<StockPrice> getPriceList() {
-        return isSuccess() ? result.getData().getHisseFiyat() : null;
-    }
-
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ResultData {
@@ -49,25 +37,35 @@ public class StockPriceResponse {
         @JsonProperty("record_id")
         private String recordId;
 
-        @JsonProperty("asset_code")
-        private String stockCode; // API'den asset_code olarak geliyor, kodunuzda stockCode olarak kullanılıyor
-
         @JsonProperty("close_price")
-        private BigDecimal price; // API'den close_price olarak geliyor, kodunuzda price olarak kullanılıyor
+        private BigDecimal closePrice;
 
         @JsonProperty("record_date")
         private String recordDate;
 
-        @JsonProperty("data_date")
-        private String dataDate;
+        @JsonProperty("asset_code")
+        private String assetCode;
 
         @JsonProperty("high_price")
         private BigDecimal highPrice;
+
+        @JsonProperty("data_date")
+        private String dataDate;
 
         @JsonProperty("low_price")
         private BigDecimal lowPrice;
 
         @JsonProperty("open_price")
         private BigDecimal openPrice;
+
+        // Helper methods
+        public String getStockCode() {
+            if (assetCode == null) return null;
+            return assetCode.replace(".E", "");
+        }
+
+        public BigDecimal getPrice() {
+            return this.closePrice;
+        }
     }
 }
