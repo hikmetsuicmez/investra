@@ -4,12 +4,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Account } from "./Account"; 
+import { useRouter } from "next/navigation";
 
 export default function SeatchAccountByClientId() {
   const { clientId } = useParams();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchAccounts() {
@@ -61,6 +63,7 @@ export default function SeatchAccountByClientId() {
           {accounts.map((account) => (
             <div
               key={account.id}
+              onClick={()=>router.push(`/accounts/${account.id}/deposit`)}
               className="grid grid-cols-4 items-center p-2 border-b text-sm md:text-base"
             >
               <div>{account.accountNumber}</div>

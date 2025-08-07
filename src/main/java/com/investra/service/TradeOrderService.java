@@ -251,7 +251,7 @@ public class TradeOrderService {
 
             if (user != null) {
                 try {
-                    sendOrderSettledNotification(user, stock.getSymbol(), freshOrder.getOrderType());
+                    sendOrderSettledNotification(user, stock.getCode(), freshOrder.getOrderType());
                     log.info("Bildirim gönderildi: {}", user.getEmail());
                 } catch (Exception e) {
                     log.error("Bildirim gönderme hatası (işlem etkilenmez): {}", e.getMessage());
@@ -278,7 +278,7 @@ public class TradeOrderService {
             Notification notification = Notification.builder()
                     .recipient(user.getEmail()) // Kullanıcı adı yerine e-posta adresi kullanılıyor
                     .subject("Emir Gerçekleşti")
-                    .content(order.getStock().getSymbol() + " hissesi için " + order.getOrderType().name() +
+                    .content(order.getStock().getCode() + " hissesi için " + order.getOrderType().name() +
                             " emriniz başarıyla gerçekleştirildi.")
                     .type(NotificationType.INFO)
                     .isHtml(false)
@@ -368,7 +368,7 @@ public class TradeOrderService {
         Notification notification = Notification.builder()
                 .recipient(user.getEmail()) // Kullanıcı adı yerine e-posta adresi kullanılıyor
                 .subject("Emir İptal Edildi")
-                .content(order.getStock().getSymbol() + " hissesi için " + order.getOrderType().name() +
+                .content(order.getStock().getCode() + " hissesi için " + order.getOrderType().name() +
                         " emiriniz iptal edildi.")
                 .type(NotificationType.INFO)
                 .isHtml(false) // isHtml alanı eklendi

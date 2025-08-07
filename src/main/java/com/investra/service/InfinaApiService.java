@@ -20,33 +20,27 @@ public class InfinaApiService {
     private final RestTemplate restTemplate;
     private final InfinaApiConfig infinaApiConfig;
 
-
     public List<StockDefinitionResponse.StockDefinition> getAllStockDefinitions() {
         try {
             log.info("Hisse senedi tanımları Infina API'sinden alınıyor");
             String url = infinaApiConfig.getStockDefinitionUrl();
-
-            log.info("API URL: {}", url); // URL'yi loglamak için eklendi
+            log.debug("API URL: {}", url);
 
             StockDefinitionResponse response = restTemplate.getForObject(url, StockDefinitionResponse.class);
 
-            if (response != null) {
-                log.info("API yanıtı: success={}, error={}", response.isSuccess(), response.getError());
-            } else {
-                log.error("API'den boş yanıt alındı");
-            }
+            if (response != null && response.getResult() != null &&
+                response.getResult().getData() != null &&
+                response.getResult().getData().getHisseTanim() != null) {
 
-            if (response != null && response.isSuccess()) {
-                log.info("Toplam {} hisse senedi tanımı alındı",
-                        response.getStockList() != null ? response.getStockList().size() : 0);
-                return response.getStockList();
+                List<StockDefinitionResponse.StockDefinition> definitions = response.getResult().getData().getHisseTanim();
+                log.info("Toplam {} hisse senedi tanımı alındı", definitions.size());
+                return definitions;
             } else {
-                log.error("Hisse senedi tanımları alınırken hata: {}",
-                        response != null ? response.getError() : "Yanıt alınamadı");
+                log.warn("Hisse senedi tanımları alınamadı");
                 return Collections.emptyList();
             }
         } catch (Exception e) {
-            log.error("Hisse senedi tanımları alınırken beklenmeyen hata: {}", e.getMessage(), e);
+            log.error("Hisse senedi tanımları alınırken hata: {}", e.getMessage(), e);
             return Collections.emptyList();
         }
     }
@@ -59,16 +53,19 @@ public class InfinaApiService {
 
             StockPriceResponse response = restTemplate.getForObject(url, StockPriceResponse.class);
 
-            if (response != null && response.isSuccess() && response.getPriceList() != null && !response.getPriceList().isEmpty()) {
+            if (response != null && response.getResult() != null &&
+                response.getResult().getData() != null &&
+                response.getResult().getData().getHisseFiyat() != null &&
+                !response.getResult().getData().getHisseFiyat().isEmpty()) {
+
                 log.info("Hisse senedi fiyatı başarıyla alındı: {}", stockCode);
-                return Optional.of(response.getPriceList().get(0));
+                return Optional.of(response.getResult().getData().getHisseFiyat().get(0));
             } else {
-                log.error("Hisse senedi fiyatı alınırken hata: {}",
-                        response != null ? response.getError() : "Yanıt alınamadı");
+                log.error("Hisse senedi fiyatı alınamadı: {}", stockCode);
                 return Optional.empty();
             }
         } catch (Exception e) {
-            log.error("Hisse senedi fiyatı alınırken beklenmeyen hata: {}", e.getMessage(), e);
+            log.error("Hisse senedi fiyatı alınırken hata: {}", e.getMessage(), e);
             return Optional.empty();
         }
     }
@@ -81,17 +78,19 @@ public class InfinaApiService {
 
             StockPriceResponse response = restTemplate.getForObject(url, StockPriceResponse.class);
 
-            if (response != null && response.isSuccess()) {
-                log.info("Toplam {} hisse senedi fiyatı alındı",
-                        response.getPriceList() != null ? response.getPriceList().size() : 0);
-                return response.getPriceList();
+            if (response != null && response.getResult() != null &&
+                response.getResult().getData() != null &&
+                response.getResult().getData().getHisseFiyat() != null) {
+
+                List<StockPriceResponse.StockPrice> prices = response.getResult().getData().getHisseFiyat();
+                log.info("Toplam {} hisse senedi fiyatı alındı", prices.size());
+                return prices;
             } else {
-                log.error("Hisse senedi fiyatları alınırken hata: {}",
-                        response != null ? response.getError() : "Yanıt alınamadı");
+                log.error("Hisse senedi fiyatları alınamadı");
                 return Collections.emptyList();
             }
         } catch (Exception e) {
-            log.error("Hisse senedi fiyatları alınırken beklenmeyen hata: {}", e.getMessage(), e);
+            log.error("Hisse senedi fiyatları alınırken hata: {}", e.getMessage(), e);
             return Collections.emptyList();
         }
     }
