@@ -1,4 +1,4 @@
-package com.investra.service;
+package com.investra.service.impl;
 
 import com.investra.dtos.request.StockSellOrderRequest;
 import com.investra.dtos.response.*;
@@ -8,6 +8,9 @@ import com.investra.enums.OrderType;
 import com.investra.exception.*;
 import com.investra.mapper.StockMapper;
 import com.investra.repository.*;
+import com.investra.service.AbstractStockTradeService;
+import com.investra.service.StockSellService;
+import com.investra.service.TradeOrderService;
 import com.investra.service.helper.*;
 import com.investra.service.helper.EntityFinderService.OrderEntities;
 import com.investra.service.helper.OrderCalculationService.OrderCalculation;

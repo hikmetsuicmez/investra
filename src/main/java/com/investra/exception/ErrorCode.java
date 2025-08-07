@@ -42,6 +42,7 @@ public enum ErrorCode {
     UNEXPECTED_ERROR(5008, "Beklenmeyen bir hata oluştu"),
     ACCOUNT_ALREADY_EXISTS(5009, "Hesap zaten mevcut"),
     INVALID_AMOUNT(5010, "Geçersiz tutar"),
+    INVALID_PORTFOLIO_CREATE_REQUEST(5011, "Portföy oluşturma isteği geçersiz"),
 
     // Bildirim hataları (6000-6999)
     NOTIFICATION_ERROR(6000, "Bildirim gönderimi başarısız"),
