@@ -17,6 +17,8 @@ import com.investra.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -155,6 +157,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
 
 
     @Override
+    @Cacheable(value = "clients", key = "'active_clients'")
     public Response<List<ClientDTO>> getActiveClients() {
         List<Client> activeClients = clientRepository.findAll().stream()
                 .filter(client -> Boolean.TRUE.equals(client.getIsActive()))
@@ -182,6 +185,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
     }
 
     @Override
+    @Cacheable(value = "clients", key = "'inactive_clients'")
     public Response<List<ClientDTO>> getInactiveClients() {
         List<Client> inactiveClients = clientRepository.findAll().stream()
                 .filter(client -> Boolean.FALSE.equals(client.getIsActive()))
@@ -209,6 +213,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
     }
 
     @Override
+    @CacheEvict(value = "clients", allEntries = true)
     public Response<Void> deleteClient(Client client) {
         LocalDateTime requestTimestamp = LocalDateTime.now();
         log.info("Delete user isteği alındı. Zaman: {}, Müşteri:{}", requestTimestamp, client.getFullName());

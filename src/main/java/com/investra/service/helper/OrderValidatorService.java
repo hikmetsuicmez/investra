@@ -62,6 +62,7 @@ public class OrderValidatorService {
 
             log.debug("İstek doğrulama başarılı: {}", request);
         } catch (ValidationException e) {
+            log.warn("İstek doğrulama hatası: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
             log.error("İstek doğrulanırken beklenmeyen bir hata oluştu: {}", e.getMessage());
@@ -107,18 +108,18 @@ public class OrderValidatorService {
             }
 
             // Borsa açık mı kontrolü
-            if (isMarketOpen()) {
-                log.warn("İstek doğrulama hatası: Borsa kapalı");
+            if (!isMarketOpen()) {
                 throw new ValidationException("Borsa şu anda kapalı. İşlem saatleri: 10:00 - 18:00");
             }
 
             // Hisse senedi aktif mi kontrolü
             if (!entities.stock().getIsActive()) {
-                log.warn("İstek doğrulama hatası: Hisse senedi aktif değil - {}", entities.stock().getSymbol());
-                throw new InactiveStockException("Hisse senedi aktif değil: " + entities.stock().getSymbol());
+                throw new InactiveStockException("Hisse senedi aktif değil: " + entities.stock().getCode());
             }
 
+            log.debug("Alış isteği doğrulama başarılı: {}", request);
         } catch (ValidationException | InactiveStockException e) {
+            log.warn("Alış isteği doğrulama hatası: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
             log.error("Alış isteği doğrulanırken beklenmeyen bir hata oluştu: {}", e.getMessage());
@@ -128,26 +129,21 @@ public class OrderValidatorService {
 
     public void validateOrderExecution(Long stockId) {
         // Borsa açık mı kontrolü
-        if (isMarketOpen()) {
-            log.warn("İşlem reddedildi: Borsa kapalı. Kontrol edilen saat: {}", LocalTime.now());
+        if (!isMarketOpen()) {
             throw new ValidationException("Borsa şu anda kapalı. İşlem saatleri: 10:00 - 18:00");
         }
 
         // Hisse senedi aktif mi kontrolü
         Stock stock = stockRepository.findById(stockId)
-                .orElseThrow(() -> {
-                    log.warn("Geçersiz hisse senedi ID ile işlem yapmaya çalışma: {}", stockId);
-                    return new ValidationException("Geçersiz hisse senedi ID: " + stockId);
-                });
+                .orElseThrow(() -> new ValidationException("Geçersiz hisse senedi ID: " + stockId));
 
         if (!stock.getIsActive()) {
-            log.warn("Aktif olmayan hisse senedi için işlem talebi: {}", stock.getSymbol());
-            throw new InactiveStockException("Hisse senedi aktif değil: " + stock.getSymbol());
+            throw new InactiveStockException("Hisse senedi aktif değil: " + stock.getCode());
         }
     }
 
     public boolean isMarketOpen() {
         LocalTime now = LocalDateTime.now().toLocalTime();
-        return now.isBefore(MARKET_OPEN_TIME) || now.isAfter(MARKET_CLOSE_TIME);
+        return !now.isBefore(MARKET_OPEN_TIME) && !now.isAfter(MARKET_CLOSE_TIME);
     }
 }
