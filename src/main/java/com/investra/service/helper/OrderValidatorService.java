@@ -95,13 +95,13 @@ public class OrderValidatorService {
             }
 
             // Borsa açık mı kontrolü
-            if (isMarketOpen()) {
+            if (!isMarketOpen()) {
                 throw new ValidationException("Borsa şu anda kapalı. İşlem saatleri: 10:00 - 18:00");
             }
 
             // Hisse senedi aktif mi kontrolü
             if (!entities.stock().getIsActive()) {
-                throw new InactiveStockException("Hisse senedi aktif değil: " + entities.stock().getSymbol());
+                throw new InactiveStockException("Hisse senedi aktif değil: " + entities.stock().getCode());
             }
 
             log.debug("Alış isteği doğrulama başarılı: {}", request);
@@ -116,7 +116,7 @@ public class OrderValidatorService {
 
     public void validateOrderExecution(Long stockId) {
         // Borsa açık mı kontrolü
-        if (isMarketOpen()) {
+        if (!isMarketOpen()) {
             throw new ValidationException("Borsa şu anda kapalı. İşlem saatleri: 10:00 - 18:00");
         }
 
@@ -125,12 +125,12 @@ public class OrderValidatorService {
                 .orElseThrow(() -> new ValidationException("Geçersiz hisse senedi ID: " + stockId));
 
         if (!stock.getIsActive()) {
-            throw new InactiveStockException("Hisse senedi aktif değil: " + stock.getSymbol());
+            throw new InactiveStockException("Hisse senedi aktif değil: " + stock.getCode());
         }
     }
 
     public boolean isMarketOpen() {
         LocalTime now = LocalDateTime.now().toLocalTime();
-        return now.isBefore(MARKET_OPEN_TIME) || now.isAfter(MARKET_CLOSE_TIME);
+        return !now.isBefore(MARKET_OPEN_TIME) && !now.isAfter(MARKET_CLOSE_TIME);
     }
 }

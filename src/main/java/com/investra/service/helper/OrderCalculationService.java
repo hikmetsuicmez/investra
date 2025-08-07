@@ -139,7 +139,7 @@ public class OrderCalculationService {
         return StockSellOrderPreviewResponse.builder()
                 .accountNumber(account.getAccountNumber())
                 .stockName(stock.getName())
-                .stockSymbol(stock.getSymbol())
+                .stockSymbol(stock.getCode())
                 .price(price)
                 .quantity(request.getQuantity())
                 .tradeDate(LocalDate.now())

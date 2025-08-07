@@ -25,46 +25,51 @@ public class Stock {
     private Long id;
 
     @Column(name = "code", unique = true)
-    private String code; // Infina API'sinde HISSE_KODU olarak gelen alan
-
-    @Column(name = "symbol")
-    private String symbol;
+    private String code;
 
     @Column(name = "name")
     private String name;
 
     @Column(name = "sector")
-    private String sector; // Infina API'sinde SEKTOR_ADI olarak gelen alan
+    private String sector;
 
     @Column(name = "exchange_code")
-    private String exchangeCode; // Infina API'sinde BORSA_KODU olarak gelen alan
+    private String exchangeCode;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "stock_group")
     private StockGroup group;
 
     @Column(name = "price", precision = 19, scale = 4)
-    private BigDecimal price; // Infina API'sinde FIYAT olarak gelen alan
+    private BigDecimal price;
 
     @Column(name = "is_active")
     private Boolean isActive;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "source")
-    private StockSource source;
 
     @Column(name = "created_at")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
-    @Transient
-    private String createdAtString;
-
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Transient
-    private String updatedAtString;
+    @Column(name = "isin")
+    private String isin;
+
+    @Column(name = "market")
+    private String market;
+
+    @Column(name = "sub_market")
+    private String subMarket;
+
+    @Column(name = "currency")
+    private String currency;
+
+    @Column(name = "security_desc")
+    private String securityDesc;
+
+    @Column(name = "issuer_name")
+    private String issuerName;
 
     public String getCreatedAt() {
         if (createdAt != null) {
@@ -86,14 +91,6 @@ public class Stock {
 
     public LocalDateTime getUpdatedAtDate() {
         return updatedAt;
-    }
-
-    public void setCreatedAtDate(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAtDate(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     @PrePersist

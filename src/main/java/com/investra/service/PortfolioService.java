@@ -42,7 +42,7 @@ public class PortfolioService {
             throw new IllegalArgumentException("Emir bilgisi boş olamaz");
         }
         Long stockId = order.getStock().getId();
-        String stockSymbol = order.getStock().getSymbol();
+        String stockCode = order.getStock().getCode();
         Long accountId = order.getAccount().getId();
         Long clientId = order.getClient().getId();
 
@@ -56,7 +56,7 @@ public class PortfolioService {
                 .orElseThrow(() -> new ClientNotFoundException("Müşteri bulunamadı: " + clientId));
 
         log.info("Portföy güncellemesi başlatılıyor. Emir ID: {}, Hisse: {}, Client ID: {}",
-                 order.getId(), stockSymbol, clientId);
+                 order.getId(), stockCode, clientId);
 
         // Client'a ait portföyü bul veya oluştur
         Portfolio portfolio;
@@ -138,7 +138,7 @@ public class PortfolioService {
             }
 
             log.info("Portföydeki mevcut hisse güncellendi: {}, Yeni Miktar: {}, Yeni Ort. Fiyat: {}",
-                    stock.getSymbol(), newQuantity, newAvgPrice);
+                    stock.getCode(), newQuantity, newAvgPrice);
         } else {
             // Yeni portföy kaydı oluştur
             try {
@@ -162,7 +162,7 @@ public class PortfolioService {
             }
 
             log.info("Portföye yeni hisse eklendi: {}, Miktar: {}, Fiyat: {}",
-                    stock.getSymbol(), quantity, price);
+                    stock.getCode(), quantity, price);
         }
     }
 
@@ -176,7 +176,7 @@ public class PortfolioService {
             int currentQuantity = existingItem.getQuantity();
 
             if (currentQuantity < quantity) {
-                throw new IllegalStateException("Portföyde yeterli hisse senedi bulunmuyor: " + stock.getSymbol());
+                throw new IllegalStateException("Portföyde yeterli hisse senedi bulunmuyor: " + stock.getCode());
             }
 
             int newQuantity = currentQuantity - quantity;
@@ -187,14 +187,14 @@ public class PortfolioService {
                 existingItem.setLastUpdated(LocalDateTime.now());
                 portfolioItemRepository.save(existingItem);
                 log.info("Portföydeki hisse miktarı azaltıldı: {}, Yeni Miktar: {}",
-                        stock.getSymbol(), newQuantity);
+                        stock.getCode(), newQuantity);
             } else {
                 // Hisse kalmadıysa kaydı sil
                 portfolioItemRepository.delete(existingItem);
-                log.info("Portföyden hisse tamamen çıkarıldı: {}", stock.getSymbol());
+                log.info("Portföyden hisse tamamen çıkarıldı: {}", stock.getCode());
             }
         } else {
-            throw new IllegalStateException("Portföyde satılacak hisse senedi bulunamadı: " + stock.getSymbol());
+            throw new IllegalStateException("Portföyde satılacak hisse senedi bulunamadı: " + stock.getCode());
         }
     }
 
@@ -210,7 +210,7 @@ public class PortfolioService {
             Client client) {
 
         log.info("Portföy güncellemesi başlatılıyor (Entity'ler ile). Emir ID: {}, Hisse: {}, Client ID: {}",
-                orderId, stock.getSymbol(), client.getId());
+                orderId, stock.getCode(), client.getId());
 
         // Client'a ait portföyü bul veya oluştur
         Portfolio portfolio;
@@ -279,14 +279,14 @@ public class PortfolioService {
                     PortfolioItem saved = portfolioItemRepository.save(newItem);
                     log.info("Yeni portföy öğesi kaydedildi: ID={}", saved.getId());
                 }
-                log.info("Alış emri portföye eklendi: {}, Miktar: {}, Fiyat: {}", stock.getSymbol(), quantity, price);
+                log.info("Alış emri portföye eklendi: {}, Miktar: {}, Fiyat: {}", stock.getCode(), quantity, price);
             } else if (orderType == OrderType.SELL) {
                 if (existingItemOpt.isPresent()) {
                     PortfolioItem existingItem = existingItemOpt.get();
                     int currentQuantity = existingItem.getQuantity();
 
                     if (currentQuantity < quantity) {
-                        throw new IllegalStateException("Portföyde yeterli hisse senedi bulunmuyor: " + stock.getSymbol());
+                        throw new IllegalStateException("Portföyde yeterli hisse senedi bulunmuyor: " + stock.getCode());
                     }
 
                     int newQuantity = currentQuantity - quantity;
@@ -296,16 +296,16 @@ public class PortfolioService {
                         existingItem.setLastUpdated(now);
                         portfolioItemRepository.save(existingItem);
                         log.info("Portföydeki hisse miktarı azaltıldı: {}, Yeni Miktar: {}",
-                                stock.getSymbol(), newQuantity);
+                                stock.getCode(), newQuantity);
                     } else {
                         // Hisse kalmadıysa kaydı sil
                         portfolioItemRepository.delete(existingItem);
-                        log.info("Portföyden hisse tamamen çıkarıldı: {}", stock.getSymbol());
+                        log.info("Portföyden hisse tamamen çıkarıldı: {}", stock.getCode());
                     }
                 } else {
-                    throw new IllegalStateException("Portföyde satılacak hisse senedi bulunamadı: " + stock.getSymbol());
+                    throw new IllegalStateException("Portföyde satılacak hisse senedi bulunamadı: " + stock.getCode());
                 }
-                log.info("Satış emri portföye yansıtıldı: {}, Miktar: {}", stock.getSymbol(), quantity);
+                log.info("Satış emri portföye yansıtıldı: {}, Miktar: {}", stock.getCode(), quantity);
             } else {
                 log.warn("Bilinmeyen emir tipi: {}", orderType);
             }

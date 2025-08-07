@@ -3,7 +3,6 @@ package com.investra.dtos.response.infina;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-
 import java.util.List;
 
 @Data
@@ -12,18 +11,6 @@ public class StockDefinitionResponse {
 
     @JsonProperty("result")
     private ResultData result;
-
-    public boolean isSuccess() {
-        return result != null && result.getData() != null && result.getData().getHisseTanim() != null;
-    }
-
-    public String getError() {
-        return null; // API yanıtında hata bilgisi yoksa null dönecek
-    }
-
-    public List<StockDefinition> getStockList() {
-        return isSuccess() ? result.getData().getHisseTanim() : null;
-    }
 
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -45,26 +32,90 @@ public class StockDefinitionResponse {
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class StockDefinition {
-        // API'den gelen alanlar burada belirtilen adlarla eşleştirilecek
-        @JsonProperty("asset_code")
-        private String stockCode; // Muhtemelen asset_code veya benzer bir şey
+        private String country;
 
-        @JsonProperty("asset_name")
-        private String stockName; // Muhtemelen asset_name veya benzer bir şey
+        @JsonProperty("short_sale_policy")
+        private String shortSalePolicy;
 
-        @JsonProperty("exchange_code")
-        private String exchangeCode; // Muhtemelen exchange_code veya benzer bir şey
+        private String code;
 
-        @JsonProperty("sector_code")
-        private String sectorCode; // Muhtemelen sector_code veya benzer bir şey
+        private Integer precision;
 
-        @JsonProperty("sector_name")
-        private String sectorName; // Muhtemelen sector_name veya benzer bir şey
+        @JsonProperty("gross_settl")
+        private String grossSettl;
 
-        @JsonProperty("market_cap")
-        private Double marketCap; // Muhtemelen market_cap veya benzer bir şey
+        @JsonProperty("market_desc")
+        private String marketDesc;
 
-        @JsonProperty("active")
-        private String active; // Muhtemelen active veya benzer bir şey
+        @JsonProperty("sub_market_desc")
+        private String subMarketDesc;
+
+        @JsonProperty("maximum_lot")
+        private Integer maximumLot;
+
+        private String type;
+
+        private String issuer;
+
+        @JsonProperty("security_desc")
+        private String securityDesc;
+
+        private String security;
+
+        private String currency;
+
+        @JsonProperty("lot_size")
+        private Integer lotSize;
+
+        private String sector;
+
+        @JsonProperty("security_type")
+        private String securityType;
+
+        @JsonProperty("legacy_code")
+        private String legacyCode;
+
+        @JsonProperty("market_sector")
+        private String marketSector;
+
+        private String ticker;
+
+        @JsonProperty("short_sell_enabled")
+        private Boolean shortSellEnabled;
+
+        private String index;
+
+        @JsonProperty("max_order_value")
+        private Integer maxOrderValue;
+
+        @JsonProperty("issuer_name")
+        private String issuerName;
+
+        @JsonProperty("sub_market")
+        private String subMarket;
+
+        private String market;
+
+        @JsonProperty("ptt_row")
+        private String pttRow;
+
+        @JsonProperty("last_update_time")
+        private String lastUpdateTime;
+
+        private String unit;
+
+        private String domain;
+
+        private String exchange;
+
+        @JsonProperty("listing_date")
+        private String listingDate;
+
+        @JsonProperty("minimum_lot")
+        private Integer minimumLot;
+
+        private String isin;
+
+        private String status;
     }
 }
