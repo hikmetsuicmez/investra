@@ -56,7 +56,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
     }
 
     @Override
-    @Cacheable(value = "portfolio", key = "#clientId")
+    //@Cacheable(value = "portfolio", key = "#clientId")
     public Response<List<ClientStockHoldingResponse>> getClientStockHoldings(Long clientId) {
         try {
             Client client = clientRepository.findById(clientId)

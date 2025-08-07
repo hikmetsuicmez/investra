@@ -143,7 +143,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
 
 
     @Override
-    @Cacheable(value = "clients", key = "'active_clients'")
+    // @Cacheable(value = "clients", key = "'active_clients'")
     public Response<List<ClientDTO>> getActiveClients() {
         List<Client> activeClients = clientRepository.findAll().stream()
                 .filter(client -> Boolean.TRUE.equals(client.getIsActive()))

@@ -2,10 +2,12 @@ package com.investra.constants;
 
 public class ApiEndpoints {
 
-    private ApiEndpoints() {}
+    private ApiEndpoints() {
+    }
 
     public static final class Auth {
-        private Auth() {}
+        private Auth() {
+        }
 
         public static final String BASE = "/api/v1/auth";
         public static final String LOGIN = "/login"; // Giriş yapma
@@ -14,18 +16,21 @@ public class ApiEndpoints {
         public static final String RESET_PASSWORD = "/reset-password";  // Şifre sıfırlama
     }
 
-     public static final class User {
-        private User() {}
-         public static final String BASE = "/api/v1/users";
-         public static final String CREATE = "/create-user";
-         public static final String UPDATE = "/update-user/{employeeNumber}";
-         public static final String DELETE = "/delete-user/{employeeNumber}";
-         public static final String GET_ALL = "/get-all"; // Tüm kullanıcıları getir
-         public static final String GET_BY_ID = "/{userId}"; // Kullanıcıyı ID ile getir
+    public static final class User {
+        private User() {
+        }
+
+        public static final String BASE = "/api/v1/users";
+        public static final String CREATE = "/create-user";
+        public static final String UPDATE = "/update-user/{employeeNumber}";
+        public static final String DELETE = "/delete-user/{employeeNumber}";
+        public static final String GET_ALL = "/get-all"; // Tüm kullanıcıları getir
+        public static final String GET_BY_ID = "/{userId}"; // Kullanıcıyı ID ile getir
     }
 
     public static final class Stock {
-        private Stock() {}
+        private Stock() {
+        }
 
         public static final String BASE = "/api/v1/stocks";
         public static final String SELL = "/sell"; // Hisse senedi satışı
@@ -43,7 +48,9 @@ public class ApiEndpoints {
     }
 
     public static final class Client {
-        private Client() {}
+        private Client() {
+        }
+
         public static final String BASE = "/api/v1/clients";
         public static final String CREATE = "/create-client";
         public static final String GET_CLIENT_INFO_BY_ID = "/client";
@@ -55,7 +62,9 @@ public class ApiEndpoints {
     }
 
     public static final class Account {
-        private Account() {}
+        private Account() {
+        }
+
         public static final String BASE = "/api/v1/accounts";
         public static final String DEPOSIT = "/deposit"; // Hesaba bakiye yükleme
         public static final String WITHDRAWAL = "/withdrawal"; // Hesaptan bakiye çıkışı
@@ -68,7 +77,9 @@ public class ApiEndpoints {
     }
 
     public static final class TradeOrder {
-        private TradeOrder() {}
+        private TradeOrder() {
+        }
+
         public static final String BASE = "/api/v1/trade-orders";
         public static final String GET_ALL = "/all"; // Tüm emirleri getir
         public static final String GET_PENDING = "/pending"; // Bekleyen emirleri getir
@@ -77,5 +88,20 @@ public class ApiEndpoints {
         public static final String GET_CANCELLED = "/cancelled"; // İptal edilen emirleri getir
         public static final String ORDER_CANCELLED = "/{orderId}/cancel";
 
+    }
+
+    public static final class EndOfDay {
+        private EndOfDay() {
+        }
+
+        public static final String BASE = "/api/v1/end-of-day";
+        public static final String STATUS = "/status"; // Gün sonu değerleme durumu
+        public static final String FETCH_PRICES = "/fetch-prices"; // Kapanış fiyatlarını al
+
+        public static final String CLIENT_VALUATIONS = "/client-valuations"; // Tüm müşteri değerlemelerini getir
+        public static final String CLIENT_VALUATION = "/client-valuation/{clientId}"; // Belirli bir müşteri değerlemesini getir
+        public static final String START_VALUATION = "/start-valuation"; // Gün sonu değerleme başlat
+        public static final String STOCK_PRICES = "/stock-prices"; // Hisse fiyatlarını getir
+        public static final String MANUALLY_UPDATE_PRICES = "/manually-update-prices"; // Kapanış fiyatlarını manuel olarak güncelle
     }
 }
