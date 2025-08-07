@@ -64,6 +64,8 @@ export default function ResetPassword() {
 			}
 
 			setOpenDialog(true);
+
+			window.location.href = "/auth/login";
 		} catch (err) {
 			alert("Sunucu hatası: " + err);
 		}
@@ -203,7 +205,7 @@ export default function ResetPassword() {
 						<AlertDialogTitle>Başarılı!</AlertDialogTitle>
 					</AlertDialogHeader>
 					<AlertDialogDescription className="text-center">
-						Şifreniz başarıyla güncellendi. Ana sayfaya yönderiliyorsunuz.
+						Şifreniz başarıyla güncellendi. Giriş sayfasına yönderiliyorsunuz.
 					</AlertDialogDescription>
 					<AlertDialogFooter>
 						<Progress value={progress} className="bg-indigo-700/20 [&>*]:bg-slate-800/90" />

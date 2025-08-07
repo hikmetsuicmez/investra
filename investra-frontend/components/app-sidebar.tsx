@@ -1,6 +1,9 @@
+"use client";
+
 import {
 	Sidebar,
 	SidebarContent,
+	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarMenu,
@@ -17,11 +20,17 @@ import {
 	ArrowUpCircle,
 	ChartLine,
 	ChevronDown,
+	ChevronsUpDown,
+	Key,
 	ListChecks,
+	LogOut,
 	Network,
+	Settings,
 	Users,
 	Wallet,
 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { redirect } from "next/navigation";
 
 // Example item config
 const items = [
@@ -67,6 +76,22 @@ const items = [
 ];
 
 export function AppSidebar() {
+	const handleLogout = async () => {
+		try {
+			const response = await fetch("/api/auth/logout", {
+				method: "POST",
+			});
+
+			if (response.ok) {
+				window.location.href = "/auth/login";
+			} else {
+				console.error("Logout failed:", response.status);
+			}
+		} catch (error) {
+			console.error("Logout error:", error);
+		}
+	};
+
 	return (
 		<Sidebar variant="sidebar" className="h-screen font-medium">
 			<SidebarContent>
@@ -117,6 +142,37 @@ export function AppSidebar() {
 					</SidebarGroup>
 				</SidebarMenu>
 			</SidebarContent>
+			<SidebarFooter className="border-t">
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<DropdownMenu>
+							<DropdownMenuTrigger className="w-full">
+								<SidebarMenuButton size="lg" asChild>
+									<div className="flex gap-2 select-none ">
+										<Settings />
+										<p className="flex-grow">Seçenekler</p>
+										<ChevronsUpDown />
+									</div>
+								</SidebarMenuButton>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent>
+								<DropdownMenuItem>
+									<Link href={"/auth/change-password"} className="flex gap-2 select-none w-[200px] items-center">
+										<Key color="black" />
+										<p className="flex-grow">Şifreni değiştir</p>
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={handleLogout}>
+									<div className="flex gap-2 select-none items-center cursor-pointer w-[200px]">
+										<LogOut color="black" />
+										<p className="flex-grow">Çıkış Yap</p>
+									</div>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarFooter>
 		</Sidebar>
 	);
 }
