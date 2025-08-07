@@ -64,7 +64,7 @@ public class StockService {
 
         // Fiyatı güncel mi kontrol et
         updateStockPrice(stockOpt.get());
-
+        log.info("Veritabanında istediğiniz hisse bulundu. Hisse kodu={}",stockCode);
         return stockOpt;
     }
 
