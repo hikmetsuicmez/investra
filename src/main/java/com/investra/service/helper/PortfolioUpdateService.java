@@ -68,7 +68,7 @@ public class PortfolioUpdateService {
             updateOrCreatePortfolioItem(client, stock, quantity);
 
             log.info("Alış işlemi sonrası portföy ve hesap bakiyesi güncellendi. Müşteri ID: {}, Hisse: {}, Miktar: {}, Tutar: {}",
-                    client.getId(), stock.getSymbol(), quantity, totalAmount);
+                    client.getId(), stock.getCode(), quantity, totalAmount);
         } catch (Exception e) {
             log.error("Alış işlemi sonrası güncelleme yapılırken hata oluştu: {}", e.getMessage());
             throw new DatabaseOperationException("Alış işlemi sonrası güncelleme yapılırken hata oluştu", e);
@@ -120,7 +120,7 @@ public class PortfolioUpdateService {
                         .lastUpdated(LocalDateTime.now())
                         .build();
                 log.debug("Yeni portföy öğesi oluşturuldu. Müşteri: {}, Hisse: {}, Miktar: {}",
-                        client.getId(), stock.getSymbol(), quantity);
+                        client.getId(), stock.getCode(), quantity);
             }
 
             return portfolioItemRepository.save(portfolioItem);

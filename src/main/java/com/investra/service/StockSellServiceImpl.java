@@ -12,6 +12,7 @@ import com.investra.service.helper.*;
 import com.investra.service.helper.EntityFinderService.OrderEntities;
 import com.investra.service.helper.OrderCalculationService.OrderCalculation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +56,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
     }
 
     @Override
+    @Cacheable(value = "portfolio", key = "#clientId")
     public Response<List<ClientStockHoldingResponse>> getClientStockHoldings(Long clientId) {
         try {
             Client client = clientRepository.findById(clientId)
@@ -199,7 +201,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
 
                 if (updatedPortfolioItem == null) {
                     log.info("Müşteri {} tüm {} hisselerini sattı, portföyden kaldırıldı.",
-                            entities.client().getId(), entities.stock().getSymbol());
+                            entities.client().getId(), entities.stock().getCode());
                 }
 
                 // NOT: T+2 süreci sonunda bakiye güncellenecek

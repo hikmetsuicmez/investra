@@ -62,6 +62,8 @@ export default function ChangePassword() {
 			}
 
 			setOpenDialog(true);
+
+			window.location.href = "/dashboard";
 		} catch (err) {
 			alert("Sunucu hatası: " + err);
 		}
