@@ -36,7 +36,7 @@ public class CreateClientResponse {
     private String blueCardNo;
     private String nationalityNumber;
     private LocalDate birthDate;
-    private String prosfession;
+    private String profession;
     private Gender gender;
     private String educationStatus;
     private BigDecimal monthlyIncome;
