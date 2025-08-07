@@ -16,6 +16,7 @@ import com.investra.repository.PortfolioItemRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.service.helper.*;
 
+import com.investra.service.impl.StockSellServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.*;

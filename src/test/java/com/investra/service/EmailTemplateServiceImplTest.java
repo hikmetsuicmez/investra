@@ -1,5 +1,6 @@
 package com.investra.service;
 
+import com.investra.service.impl.EmailTemplateServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

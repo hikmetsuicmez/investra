@@ -11,7 +11,7 @@ import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.repository.UserRepository;
-import com.investra.service.ClientServiceImpl;
+import com.investra.service.impl.ClientServiceImpl;
 import com.investra.service.EmailTemplateService;
 import com.investra.service.NotificationService;
 import org.junit.Before;

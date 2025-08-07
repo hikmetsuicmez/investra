@@ -8,6 +8,7 @@ import com.investra.dtos.response.UpdateUserResponse;
 import com.investra.entity.User;
 import com.investra.enums.Role;
 import com.investra.repository.UserRepository;
+import com.investra.service.impl.AdminServiceImpl;
 import com.investra.utils.EmployeeNumberGenerator;
 import com.investra.utils.PasswordGenerator;
 import org.junit.Before;
