@@ -16,6 +16,8 @@ import com.investra.repository.ClientRepository;
 import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +38,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "accounts", allEntries = true)
     public Response<AccountResponse> createAccount(AccountCreationRequest request) {
         log.info("Yeni hesap oluşturma isteği alındı. Müşteri ID: {}", request.getClientId());
 
@@ -101,26 +104,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Response<AccountResponse> getAccountById(Long accountId) {
-        log.info("Hesap detayları isteniyor. Hesap ID: {}", accountId);
-
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> {
-                    log.error("Hesap bulunamadı. ID: {}", accountId);
-                    return new InvalidRequestStateException("Hesap bulunamadı. ID: " + accountId);
-                });
-
-        AccountResponse accountResponse = AccountMapper.toAccountResponse(account);
-
-        return Response.<AccountResponse>builder()
-                .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
-                .message("Hesap detayları başarıyla getirildi")
-                .data(accountResponse)
-                .build();
-    }
-
-    @Override
+    @Cacheable(value = "accounts", key = "'client_' + #clientId")
     public Response<List<AccountResponse>> getAccountsByClientId(Long clientId) {
         log.info("Müşterinin hesapları isteniyor. Müşteri ID: {}", clientId);
 
@@ -140,6 +124,27 @@ public class AccountServiceImpl implements AccountService {
                 .isSuccess(true)
                 .message("Müşteri hesapları başarıyla getirildi")
                 .data(accountResponses)
+                .build();
+    }
+
+    @Override
+    @Cacheable(value = "accounts", key = "#id")
+    public Response<AccountResponse> getAccountById(Long id) {
+        log.info("Hesap detayları isteniyor. Hesap ID: {}", id);
+
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Hesap bulunamadı. ID: {}", id);
+                    return new InvalidRequestStateException("Hesap bulunamadı. ID: " + id);
+                });
+
+        AccountResponse accountResponse = AccountMapper.toAccountResponse(account);
+
+        return Response.<AccountResponse>builder()
+                .statusCode(HttpStatus.OK.value())
+                .isSuccess(true)
+                .message("Hesap detayları başarıyla getirildi")
+                .data(accountResponse)
                 .build();
     }
 

@@ -13,6 +13,7 @@ import com.investra.service.helper.*;
 import com.investra.service.helper.EntityFinderService.OrderEntities;
 import com.investra.service.helper.OrderCalculationService.OrderCalculation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,6 +65,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
     }
 
     @Override
+    @Cacheable(value = "stocks", key = "'available'")
     public Response<List<StockResponse>> getAvailableStocks() {
         try {
             List<Stock> stocks = stockRepository.findByIsActiveTrue();
