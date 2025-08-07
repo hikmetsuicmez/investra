@@ -1,9 +1,10 @@
-package com.investra.service;
+package com.investra.service.impl;
 
 import com.investra.dtos.response.NotificationDTO;
 import com.investra.entity.Notification;
 import com.investra.exception.NotificationException;
 import com.investra.repository.NotificationRepository;
+import com.investra.service.NotificationService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
