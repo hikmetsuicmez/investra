@@ -37,7 +37,6 @@ export default function CustomerTable({
 }: {
 	customers: (IndividualCustomerInfo | CorporateCustomerInfo)[];
 }) {
-	console.log(customers);
 	return (
 		<Table className="text-lg">
 			<TableHeader>

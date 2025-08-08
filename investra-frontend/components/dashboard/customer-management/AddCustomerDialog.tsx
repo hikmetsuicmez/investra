@@ -50,7 +50,6 @@ export interface CorporateCustomerInfo {
 	clientType: "CORPORATE";
 	companyName: string;
 	taxNumber: string;
-	registrationNumber: string;
 	companyType: CompanyType;
 	email: string;
 	address: string;
@@ -85,7 +84,6 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 		clientType: "CORPORATE",
 		companyName: "",
 		taxNumber: "",
-		registrationNumber: "",
 		companyType: "as",
 		email: "",
 		address: "",
@@ -359,7 +357,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 
 					<TabsContent value="kurumsal">
 						<form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-							<div className="flex flex-col gap-2 col-span-2">
+							<div className="flex flex-col gap-2">
 								<Label htmlFor="companyName">Kurum Ticari Adı *</Label>
 								<Input
 									id="companyName"
@@ -380,18 +378,6 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 									required
 								/>
 							</div>
-
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="registryNumber">Sicil No *</Label>
-								<Input
-									id="registryNumber"
-									placeholder="Sicil No"
-									value={corporateInfo.registrationNumber}
-									onChange={(e) => setCorporateInfo((prev) => ({ ...prev, registrationNumber: e.target.value }))}
-									required
-								/>
-							</div>
-
 							<div className="flex flex-col gap-2">
 								<Label htmlFor="companyType">Şirket Türü *</Label>
 								<Select
@@ -460,20 +446,13 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 
 							<div className="flex flex-col gap-2">
 								<Label htmlFor="revenue">Ciro *</Label>
-								<Select
-									onValueChange={(value) => setCorporateInfo((prev) => ({ ...prev, monthlyRevenue: value }))}
+								<Input
+									id="revenue"
+									placeholder="Ciro"
 									value={corporateInfo.monthlyRevenue}
-								>
-									<SelectTrigger id="revenue" className="w-full">
-										<SelectValue placeholder="Ciro *" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="0-500.000">0-500.000</SelectItem>
-										<SelectItem value="500.000-1.500.000">500.000-1.500.000</SelectItem>
-										<SelectItem value="1.500.000-3.000.000">1.500.000-3.000.000</SelectItem>
-										<SelectItem value="3.000.000 ve üzeri">3.000.000 ve üzeri</SelectItem>
-									</SelectContent>
-								</Select>
+									onChange={(e) => setCorporateInfo((prev) => ({ ...prev, monthlyRevenue: e.target.value }))}
+									required
+								/>
 							</div>
 
 							<div className="flex flex-col gap-2 col-span-2">
