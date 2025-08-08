@@ -39,9 +39,6 @@ public class NotificationServiceImpl implements NotificationService {
             helper.setSubject(notificationDTO.getSubject());
             helper.setText(notificationDTO.getContent(), notificationDTO.isHtml());
 
-            log.debug("MimeMessage hazırlandı - To: {}, Subject: {}, HTML: {}",
-                    notificationDTO.getRecipient(), notificationDTO.getSubject(), notificationDTO.isHtml());
-
             javaMailSender.send(mimeMessage);
             log.info("E-posta başarıyla gönderildi - Alıcı: {}", notificationDTO.getRecipient());
 
