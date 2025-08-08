@@ -275,9 +275,9 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 										<SelectValue placeholder="Cinsiyet" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="erkek">Erkek</SelectItem>
-										<SelectItem value="kadın">Kadın</SelectItem>
-										<SelectItem value="diğer">Diğer</SelectItem>
+										<SelectItem value="Male">Erkek</SelectItem>
+										<SelectItem value="Female">Kadın</SelectItem>
+										<SelectItem value="Other">Diğer</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>

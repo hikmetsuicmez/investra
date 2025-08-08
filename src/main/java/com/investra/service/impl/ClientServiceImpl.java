@@ -220,7 +220,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
     @CacheEvict(value = "clients", allEntries = true)
     public Response<Void> deleteClient(Client client) {
         LocalDateTime requestTimestamp = LocalDateTime.now();
-        log.info("Delete user isteği alındı. Zaman: {}, Müşteri:{}", requestTimestamp, client.getFullName());
+        log.info("Delete client isteği alındı. Zaman: {}, Müşteri:{}", requestTimestamp, client.getFullName());
 
         try {
             if (!client.getIsActive()) {
@@ -288,6 +288,5 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                     .build();
         }
     }
-
 
 }

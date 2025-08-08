@@ -116,8 +116,8 @@ public class TradeOrderService {
                 processWaitingOrder(order);
                 log.info("Limit emri başarıyla işlendi: ID={}, Fiyat={}", order.getId(), currentPrice);
             } else {
-                log.debug("Limit emri için fiyat koşulları henüz sağlanmadı: ID={}, Piyasa Fiyatı={}, Limit Fiyatı={}",
-                        order.getId(), currentPrice, limitPrice);
+                log.info("Limit emri için fiyat koşulları henüz sağlanmadı:İşlem Tipi={}, ID={}, Piyasa Fiyatı={}, Limit Fiyatı={}",
+                        order.getOrderType(),order.getId(), currentPrice, limitPrice);
             }
         } catch (Exception e) {
             log.error("Limit emri {} işlenirken hata: {}", order.getId(), e.getMessage(), e);

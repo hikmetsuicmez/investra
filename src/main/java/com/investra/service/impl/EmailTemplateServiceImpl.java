@@ -33,6 +33,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
             }
 
             context.setVariable("currentYear", Year.now().getValue());
+            log.info("currentYear değişkeni context'e eklendi: {}", Year.now().getValue());
 
             String fullTemplateName = "email/" + templateName;
             log.info("Şablon işleniyor: {}", fullTemplateName);
