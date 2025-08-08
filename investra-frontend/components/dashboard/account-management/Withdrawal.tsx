@@ -1,162 +1,263 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
-type Account = {
-  id: string
-  currency: string
-  availableBalance: number
-  currentBalance: number
-}
+export default function Withdrawal({
+  clientId,
+  accountId,
+}: {
+  clientId: string;
+  accountId: string;
+}) {
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const [showSuccess, setShowSuccess] = useState(false);
 
-const dummyAccounts: Account[] = [
-  {
-    id: "1234567890",
-    currency: "TRY",
-    availableBalance: 95450.75,
-    currentBalance: 125450.75,
-  },
-  {
-    id: "1234567891",
-    currency: "USD",
-    availableBalance: 3750.25,
-    currentBalance: 8750.25,
-  },
-]
+  const [confirmationData, setConfirmationData] = useState<{
+    amount: number;
+    accountNumber: string;
+    date: string;
+    description: string;
+  } | null>(null);
 
-export default function Withdrawal({ clientId }: { clientId: string }) {
-  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
-  const [description, setDescription] = useState("")
-  const [amount, setAmount] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [accountInfo, setAccountInfo] = useState<{
+    accountNumber: string;
+    availableBalance: string;
+    balance: string;
+    currency: string;
+  } | null>(null);
+
+  useEffect(() => {
+    async function fetchAccountInfo() {
+      try {
+        const res = await fetch(
+          `/api/accounts/${clientId}/account/${accountId}`
+        );
+        if (!res.ok) throw new Error("Hesap bilgisi alınamadı");
+        const data = await res.json();
+
+        setAccountInfo({
+          accountNumber: data.data.accountNumber,
+          availableBalance: data.data.availableBalance,
+          balance: data.data.balance,
+          currency: data.data.currency,
+        });
+      } catch (error) {
+        console.error(error);
+        setAccountInfo(null);
+      }
+    }
+    fetchAccountInfo();
+  }, [clientId, accountId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
-    if (!amount || !selectedAccount) {
-      setError("Lütfen bir hesap ve tutar giriniz.")
-      return
-    }
-
-    if (Number(amount) > selectedAccount.availableBalance) {
-      setError("Tutar, kullanılabilir bakiyeden büyük olamaz.")
-      return
+    if (!amount) {
+      setError("Lütfen tutar giriniz.");
+      setIsLoading(false);
+      return;
     }
 
     const withdrawal = {
-      accountId: Number(selectedAccount.id),
+      accountId: Number(accountId),
       clientId: Number(clientId),
       description,
       amount: Number(amount),
-    }
+    };
 
-    setIsLoading(true)
     try {
-      const res = await fetch(`/api/accounts/${clientId}/account/${selectedAccount.id}/withdrawal`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(withdrawal),
-      })
-      if (!res.ok) throw new Error("İşlem başarısız oldu.")
+      const res = await fetch(
+        `/api/accounts/${clientId}/account/${accountId}/withdrawal`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(withdrawal),
+        }
+      );
+      const data = await res.json();
 
-      setDescription("")
-      setAmount("")
-      router.push("/dashboard")
+      if (!res.ok) {
+        throw new Error(data?.message || "İşlem başarısız oldu.");
+      }
+      setConfirmationData({
+        amount: Number(amount),
+        accountNumber: accountInfo?.accountNumber || "",
+        date: new Date().toLocaleDateString("tr-TR"),
+        description: description || "—",
+      });
+
+      setShowSuccess(true);
+      setDescription("");
+      setAmount("");
     } catch (err: any) {
-      setError(err.message || "Bir hata oluştu.")
+      setError(err.message || "Bir hata oluştu.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <Card className="w-full max-w-3xl shadow-md border">
+      <Card className="w-full max-w-10xl shadow-md border min-h-[600px]">
         <CardHeader>
-          <CardTitle>Hesap Seçimi ve Bakiye Çıkışı</CardTitle>
-          <CardDescription>Lütfen bakiye çıkışı yapılacak hesabı ve işlem detaylarını girin.</CardDescription>
+          <CardTitle>Bakiye Çıkış İşlemi</CardTitle>
+          <CardDescription>
+            Aşağıdaki formu doldurarak bakiye çıkış işlemini gerçekleştirin.
+          </CardDescription>
         </CardHeader>
-
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <Label className="text-md font-semibold">Müşteri Hesapları</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {dummyAccounts.map((acc) => (
-                <Button
-                  key={acc.id}
-                  variant={selectedAccount?.id === acc.id ? "default" : "outline"}
-                  onClick={() => setSelectedAccount(acc)}
-                  className="text-left h-auto p-4 flex flex-col items-start"
-                >
-                  <div className="text-sm text-muted-foreground">Hesap No: {acc.id}</div>
-                  <div className="text-sm">Kullanılabilir Bakiye: <strong>{acc.availableBalance} {acc.currency}</strong></div>
-                  <div className="text-sm">Güncel Bakiye: {acc.currentBalance} {acc.currency}</div>
-                </Button>
-              ))}
+        {accountInfo && (
+          <div className="flex justify-between px-6 py-4 bg-gray-50 border-b border-gray-200 mb-6 rounded">
+            <div className="mr-8">
+              <strong>Hesap No:</strong> {accountInfo.accountNumber}
+            </div>
+            <div className="mr-8">
+              <strong>Kullanılabilir Bakiye:</strong>
+              {parseFloat(accountInfo.availableBalance).toLocaleString(
+                "tr-TR",
+                { minimumFractionDigits: 2 }
+              )}{" "}
+              {accountInfo.currency}
+            </div>
+            <div className="mr-8">
+              <strong>Güncel Bakiye:</strong>
+              {parseFloat(accountInfo.balance).toLocaleString("tr-TR", {
+                minimumFractionDigits: 2,
+              })}{" "}
+              {accountInfo.currency}
+            </div>
+            <div>
+              <strong>Para Birimi:</strong> {accountInfo.currency}
             </div>
           </div>
+        )}
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="amount">
+                Tutar <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="amount"
+                type="text"
+                placeholder="Örn: 10000"
+                value={amount}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[.,]/g, "");
+                  if (/^\d*$/.test(val)) {
+                    setAmount(val);
+                  }
+                }}
+                required
+              />
+            </div>
 
-          {selectedAccount && (
-            <form onSubmit={handleSubmit} className="space-y-6 pt-4 border-t mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="amount">Tutar <span className="text-destructive">*</span></Label>
-                <Input
-                  id="amount"
-                  type="text"
-                  placeholder={`Örn: 1000 (${selectedAccount.currency})`}
-                  value={amount}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/[.,]/g, '')
-                    if (/^\d*$/.test(val)) {
-                      setAmount(val)
-                    }
-                  }}
-                  required
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Açıklama (Opsiyonel)</Label>
+              <Textarea
+                id="description"
+                placeholder="thy için yatırılan para"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Açıklama (Opsiyonel)</Label>
-                <Textarea
-                  id="description"
-                  placeholder="thy için yatırılan para"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
+            <Alert variant="warning" className="border-l-4 border-yellow-500">
+              <AlertTitle>Önemli Bilgi:</AlertTitle>
+              <AlertDescription>
+                - Bakiye tutarının ilk önce paranın olduğu yatırım hesabından
+                çıkış yapmış olması gerekmektedir.
+                <br />
+                - Çıkış bakiyesi "Kullanılabilir Bakiye" tutarından büyük
+                olamaz.
+                <br />- Para birimi seçilen hesaba göre otomatik olarak
+                belirlenir.
+              </AlertDescription>
+            </Alert>
 
-              <Alert variant="warning" className="border-l-4 border-yellow-500">
-                <AlertTitle>Önemli Bilgi:</AlertTitle>
-                <AlertDescription>
-                  - Bakiye çıkışı sadece seçilen hesabın <strong>kullanılabilir bakiyesi</strong> kadar olabilir.<br />
-                  - Para birimi <strong>{selectedAccount.currency}</strong> olarak otomatik belirlenmiştir.
-                </AlertDescription>
-              </Alert>
+            {error && <p className="text-sm text-red-500">{error}</p>}
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
-
-              <div className="flex justify-between">
-                <Button type="button" variant="outline" onClick={() => setSelectedAccount(null)}>← Hesap Seçimini Değiştir</Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Yükleniyor..." : "✓ Onayla"}
-                </Button>
-              </div>
-            </form>
-          )}
-        </CardContent>
+            <div className="flex justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+              >
+                Geri Dön
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Yükleniyor..." : "✓ Onayla"}
+              </Button>
+            </div>
+          </CardContent>
+        </form>
       </Card>
+      {showSuccess && confirmationData && (
+        <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
+          <AlertDialogContent className="bg-green-50 text-green-800">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-green-700 text-lg font-bold">
+                ✔ İşlem Başarılı
+              </AlertDialogTitle>
+              <AlertDialogDescription className="mt-2 text-sm text-green-800 space-y-1">
+                <p>
+                  <strong>Çıkış Yapılan Tutar:</strong>{" "}
+                  {confirmationData.amount.toLocaleString("tr-TR")} TRY
+                </p>
+                <p>
+                  <strong>İşlem Tarihi:</strong> {confirmationData.date}
+                </p>
+                <p>
+                  <strong>Hesap:</strong> {confirmationData.accountNumber}
+                </p>
+                <p>
+                  <strong>Açıklama:</strong> {confirmationData.description}
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+              <AlertDialogAction
+                onClick={() => {
+                  setShowSuccess(false);
+                  router.push("/dashboard");
+                }}
+              >
+                Tamam
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
-  )
+  );
 }
