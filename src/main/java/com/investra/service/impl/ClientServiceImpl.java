@@ -1,4 +1,4 @@
-package com.investra.service;
+package com.investra.service.impl;
 
 
 import com.investra.dtos.request.CreateClientRequest;
@@ -14,6 +14,10 @@ import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.repository.UserRepository;
+import com.investra.service.AbstractStockTradeService;
+import com.investra.service.ClientService;
+import com.investra.service.EmailTemplateService;
+import com.investra.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;

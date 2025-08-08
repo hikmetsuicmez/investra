@@ -1,4 +1,4 @@
-package com.investra.service;
+package com.investra.service.impl;
 
 import com.investra.dtos.request.DepositRequest;
 import com.investra.dtos.response.DepositResponse;
@@ -18,6 +18,7 @@ import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.TransactionRepository;
 import com.investra.repository.UserRepository;
+import com.investra.service.AccountDepositService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

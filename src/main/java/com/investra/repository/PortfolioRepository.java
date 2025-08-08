@@ -2,7 +2,6 @@ package com.investra.repository;
 
 import com.investra.entity.Client;
 import com.investra.entity.Portfolio;
-import com.investra.entity.TradeOrder;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

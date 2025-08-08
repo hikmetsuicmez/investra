@@ -1,6 +1,7 @@
 package com.investra.controller;
 
 import com.investra.constants.ApiEndpoints;
+import com.investra.docs.AccountDepositApiDocs;
 import com.investra.dtos.request.DepositRequest;
 import com.investra.dtos.response.DepositResponse;
 import com.investra.dtos.response.Response;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(ApiEndpoints.Account.BASE + ApiEndpoints.Account.DEPOSIT)
 @RequiredArgsConstructor
 @Slf4j
-public class AccountDepositController {
+public class AccountDepositController implements AccountDepositApiDocs {
 
     private final AccountDepositService accountDepositService;
 
