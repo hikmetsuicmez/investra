@@ -120,7 +120,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
             // Önizlemeyi önbelleğe kaydet ve previewId döndür
             String previewId = previewCacheService.cachePreview(request, previewResponse);
             previewResponse.setPreviewId(previewId);
-
+            log.info("Satış önizlemesi başarılı");
             return Response.<StockSellOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.OK.value())
                     .isSuccess(true)
