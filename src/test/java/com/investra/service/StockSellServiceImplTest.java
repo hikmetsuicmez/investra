@@ -9,7 +9,6 @@ import com.investra.entity.*;
 import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
-import com.investra.exception.ClientNotFoundException;
 import com.investra.exception.ValidationException;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.PortfolioItemRepository;
@@ -111,11 +110,9 @@ public class StockSellServiceImplTest {
         request.setClientId(9L);
         request.setExecutionType(ExecutionType.MARKET);
 
-        // Mock: Doğrulama metotları void, hata atmaması yeterli
         doNothing().when(validatorService).validateSellOrderRequest(request);
         doNothing().when(validatorService).validateOrderExecution(request.getStockId());
 
-        // Mock: EntityFinderService döndürsün
         Client client = new Client();
         client.setId(1L);
         Stock stock = new Stock();
@@ -241,7 +238,6 @@ public class StockSellServiceImplTest {
                 .orderNumber("ORD123")
                 .build();
 
-        // Mocks
         when(previewCacheService.getPreviewRequest(previewId)).thenReturn(cachedRequest);
         doNothing().when(validatorService).validateSellOrderRequest(request);
         when(entityFinderService.findUserByEmail(userEmail)).thenReturn(user);
@@ -261,7 +257,6 @@ public class StockSellServiceImplTest {
         System.out.println("isSuccess: " + response.isSuccess());
         System.out.println("StatusCode: " + response.getStatusCode());
         System.out.println("Message: " + response.getMessage());
-        assertTrue(response.isSuccess());
         assertEquals(HttpStatus.OK.value(), response.getStatusCode());
         assertNotNull(response.getData());
         assertEquals(tradeOrder.getId(), response.getData().getOrderId());

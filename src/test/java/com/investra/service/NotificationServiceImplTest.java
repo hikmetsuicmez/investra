@@ -7,13 +7,11 @@ import com.investra.exception.ErrorCode;
 import com.investra.exception.NotificationException;
 import com.investra.repository.NotificationRepository;
 import com.investra.service.impl.NotificationServiceImpl;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

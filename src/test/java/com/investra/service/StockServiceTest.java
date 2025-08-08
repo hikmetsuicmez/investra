@@ -1,11 +1,10 @@
 package com.investra.service;
-import com.investra.dtos.response.infina.StockPriceResponse;
 import com.investra.entity.Stock;
 import com.investra.repository.StockRepository;
+import com.investra.service.impl.StockServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.*;
-import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -20,7 +19,7 @@ public class StockServiceTest {
     private StockRepository stockRepository;
 
     @InjectMocks
-    private StockService stockService;
+    private StockServiceImpl stockService;
 
     @Before
     public void setUp() {

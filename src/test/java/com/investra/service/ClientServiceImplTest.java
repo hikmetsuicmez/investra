@@ -4,7 +4,6 @@ import com.investra.dtos.request.CreateIndividualClientRequest;
 import com.investra.dtos.response.Response;
 import com.investra.entity.Client;
 import com.investra.entity.User;
-import com.investra.enums.NotificationType;
 import com.investra.enums.OrderStatus;
 import com.investra.exception.UserNotFoundException;
 import com.investra.repository.AccountRepository;
@@ -12,14 +11,11 @@ import com.investra.repository.ClientRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.repository.UserRepository;
 import com.investra.service.impl.ClientServiceImpl;
-import com.investra.service.EmailTemplateService;
-import com.investra.service.NotificationService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.Assert.*;
