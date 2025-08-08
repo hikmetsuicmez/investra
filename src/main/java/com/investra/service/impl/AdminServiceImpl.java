@@ -11,8 +11,8 @@ import com.investra.repository.UserRepository;
 import com.investra.service.AdminService;
 import com.investra.service.EmailTemplateService;
 import com.investra.service.NotificationService;
-import com.investra.utils.PasswordGenerator;
-import com.investra.utils.EmployeeNumberGenerator;
+import com.investra.service.helper.PasswordGenerator;
+import com.investra.service.helper.EmployeeNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.investra.utils.AdminOperationsValidator.duplicateResourceCheck;
+import static com.investra.service.helper.AdminOperationsValidator.duplicateResourceCheck;
 import static com.investra.mapper.UserMapper.*;
 @Service
 @RequiredArgsConstructor

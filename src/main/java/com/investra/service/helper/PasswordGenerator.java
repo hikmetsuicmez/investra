@@ -1,4 +1,4 @@
-package com.investra.utils;
+package com.investra.service.helper;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;

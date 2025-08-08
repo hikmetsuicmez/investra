@@ -31,7 +31,7 @@ import java.util.*;
 
 import static com.investra.mapper.ClientMapper.mapToEntity;
 import static com.investra.mapper.ClientMapper.mapToResponse;
-import static com.investra.utils.AdminOperationsValidator.duplicateResourceCheck;
+import static com.investra.service.helper.AdminOperationsValidator.duplicateResourceCheck;
 
 @Service
 @Slf4j
