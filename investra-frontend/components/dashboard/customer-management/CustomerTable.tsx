@@ -1,16 +1,10 @@
 "use client";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CorporateCustomerInfo, IndividualCustomerInfo } from "./AddCustomerDialog";
+import { CorporateCustomerInfo, IndividualCustomerInfo, CustomerDisplayInfo, CustomerTableProps } from "@/types/customers";
 import DeleteCustomerDialog from "./DeleteCustomerDialog";
 
-function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustomerInfo): {
-	name: string;
-	type: string;
-	phone: string;
-	email: string;
-	status: string;
-} {
+function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustomerInfo): CustomerDisplayInfo {
 	if (customer.clientType == "INDIVIDUAL") {
 		// It's an individual
 		return {
@@ -32,11 +26,7 @@ function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustom
 	}
 }
 
-export default function CustomerTable({
-	customers,
-}: {
-	customers: (IndividualCustomerInfo | CorporateCustomerInfo)[];
-}) {
+export default function CustomerTable({ customers }: CustomerTableProps) {
 	return (
 		<Table className="text-lg">
 			<TableHeader>

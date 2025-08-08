@@ -76,7 +76,7 @@ const items = [
 			{
 				label: "Hisse Senedi Satış",
 				icon: <ArrowUpCircle />,
-				href: "",
+				href: "/dashboard/stock-management/sell",
 			},
 			{
 				label: "Emir Takibi",

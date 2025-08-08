@@ -13,15 +13,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { User } from "./User";
+import { User, DeleteUserDialogProps } from "@/types/employees";
 import { useState } from "react";
 
-type Props = {
-	user: User;
-	onDeleted?: () => void;
-};
-
-export default function DeleteUserDialog({ user, onDeleted }: Props) {
+export default function DeleteUserDialog({ user, onDeleted }: DeleteUserDialogProps) {
 	const [isDeleting, setIsDeleting] = useState(false);
 
 	const handleDelete = async () => {

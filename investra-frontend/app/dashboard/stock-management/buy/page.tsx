@@ -1,103 +1,14 @@
 "use client";
 
 import BuyStockPreviewDialog from "@/components/dashboard/stock-management/BuyStockPreviewDialog";
-import { Stock, StockSelector } from "@/components/dashboard/stock-management/StockSelector";
-import { Button } from "@/components/ui/button";
+import { StockSelector } from "@/components/dashboard/stock-management/StockSelector";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CreditCardIcon, EyeIcon, SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-
-type IndividualCustomer = {
-	id: number;
-	clientType: "INDIVIDUAL";
-	email: string;
-	phone: string;
-	address: string | null;
-	notes: string | null;
-	status: string | null;
-	isActive: boolean;
-	createdAt: string;
-	fullName: string;
-	nationalityType: string | null;
-	taxId: null;
-	passportNo: string | null;
-	blueCardNo: string | null;
-	nationalityNumber: string | null;
-	birthDate: string;
-	profession: string | null;
-	gender: string | null;
-	educationStatus: string | null;
-	monthlyIncome: string | null;
-	estimatedTransactionVolume: string | null;
-
-	// Corporate-only fields set to null
-	companyName: null;
-	taxNumber: null;
-	registrationNumber: null;
-	companyType: null;
-	sector: null;
-	monthlyRevenue: null;
-};
-
-type CorporateCustomer = {
-	id: number;
-	clientType: "CORPORATE";
-	email: string;
-	phone: string;
-	address: string | null;
-	notes: string | null;
-	status: string | null;
-	isActive: boolean;
-	createdAt: string;
-	fullName: null;
-	nationalityType: null;
-	taxId: null;
-	passportNo: null;
-	blueCardNo: null;
-	nationalityNumber: null;
-	birthDate: null;
-	profession: null;
-	gender: null;
-	educationStatus: null;
-	monthlyIncome: null;
-	estimatedTransactionVolume: null;
-
-	companyName: string;
-	taxNumber: string;
-	registrationNumber: string | null;
-	companyType: string;
-	sector: string;
-	monthlyRevenue: number | null;
-};
-
-type Customer = IndividualCustomer | CorporateCustomer;
-
-type AccountType = "SETTLEMENT" | "INVESTMENT" | "CURRENT" | "SAVINGS" | "DEPOSIT";
-
-export type Account = {
-	id: number;
-	nickname: string;
-	accountNumber: string;
-	iban: string;
-	accountNumberAtBroker: string;
-	brokerName: string;
-	brokerCode: string;
-	custodianName: string;
-	custodianCode: string;
-	currency: string;
-	balance: number;
-	availableBalance: number;
-	accountType: AccountType;
-	createdAt: string;
-	clientName: string;
-	clientId: number;
-	primarySettlement: boolean;
-};
-
-export type ExecutionType = "MARKET" | "LIMIT";
+import { Customer, Account, ExecutionType, AccountType, Stock } from "@/types/stocks";
 
 export default function StockBuy() {
 	const [customers, setCustomers] = useState<Customer[]>([]);
@@ -182,7 +93,6 @@ export default function StockBuy() {
 
 	useEffect(() => {
 		setTotalCost(cost + commission + bsmv);
-		console.log(selectedAccount, selectedStock);
 	}, [cost, commission, bsmv]);
 
 	const allAccounts: Account[] = Object.values(accountsByClient).flat();

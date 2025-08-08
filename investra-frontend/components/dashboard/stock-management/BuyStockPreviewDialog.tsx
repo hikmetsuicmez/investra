@@ -1,39 +1,17 @@
 "use client";
 
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Stock } from "./StockSelector";
 import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
-import { Account, ExecutionType } from "@/app/dashboard/stock-management/buy/page";
 import { useState } from "react";
 import { toast } from "sonner";
-
-type BuyStockPreviewDialogProps = {
-	selectedStock: Stock;
-	quantity: number;
-	totalCost: number;
-	selectedAccount: Account;
-	executionType: ExecutionType;
-};
-
-type BuyOrderResults = {
-	accountNumber: string;
-	operation: string;
-	stockName: string;
-	stockSymbol: string;
-	price: number;
-	quantity: number;
-	tradeDate: string;
-	valueDate: string;
-	totalAmount: number;
-	stockGroup: string;
-	commission: number;
-	bsmv: number;
-	totalTaxAndCommission: number;
-	netAmount: number;
-	executionType: string;
-	previewId?: string;
-};
+import { 
+	Stock, 
+	Account, 
+	ExecutionType, 
+	BuyStockPreviewDialogProps, 
+	BuyOrderResults 
+} from "@/types/stocks";
 
 export default function BuyStockPreviewDialog({
 	selectedStock,

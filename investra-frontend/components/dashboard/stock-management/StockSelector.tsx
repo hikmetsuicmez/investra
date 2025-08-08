@@ -1,25 +1,14 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Popover, PopoverTrigger, PopoverContent } from "@radix-ui/react-popover"; // or your popover library
 
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "cmdk"; // example for command palette UI
 import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "lucide-react";
+import { Stock, StockSelectorProps } from "@/types/stocks";
 
-export type Stock = {
-	id: number;
-	name: string;
-	symbol: string | null;
-	currentPrice: number;
-	stockGroup: string;
-	isActive: boolean;
-	source: string | null;
-};
-
-type StockSelectorProps = {
-	selectedStock: Stock;
-	setSelectedStock: Dispatch<SetStateAction<Stock>>;
-};
+// Re-export Stock type for backward compatibility
+export { Stock };
 
 export const StockSelector: React.FC<StockSelectorProps> = ({ selectedStock, setSelectedStock }) => {
 	const [stocks, setStocks] = useState<Stock[]>([]);

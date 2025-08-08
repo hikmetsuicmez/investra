@@ -19,46 +19,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-
-interface AddCustomerDialogProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-}
-
-type CitizenshipType = "tcVatandasi" | "yabanciUyruklu";
-
-export interface IndividualCustomerInfo {
-	clientType: "INDIVIDUAL";
-	fullName: string;
-	citizenshipType: CitizenshipType;
-	nationalityNumber: string;
-	email: string;
-	birthDate: Date;
-	profession: string;
-	gender: string;
-	educationStatus: string;
-	phone: string;
-	monthlyRevenue: string;
-	estimatedTransactionVolume: string;
-	notes: string;
-	isActive: boolean;
-}
-
-type CompanyType = "as" | "ltd" | "kooperatif" | "kollektif" | "komandit";
-
-export interface CorporateCustomerInfo {
-	clientType: "CORPORATE";
-	companyName: string;
-	taxNumber: string;
-	companyType: CompanyType;
-	email: string;
-	address: string;
-	sector: string;
-	phone: string;
-	monthlyRevenue: string;
-	companyNotes: string;
-	isActive: boolean;
-}
+import { 
+	AddCustomerDialogProps, 
+	IndividualCustomerInfo, 
+	CorporateCustomerInfo, 
+	CitizenshipType, 
+	CompanyType 
+} from "@/types/customers";
 
 export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDialogProps) {
 	const [tab, setTab] = useState<"bireysel" | "kurumsal">("bireysel");

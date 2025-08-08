@@ -3,16 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
-
-interface Stock {
-	"id": number;
-	"name": string;
-	"symbol": string | null;
-	"currentPrice": number;
-	"stockGroup": string;
-	"isActive": boolean;
-	"source": string | null;
-}
+import { Stock } from "@/types/stocks";
 
 export default function StockList() {
 	const [stocks, setStocks] = useState<Stock[]>([]);

@@ -14,15 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import { CorporateCustomerInfo, IndividualCustomerInfo } from "./AddCustomerDialog";
+import { CorporateCustomerInfo, IndividualCustomerInfo, DeleteCustomerDialogProps } from "@/types/customers";
 
-type Props = {
-	customer: IndividualCustomerInfo | CorporateCustomerInfo;
-	onDeleted?: () => void;
-	disabled: boolean;
-};
-
-export default function DeleteCustomerDialog({ customer, onDeleted, disabled }: Props) {
+export default function DeleteCustomerDialog({ customer, onDeleted, disabled }: DeleteCustomerDialogProps) {
 	const [isDeleting, setIsDeleting] = useState(false);
 
 	const handleDelete = async () => {
