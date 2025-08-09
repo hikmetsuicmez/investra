@@ -40,6 +40,7 @@ public class StockSellServiceImplTest {
     @Mock private PortfolioUpdateService portfolioUpdateService;
     @Mock private OrderPreviewCacheService previewCacheService;
     @Mock private TradeOrderService tradeOrderService;
+    @Mock private SimulationDateService simulationDateService;
 
     @InjectMocks
     private StockSellServiceImpl stockSellService;
@@ -56,7 +57,8 @@ public class StockSellServiceImplTest {
                 calculationService,
                 portfolioUpdateService,
                 previewCacheService,
-                tradeOrderService
+                tradeOrderService,
+                simulationDateService
         );
     }
 

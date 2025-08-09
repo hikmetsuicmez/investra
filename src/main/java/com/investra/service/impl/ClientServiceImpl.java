@@ -8,12 +8,15 @@ import com.investra.dtos.response.*;
 import com.investra.entity.*;
 import com.investra.enums.NotificationType;
 import com.investra.enums.OrderStatus;
+import com.investra.exception.BusinessException;
+import com.investra.exception.ErrorCode;
 import com.investra.exception.UserNotFoundException;
 import com.investra.mapper.ClientMapper;
 import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.repository.UserRepository;
+import com.investra.utils.ExceptionUtil;
 import com.investra.service.AbstractStockTradeService;
 import com.investra.service.ClientService;
 import com.investra.service.EmailTemplateService;
@@ -80,27 +83,47 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
     }
 
     private Response<CreateClientResponse> createIndividualClient(CreateIndividualClientRequest request, String userEmail) {
+        // Zorunlu alanların kontrolü
+        if (request.getFullName() == null || request.getFullName().isBlank()) {
+            throw new BusinessException("Müşteri adı boş olamaz", ErrorCode.VALIDATION_ERROR);
+        }
+
+        if (request.getBirthDate() == null) {
+            throw new BusinessException("Doğum tarihi boş olamaz", ErrorCode.VALIDATION_ERROR);
+        }
+
+        if (request.getGender() == null) {
+            throw new BusinessException("Cinsiyet bilgisi boş olamaz", ErrorCode.VALIDATION_ERROR);
+        }
+
+        if (request.getAddress() == null || request.getAddress().isBlank()) {
+            throw new BusinessException("Adres bilgisi boş olamaz", ErrorCode.VALIDATION_ERROR);
+        }
+
+        // Mükerrer kayıt kontrolü
         if (request.getEmail() != null) {
-            duplicateResourceCheck(() -> clientRepository.findByEmail(request.getEmail()).isPresent(), "Bu email ile kayıtlı bir müşteri mevcut");
+            duplicateResourceCheck(() -> clientRepository.findByEmail(request.getEmail()).isPresent(),
+                    "Bu email ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
         }
         if (request.getNationalityNumber() != null && !request.getNationalityNumber().isBlank()) {
             duplicateResourceCheck(() -> clientRepository.findByNationalityNumber(request.getNationalityNumber()).isPresent(),
-                    "Bu TCKN ile kayıtlı bir müşteri mevcut");
+                    "Bu TCKN ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
         }
         if (request.getBlueCardNo() != null && !request.getBlueCardNo().isBlank()) {
             duplicateResourceCheck(() -> clientRepository.findByBlueCardNo(request.getBlueCardNo()).isPresent(),
-                    "Bu Mavi Kart ile kayıtlı bir müşteri mevcut");
+                    "Bu Mavi Kart ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
         }
         if (request.getPassportNo() != null && !request.getPassportNo().isBlank()) {
             duplicateResourceCheck(() -> clientRepository.findByPassportNo(request.getPassportNo()).isPresent(),
-                    "Bu Pasaport numarası ile kayıtlı bir müşteri mevcut");
+                    "Bu Pasaport numarası ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
         }
         if (request.getTaxId() != null) {
-            duplicateResourceCheck(() -> clientRepository.findByTaxId(request.getTaxId()).isPresent(), "Bu vergi numarası ile kayıtlı bir müşteri mevcut");
+            duplicateResourceCheck(() -> clientRepository.findByTaxId(request.getTaxId()).isPresent(),
+                    "Bu vergi numarası ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
         }
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı: " + userEmail));
+                .orElseThrow(() -> new BusinessException("Kullanıcı bulunamadı: " + userEmail, ErrorCode.USER_NOT_FOUND));
 
         Client client = mapToEntity(request, user);
         client.setIsActive(true);
@@ -118,9 +141,9 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
 
     private Response<CreateClientResponse> createCorporateClient(CreateCorporateClientRequest request, String userEmail) {
         if (request.getEmail() != null) {
-            duplicateResourceCheck(() -> clientRepository.findByEmail(request.getEmail()).isPresent(), "Bu email ile kayıtlı bir müşteri mevcut");
+            duplicateResourceCheck(() -> clientRepository.findByEmail(request.getEmail()).isPresent(), "Bu email ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
         }
-        duplicateResourceCheck(() -> clientRepository.findByTaxNumber(request.getTaxNumber()).isPresent(), "Bu vergi numarası ile kayıtlı bir müşteri mevcut");
+        duplicateResourceCheck(() -> clientRepository.findByTaxNumber(request.getTaxNumber()).isPresent(), "Bu vergi numarası ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı: " + userEmail));
@@ -147,7 +170,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
 
 
     @Override
-    //@Cacheable(value = "clients", key = "'active_clients'")
+    // @Cacheable(value = "clients", key = "'active_clients'")
     public Response<List<ClientDTO>> getActiveClients() {
         List<Client> activeClients = clientRepository.findAll().stream()
                 .filter(client -> Boolean.TRUE.equals(client.getIsActive()))
@@ -261,6 +284,11 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                 log.info("Müşteriye bilgilendirme e-postası gönderildi: {}", client.getEmail());
             } catch (Exception e) {
                 log.error("Bilgilendirme e-postası gönderilemedi. Hata: {}", e.getMessage(), e);
+                return Response.<Void>builder()
+                        .statusCode(500)
+                        .message("E-posta gönderilirken hata oluştu.")
+                        .errorCode(ExceptionUtil.getErrorCode(e))
+                        .build();
             }
             return Response.<Void>builder()
                     .statusCode(200)

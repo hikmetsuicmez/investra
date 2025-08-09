@@ -6,11 +6,6 @@ import com.investra.dtos.response.Response;
 
 public interface AccountDepositService {
 
-    /**
-     * Hesaba bakiye yükleme işlemi gerçekleştirir
-     * @param request Bakiye yükleme isteği
-     * @param userEmail İşlemi yapan kullanıcının e-posta adresi
-     * @return İşlem sonucu
-     */
+    // Hesaba bakiye yükleme işlemi gerçekleştirir
     Response<DepositResponse> depositToAccount(DepositRequest request, String userEmail);
 }
