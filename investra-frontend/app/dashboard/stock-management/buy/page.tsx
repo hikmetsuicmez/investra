@@ -47,6 +47,35 @@ export default function StockBuy() {
 		return amount.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 	}
 
+	const handleQuantityChange = (q: number) => {
+		setQuantity(q);
+		const newCost = price * q;
+		const newCommission = newCost * 0.002;
+		const newBsmv = newCommission * 0.05;
+		setCost(newCost);
+		setCommission(newCommission);
+		setBsmv(newBsmv);
+		setTotalCost(newCost + newCommission + newBsmv);
+	};
+
+	const handleTotalCostChange = (tc: number) => {
+		if (price <= 0) return;
+
+		const newQuantity = Math.round(tc / price);
+		const safeQuantity = Math.max(newQuantity, 0);
+
+		const newCost = safeQuantity * price;
+		const newCommission = newCost * 0.002;
+		const newBsmv = newCommission * 0.05;
+		const newTotalCost = newCost + newCommission + newBsmv;
+
+		setQuantity(safeQuantity);
+		setCost(newCost);
+		setCommission(newCommission);
+		setBsmv(newBsmv);
+		setTotalCost(newTotalCost);
+	};
+
 	async function fetchCustomers() {
 		try {
 			const res = await fetch("/api/clients/active-clients");
@@ -84,16 +113,6 @@ export default function StockBuy() {
 	useEffect(() => {
 		setPrice(selectedStock.currentPrice);
 	}, [selectedStock, executionType]);
-
-	useEffect(() => {
-		setCost(price * quantity);
-		setCommission(price * quantity * 0.002);
-		setBsmv(price * quantity * 0.002 * 0.05);
-	}, [price, quantity]);
-
-	useEffect(() => {
-		setTotalCost(cost + commission + bsmv);
-	}, [cost, commission, bsmv]);
 
 	const allAccounts: Account[] = Object.values(accountsByClient).flat();
 
@@ -233,7 +252,7 @@ export default function StockBuy() {
 									value={price.toFixed(2)}
 									min={0}
 									placeholder="Limit Fiyat"
-									onChange={(e) => setPrice(Number(e.target.value))}
+									onChange={(e) => setPrice(Number(e.target.value) || 0)}
 									type="number"
 									disabled={executionType === "MARKET"}
 								/>
@@ -245,13 +264,20 @@ export default function StockBuy() {
 									min={0}
 									step={1}
 									placeholder="Adet"
-									onChange={(e) => setQuantity(Number(e.target.value))}
+									onChange={(e) => handleQuantityChange(Number(e.target.value) || 0)}
 									type="number"
 								/>
 							</div>
 							<div className="w-full">
-								<Label className="mb-1">Tutar</Label>
-								<Input value={cost.toFixed(2)} placeholder="Tutar" type="number" disabled />
+								<Label className="mb-1">Toplam Maliyet</Label>
+								<Input
+									value={cost.toFixed(2)}
+									min={0}
+									step={price}
+									placeholder="Toplam Maliyet"
+									onChange={(e) => handleTotalCostChange(Number(e.target.value) || 0)}
+									type="number"
+								/>
 							</div>
 						</div>
 
