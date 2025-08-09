@@ -13,21 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { validateEmail } from "@/lib/validate-email";
 import { UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
-
-interface AddEmployeeDialogProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-}
-
-interface Employee {
-	name: string;
-	surname: string;
-	nationalId: string; // Tc kimlik
-	registrationNumber: string; // Sicil no
-	phone: string; // Tel no
-	email: string; // E-posta
-	role: "ADMIN" | "TRADER" | "VIEWER";
-}
+import { AddEmployeeDialogProps, Employee } from "@/types/employees";
 
 export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps) {
 	const [userCreateSuccess, setUserCreateSuccess] = useState(false);

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation"; 
-import { Client } from "./Client";
+import { Client, SearchType } from "@/types/customers";
 import {
   Select,
   SelectContent,
@@ -18,9 +18,7 @@ export default function SearchClientBySearchTerm () {
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [searchType, setSearchType] = useState<
-    "TCKN" | "VERGI_ID" | "MAVI_KART_NO" | "PASSPORT_NO" | "VERGI_NO" | "ISIM"
-  >("TCKN");
+  const [searchType, setSearchType] = useState<SearchType>("TCKN");
 
   const router = useRouter(); 
 

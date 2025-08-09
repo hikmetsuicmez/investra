@@ -15,15 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil } from "lucide-react";
-import { User } from "./User";
+import { User, EditUserDialogProps } from "@/types/employees";
 import { useState } from "react";
 import { toast } from "sonner";
 
-type Props = {
-	user: User;
-};
-
-export default function EditUserDialog({ user }: Props) {
+export default function EditUserDialog({ user }: EditUserDialogProps) {
 	const [firstName, setFirstName] = useState(user.firstName);
 	const [lastName, setLastName] = useState(user.lastName);
 	const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber || "");
