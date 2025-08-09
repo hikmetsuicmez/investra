@@ -111,6 +111,7 @@ public class ClientMapper {
                 .clientStatus(request.getStatus())
                 .clientType(request.getClientType())
                 .fullName(request.getFullName())
+                .isActive(request.getIsActive())
                 .build();
 
     }

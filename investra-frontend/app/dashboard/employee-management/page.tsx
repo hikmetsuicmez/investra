@@ -2,7 +2,7 @@
 
 import AddEmployeeDialog from "@/components/dashboard/employee-management/AddEmployeeDialog";
 import EmployeeTable from "@/components/dashboard/employee-management/EmployeeTable";
-import { User } from "@/components/dashboard/employee-management/User";
+import { User } from "@/types/employees";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";

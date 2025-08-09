@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation"; 
-import { Client } from "./Client";
+import { Client, SearchType } from "@/types/customers";
 import {
   Select,
   SelectContent,
@@ -18,9 +18,7 @@ export default function SearchClientBySearchTerm () {
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [searchType, setSearchType] = useState<
-    "TCKN" | "VERGI_ID" | "MAVI_KART_NO" | "PASSPORT_NO" | "VERGI_NO" | "ISIM"
-  >("TCKN");
+  const [searchType, setSearchType] = useState<SearchType>("TCKN");
 
   const router = useRouter(); 
 
@@ -46,7 +44,7 @@ export default function SearchClientBySearchTerm () {
       });
 
       const data = await res.json();
-
+      console.log(data)
       if (res.ok && data.client) {
         setClient(data.client);
         setNotFound(false);
@@ -71,23 +69,29 @@ export default function SearchClientBySearchTerm () {
   }
 
   return (
-  <div className="space-y-6">
-    {/* Arama Kutusu */}
-    <div className="bg-white rounded-xl shadow p-4 space-y-2">
-      <p className="text-xs text-muted-foreground px-1">
+  <div className="flex flex-col h-screen bg-gray-100 p-6 space-y-6">
+    <div className="flex justify-between items-center p-4 mb-4 flex-shrink-0 bg-white rounded-xl shadow">
+      <h1 className="text-2xl font-semibold">Müşteri Arama</h1>
+    </div>
+
+    <div className="bg-white rounded-xl shadow p-6 space-y-4">
+      <p className="text-xs text-muted-foreground">
         TCKN • VKN • Pasaport No • Mavi Kart No
       </p>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         <Input
           placeholder="Arama yapın..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full"
+          className="flex-grow"
         />
 
-        <Select value={searchType} onValueChange={(value) => setSearchType(value as any)}>
-          <SelectTrigger className="w-40">
+        <Select
+          value={searchType}
+          onValueChange={(value) => setSearchType(value as SearchType)}
+        >
+          <SelectTrigger className="w-48">
             <SelectValue placeholder="Arama Tipi" />
           </SelectTrigger>
           <SelectContent>
@@ -107,7 +111,7 @@ export default function SearchClientBySearchTerm () {
     </div>
 
     {client && (
-      <div className="overflow-auto border rounded-md">
+      <div className="bg-white rounded-xl shadow overflow-auto border">
         <div className="grid grid-cols-8 font-semibold bg-gray-100 p-4 text-sm md:text-base">
           <div>Ad Soyad</div>
           <div>Müşteri No</div>
@@ -116,7 +120,7 @@ export default function SearchClientBySearchTerm () {
           <div>Telefon</div>
           <div>E-posta</div>
           <div>Durum</div>
-          <div></div> 
+          <div></div>
         </div>
 
         <div className="grid grid-cols-8 items-center p-4 hover:bg-gray-50 transition">
@@ -140,8 +144,14 @@ export default function SearchClientBySearchTerm () {
         </div>
       </div>
     )}
-    {notFound && <p className="text-sm text-red-500">Müşteri bulunamadı.</p>}
+
+    {notFound && (
+      <p className="text-sm text-red-500 bg-white p-4 rounded-xl shadow">
+        Müşteri bulunamadı.
+      </p>
+    )}
   </div>
 );
+
 
 }
