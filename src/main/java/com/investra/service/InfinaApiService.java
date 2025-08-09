@@ -42,6 +42,7 @@ public class InfinaApiService {
         } catch (Exception e) {
             log.error("Hisse senedi tanımları alınırken hata: {}", e.getMessage(), e);
             return Collections.emptyList();
+
         }
     }
 

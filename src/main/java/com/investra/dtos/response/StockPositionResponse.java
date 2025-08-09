@@ -1,6 +1,5 @@
 package com.investra.dtos.response;
 
-import com.investra.enums.StockGroup;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,16 +8,16 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
-public class ClientStockHoldingResponse {
-
-    private Long stockId;
+@NoArgsConstructor
+@AllArgsConstructor
+public class StockPositionResponse {
     private String stockCode;
     private String stockName;
-    private StockGroup stockGroup;
-    private Integer availableQuantity;
+    private Integer quantity;
+    private BigDecimal costPrice;
     private BigDecimal currentPrice;
-    private BigDecimal avgPrice;
+    private BigDecimal positionValue;
+    private BigDecimal unrealizedProfitLoss;
+    private BigDecimal changePercentage;
 }

@@ -39,4 +39,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     @Query("SELECT c FROM Client c WHERE LOWER(c.fullName) = LOWER(:name)")
     Optional<Client> findByName(@Param("name") String name);
+
+    List<Client> findAllByIsActive(boolean b);
 }

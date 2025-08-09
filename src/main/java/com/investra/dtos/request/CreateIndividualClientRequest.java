@@ -25,6 +25,12 @@ public class CreateIndividualClientRequest extends CreateClientRequest {
     @NotNull(message = "Vatandaşlık tipi zorunludur")
     private Boolean nationalityType;
 
+    @NotNull(message = "Doğum tarihi zorunludur")
+    private LocalDate birthDate;
+
+    @NotNull(message = "Cinsiyet bilgisi zorunludur")
+    private Gender gender;
+
     private String taxId;
 
     @Size(min = 5, max = 20, message = "Pasaport numarası 5 ile 20 karakter arasında olmalıdır")
@@ -37,9 +43,7 @@ public class CreateIndividualClientRequest extends CreateClientRequest {
     @Pattern(regexp = "^[0-9]{11}$", message = "Kimlik numarası 11 haneli bir sayı olmalıdır")
     private String nationalityNumber;
 
-    private LocalDate birthDate;
     private String profession;
-    private Gender gender;
     private String educationStatus;
 
     @Positive(message = "Aylık gelir pozitif bir değer olmalıdır")
