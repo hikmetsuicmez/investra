@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "lucide-react";
 import { Stock, StockSelectorProps } from "@/types/stocks";
 
-// Re-export Stock type for backward compatibility
-export { Stock };
-
-export const StockSelector: React.FC<StockSelectorProps> = ({ selectedStock, setSelectedStock }) => {
+export const SellStockSelector: React.FC<StockSelectorProps> = ({ selectedStock, setSelectedStock, clientId }) => {
 	const [stocks, setStocks] = useState<Stock[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [query, setQuery] = useState("");
@@ -18,7 +15,7 @@ export const StockSelector: React.FC<StockSelectorProps> = ({ selectedStock, set
 	const [open, setOpen] = useState(false);
 
 	async function fetchStocks() {
-		const res = await fetch("/api/stocks/buy/available");
+		const res = await fetch(`/api/stocks/sell/client/${clientId}/stocks`);
 		if (!res.ok) throw new Error("Failed to fetch stocks");
 		const data = await res.json();
 		setStocks(data.data || []);
@@ -60,15 +57,19 @@ export const StockSelector: React.FC<StockSelectorProps> = ({ selectedStock, set
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger aria-label="Select stock" asChild>
 				<Button
-					className="mt-1 inline-flex items-center justify-between w-64 px-4 py-2 border rounded-md cursor-pointer bg-white"
+					className="mt-1 inline-flex items-center justify-between w-96 px-4 py-2 border rounded-md cursor-pointer bg-white"
 					variant={"ghost"}
 				>
-					{selected ? selected.name : "Hisse seçin"}
+					{selected
+						? selected.name
+						: stocks.length == 0
+						? "Bu kullanıcıya bağlı hisse senedi bulunmamaktadır"
+						: "Hisse seçin"}
 					<ChevronDownIcon />
 				</Button>
 			</PopoverTrigger>
 
-			<PopoverContent className="w-64 p-0 mt-1 bg-white border rounded-md shadow-lg z-30">
+			<PopoverContent className="w-80 p-0 mt-1 bg-white border rounded-md shadow-lg z-30">
 				<Command>
 					<CommandInput
 						placeholder="Hisse arama"
@@ -90,7 +91,7 @@ export const StockSelector: React.FC<StockSelectorProps> = ({ selectedStock, set
 										selected?.id === stock.id ? "bg-blue-500 text-white" : ""
 									}`}
 								>
-									{stock.name}
+									{stock.name} - {stock.availableQuantity} adet
 								</CommandItem>
 							))}
 						</CommandGroup>

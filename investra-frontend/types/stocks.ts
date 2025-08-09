@@ -96,6 +96,7 @@ export type Stock = {
 	stockGroup: string;
 	isActive: boolean;
 	source: string | null;
+	availableQuantity?: number;
 };
 
 // Execution Types
@@ -125,6 +126,7 @@ export type BuyOrderResults = {
 export type StockSelectorProps = {
 	selectedStock: Stock;
 	setSelectedStock: React.Dispatch<React.SetStateAction<Stock>>;
+	clientId?: number
 };
 
 export type BuyStockPreviewDialogProps = {

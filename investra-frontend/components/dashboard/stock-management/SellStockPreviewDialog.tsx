@@ -7,7 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { BuyStockPreviewDialogProps, BuyOrderResults } from "@/types/stocks";
 
-export default function BuyStockPreviewDialog({
+export default function SellStockPreviewDialog({
 	selectedStock,
 	quantity,
 	totalCost,
@@ -44,7 +44,7 @@ export default function BuyStockPreviewDialog({
 				price: selectedStock.currentPrice,
 			};
 
-			const res = await fetch("/api/stocks/buy/preview", {
+			const res = await fetch("/api/stocks/sell/preview", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -79,7 +79,7 @@ export default function BuyStockPreviewDialog({
 				previewId: previewResults.previewId,
 			};
 
-			const res = await fetch("/api/stocks/buy/execute", {
+			const res = await fetch("/api/stocks/sell/execute", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -90,13 +90,13 @@ export default function BuyStockPreviewDialog({
 			if (res.ok) {
 				const result = await res.json();
 				if (result.statusCode == 200) {
-					toast("Hisse alım işleminiz başarıyla gerçekleşti.");
+					toast("Hisse satış işleminiz başarıyla gerçekleşti.");
 				} else {
-					toast("Hisse alım sırasında bir hata oluştu.");
+					toast("Hisse satış sırasında bir hata oluştu.");
 				}
 			}
 		} catch (error) {
-			console.error("Hisse alım sırasında hata oluştu: ", error);
+			console.error("Hisse satış sırasında hata oluştu: ", error);
 		}
 	}
 
@@ -115,7 +115,7 @@ export default function BuyStockPreviewDialog({
 				</div>
 			</DialogTrigger>
 			<DialogContent>
-				<DialogTitle>Hisse Alım Ön İzleme</DialogTitle>
+				<DialogTitle>Hisse Satış Ön İzleme</DialogTitle>
 				{!previewFailed ? (
 					<>
 						<div className="grid grid-cols-2 gap-4 text-sm">

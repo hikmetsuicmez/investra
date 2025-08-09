@@ -1,6 +1,5 @@
 "use client";
 
-import BuyStockPreviewDialog from "@/components/dashboard/stock-management/BuyStockPreviewDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,9 +7,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ChartLineIcon, CreditCardIcon, SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Customer, Account, ExecutionType, AccountType, Stock } from "@/types/stocks";
-import { BuyStockSelector } from "@/components/dashboard/stock-management/BuyStockSelector";
+import SellStockPreviewDialog from "@/components/dashboard/stock-management/SellStockPreviewDialog";
+import { SellStockSelector } from "@/components/dashboard/stock-management/SellStockSelector";
 
-export default function StockBuy() {
+export default function StockSell() {
 	const [customers, setCustomers] = useState<Customer[]>([]);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [accountsByClient, setAccountsByClient] = useState<Account[]>([]);
@@ -118,7 +118,7 @@ export default function StockBuy() {
 	return (
 		<div className="flex flex-col gap-6 min-h-screen overflow-auto bg-gray-100 p-6">
 			<div className="flex justify-between items-center p-4 flex-shrink-0">
-				<h1 className="text-2xl font-semibold">Hisse Senedi Alım</h1>
+				<h1 className="text-2xl font-semibold">Hisse Senedi Satış</h1>
 			</div>
 
 			<Card className="max-h-[400px] overflow-y-auto">
@@ -183,7 +183,7 @@ export default function StockBuy() {
 					<CardContent className="flex-grow space-y-4">
 						<div className="flex items-center gap-2">
 							<ChartLineIcon size={20} />
-							<h1 className="text-lg font-semibold">Alış İşlemi - {selectedAccount.clientName}</h1>
+							<h1 className="text-lg font-semibold">Satış İşlemi - {selectedAccount.clientName}</h1>
 						</div>
 
 						<div>
@@ -205,7 +205,11 @@ export default function StockBuy() {
 
 						<div>
 							<Label>Hisse Senedi Seç</Label>
-							<BuyStockSelector selectedStock={selectedStock} setSelectedStock={setSelectedStock} />
+							<SellStockSelector
+								selectedStock={selectedStock}
+								setSelectedStock={setSelectedStock}
+								clientId={selectedAccount.clientId}
+							/>
 						</div>
 
 						<div>
@@ -277,7 +281,7 @@ export default function StockBuy() {
 							</div>
 						</div>
 
-						<BuyStockPreviewDialog
+						<SellStockPreviewDialog
 							quantity={quantity}
 							selectedStock={selectedStock}
 							totalCost={totalCost}
