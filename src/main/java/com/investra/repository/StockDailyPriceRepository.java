@@ -19,4 +19,7 @@ public interface StockDailyPriceRepository extends JpaRepository<StockDailyPrice
     List<StockDailyPrice> findAllOfficialClosePricesByDate(LocalDate priceDate);
 
     boolean existsByPriceDateAndOfficialClose(LocalDate priceDate, boolean officialClose);
+
+    // Test amaçlı günlük fiyatları silmek için
+    int deleteByPriceDate(LocalDate priceDate);
 }

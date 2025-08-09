@@ -21,4 +21,7 @@ public interface PortfolioDailyValuationRepository extends JpaRepository<Portfol
 
     @Query("SELECT CASE WHEN COUNT(pdv) > 0 THEN TRUE ELSE FALSE END FROM PortfolioDailyValuation pdv WHERE pdv.valuationDate = :date")
     boolean existsByValuationDate(LocalDate date);
+
+    // Test amaçlı değerlemeleri silmek için
+    int deleteByValuationDate(LocalDate valuationDate);
 }

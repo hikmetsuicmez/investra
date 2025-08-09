@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -105,8 +106,19 @@ public class PortfolioUpdateService {
                         portfolioItem.getId(), portfolioItem.getQuantity() - quantity, newQuantity);
             } else {
                 // Yoksa yeni bir portföy öğesi oluşturulur
-                Portfolio portfolio = portfolioRepository.findByClientId(client.getId())
-                        .orElseThrow(() -> new IllegalStateException("Müşterinin portföyü bulunamadı: " + client.getId()));
+
+                // DÜZELTME: List olarak al ve ilkini kullan
+                List<Portfolio> portfolios = portfolioRepository.findAllByClientId(client.getId());
+
+                if (portfolios.isEmpty()) {
+                    throw new IllegalStateException("Müşterinin portföyü bulunamadı: " + client.getId());
+                }
+
+                if (portfolios.size() > 1) {
+                    log.warn("Müşteri için birden fazla portföy bulundu: {}. İlki kullanılıyor.", client.getId());
+                }
+
+                Portfolio portfolio = portfolios.get(0); // İlk portföyü kullan
 
                 // Müşterinin hesabını repository üzerinden bulalım
                 Account account = accountRepository.findByClientId(client.getId())

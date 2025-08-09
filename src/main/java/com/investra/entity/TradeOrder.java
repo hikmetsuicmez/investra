@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -89,6 +90,16 @@ public class TradeOrder {
     @Column(name = "portfolio_updated")
     private boolean portfolioUpdated;
 
+    // Gün bazlı T+2 sistemi için yeni alanlar
+    @Column(name = "trade_date")
+    private LocalDate tradeDate;
+
+    @Column(name = "settlement_days_remaining")
+    private Integer settlementDaysRemaining;
+
+    @Column(name = "expected_settlement_date")
+    private LocalDate expectedSettlementDate;
+
     // Rastgele duruma atama için yardımcı metot
     @Transient
     public void assignRandomStatus() {
@@ -104,13 +115,19 @@ public class TradeOrder {
         } else if (randomValue < 90) {
             // %30 ihtimalle gerçekleşen emir
             this.status = OrderStatus.EXECUTED;
-            // T+2 sistemine göre 2 gün sonra takas tamamlanacak
+            // Gün bazlı T+2 sistemi için ayarlar
+            this.tradeDate = LocalDate.now();
             this.settlementStatus = SettlementStatus.PENDING;
-            this.settlementDate = LocalDateTime.now().plusSeconds(15); // Test için 15 saniye
+            this.settlementDaysRemaining = 2;
+            this.expectedSettlementDate = LocalDate.now().plusDays(2);
             this.fundsReserved = true;
         } else {
             // %10 ihtimalle iptal edilen emir
             this.status = OrderStatus.CANCELLED;
+            // İptal edilen emirler için settlement status'u da CANCELLED yap
+            this.settlementStatus = SettlementStatus.CANCELLED;
+            this.settlementDaysRemaining = 0;
+            this.fundsReserved = false;
         }
     }
 }

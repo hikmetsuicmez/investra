@@ -13,8 +13,10 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "portfolios")
+@Table(name = "portfolios",
+        uniqueConstraints = @UniqueConstraint(columnNames = "client_id"))
 @Builder
+
 @Entity
 public class Portfolio {
     @Id

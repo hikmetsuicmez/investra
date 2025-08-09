@@ -13,7 +13,7 @@ public class ApiEndpoints {
         public static final String LOGIN = "/login"; // Giriş yapma
         public static final String CHANGE_PASSWORD = "/change-password"; // Şifre değiştirme
         public static final String FORGOT_PASSWORD = "/forgot-password"; // Şifremi unuttum
-        public static final String RESET_PASSWORD = "/reset-password";  // Şifre sıfırlama
+        public static final String RESET_PASSWORD = "/reset-password"; // Şifre sıfırlama
     }
 
     public static final class User {
@@ -39,7 +39,8 @@ public class ApiEndpoints {
         public static final String GET_BY_CODE = "/{stockCode}"; // Hisse senedini koduna göre getir
         public static final String REFRESH = "/refresh"; // Hisse senedi verilerini güncelle
         public static final String SEARCH_CLIENT = "/search-client"; // Hisse senedi arama
-        public static final String CLIENT_STOCK_HOLDINGS = "/client/{clientId}/stocks"; // Müşterinin Hisse senedi detayları
+        public static final String CLIENT_STOCK_HOLDINGS = "/client/{clientId}/stocks"; // Müşterinin Hisse senedi
+                                                                                        // detayları
         public static final String AVAILABLE_STOCKS = "/available"; // Mevcut hisse senetleri
         public static final String PREVIEW_SELL_ORDER = "/preview"; // Satış önizleme
         public static final String PREVIEW_BUY_ORDER = "/preview"; // Alış önizleme
@@ -57,7 +58,6 @@ public class ApiEndpoints {
         public static final String DELETE = "/delete-client";
         public static final String PASSIVE_LIST = "/clients/passive-clients";
         public static final String ACTIVE_LIST = "/clients/active-clients";
-
 
     }
 
@@ -91,7 +91,9 @@ public class ApiEndpoints {
     }
 
     public static final class Portfolio {
-        private Portfolio() {}
+        private Portfolio() {
+        }
+
         public static final String BASE = "/api/v1/portfolio";
         public static final String CREATE = ""; // Portföy oluşturma
         public static final String GET_ALL = ""; // Tüm portföyleri getir
@@ -106,11 +108,19 @@ public class ApiEndpoints {
         public static final String BASE = "/api/v1/end-of-day";
         public static final String STATUS = "/status"; // Gün sonu değerleme durumu
         public static final String FETCH_PRICES = "/fetch-prices"; // Kapanış fiyatlarını al
-
-        public static final String CLIENT_VALUATIONS = "/client-valuations"; // Tüm müşteri değerlemelerini getir
-        public static final String CLIENT_VALUATION = "/client-valuation/{clientId}"; // Belirli bir müşteri değerlemesini getir
         public static final String START_VALUATION = "/start-valuation"; // Gün sonu değerleme başlat
+        public static final String CLIENT_VALUATIONS = "/client-valuations"; // Tüm müşteri değerlemelerini getir
+        public static final String CLIENT_VALUATION = "/client-valuation/{clientId}"; // Belirli bir müşteri
+                                                                                      // değerlemesini getir
         public static final String STOCK_PRICES = "/stock-prices"; // Hisse fiyatlarını getir
-        public static final String MANUALLY_UPDATE_PRICES = "/manually-update-prices"; // Kapanış fiyatlarını manuel olarak güncelle
+        public static final String MANUALLY_UPDATE_PRICES = "/manually-update-prices"; // Kapanış fiyatlarını manuel
+                                                                                       // olarak güncelle
+
+        // T+2 Settlement endpoint'leri
+        public static final String PROCESS_T0_TO_T1 = "/process-t0-to-t1"; // T+0 işlemleri T+1'e geçir
+        public static final String PROCESS_T1_TO_T2 = "/process-t1-to-t2"; // T+1 işlemleri T+2'ye geçir
+        public static final String PROCESS_T2_COMPLETION = "/process-t2-completion"; // T+2 işlemleri tamamla
+        public static final String PROCESS_ALL_T2_STEPS = "/process-all-t2-steps"; // Tüm T+2 adımlarını çalıştır
+        public static final String RESET_STATUS = "/reset-status"; // Test amaçlı gün sonu durumunu sıfırla
     }
 }

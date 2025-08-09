@@ -6,6 +6,7 @@ import com.investra.entity.*;
 import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
+import com.investra.enums.SettlementStatus;
 import com.investra.exception.*;
 import com.investra.mapper.StockMapper;
 import com.investra.repository.*;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -203,6 +205,10 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                     .user(currentUser)
                     .submittedAt(LocalDateTime.now())
                     .orderNumber(calculationService.generateOrderNumber())
+                    .tradeDate(LocalDate.now())
+                    .settlementStatus(SettlementStatus.PENDING)
+                    .settlementDaysRemaining(2)
+                    .expectedSettlementDate(LocalDate.now().plusDays(2))
                     .build();
 
             // Rastgele bir duruma atama (bekleyen, gerçekleşen, iptal)
@@ -212,10 +218,10 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             // Eğer alış emri bekleyen veya gerçekleşen ise, available balance azaltılır
             if (tradeOrder.getExecutionType() == ExecutionType.MARKET &&
-                (tradeOrder.getStatus() == OrderStatus.PENDING || tradeOrder.getStatus() == OrderStatus.EXECUTED)) {
+                    (tradeOrder.getStatus() == OrderStatus.PENDING || tradeOrder.getStatus() == OrderStatus.EXECUTED)) {
                 tradeOrderService.updateAccountBalanceForBuyOrder(entities.account(), calculation.netAmount());
             } else if (tradeOrder.getExecutionType() == ExecutionType.LIMIT &&
-                      tradeOrder.getStatus() == OrderStatus.EXECUTED) {
+                    tradeOrder.getStatus() == OrderStatus.EXECUTED) {
                 // Limit emirlerde sadece emir gerçekleştiğinde bakiyeyi güncelle
                 tradeOrderService.updateAccountBalanceForBuyOrder(entities.account(), calculation.netAmount());
             }
@@ -297,7 +303,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 .tradeDate(calculation.tradeDate())
                 .valueDate(calculation.valueDate())
                 .totalAmount(calculation.totalAmount())
-                .stockGroup(tradeOrder.getStock().getGroup() != null ? tradeOrder.getStock().getGroup().name() : "UNKNOWN")
+                .stockGroup(
+                        tradeOrder.getStock().getGroup() != null ? tradeOrder.getStock().getGroup().name() : "UNKNOWN")
                 .commission(calculation.commission())
                 .bsmv(calculation.bsmv())
                 .totalTaxAndCommission(calculation.totalTaxAndCommission())
@@ -333,6 +340,5 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 .user(currentUser)
                 .build();
     }
-
 
 }

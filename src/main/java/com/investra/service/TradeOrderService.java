@@ -1,5 +1,7 @@
 package com.investra.service;
 
+import com.investra.dtos.response.Response;
+import com.investra.dtos.response.TradeOrderDTO;
 import com.investra.entity.Account;
 import com.investra.entity.Client;
 import com.investra.entity.Notification;
@@ -11,12 +13,14 @@ import com.investra.enums.NotificationType;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
 import com.investra.enums.SettlementStatus;
+import com.investra.mapper.TradeOrderMapper;
 import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.NotificationRepository;
 import com.investra.repository.StockRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.repository.UserRepository;
+import com.investra.utils.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -76,7 +80,8 @@ public class TradeOrderService {
         }
     }
 
-    // Bekleyen bir limit emrini işler. Limit emirlerde, fiyat koşulları kontrol edilir ve uygun koşullar sağlandığında işlem gerçekleştirilir.
+    // Bekleyen bir limit emrini işler. Limit emirlerde, fiyat koşulları kontrol
+    // edilir ve uygun koşullar sağlandığında işlem gerçekleştirilir.
     @Transactional
     public void processPendingLimitOrder(TradeOrder order) {
         try {
@@ -130,9 +135,11 @@ public class TradeOrderService {
             order.setStatus(OrderStatus.EXECUTED);
             order.setExecutedAt(now);
 
-            // T+2 sistemi için takas tarihini ayarla (15 saniye sonra)
-            order.setSettlementDate(now.plusSeconds(15)); // Test için 15 saniye
+            // Gün bazlı T+2 sistemi için ayarlar
+            order.setTradeDate(now.toLocalDate());
             order.setSettlementStatus(SettlementStatus.PENDING);
+            order.setSettlementDaysRemaining(2);
+            order.setExpectedSettlementDate(now.toLocalDate().plusDays(2));
             order.setFundsReserved(true);
 
             tradeOrderRepository.save(order);
@@ -150,34 +157,27 @@ public class TradeOrderService {
         }
     }
 
-    // T+2 sistemindeki emirlerin takasını tamamla
-    //     * Her 5 saniye çalışır (test için)
-    @Scheduled(fixedRate = 5000) // Her 5 saniye kontrol et
-    public void settleCompletedOrders() {
-        log.info("T+2 sistemi için takas kontrolü başlatılıyor... [{}]", LocalDateTime.now());
-        LocalDateTime now = LocalDateTime.now();
-
+    // İptal edilen bir emri işler
+    @Transactional
+    public void processCancelledOrder(TradeOrder order) {
         try {
-            // EXECUTED durumunda, PENDING settlement status'ünde ve settlement date'i geçmiş emirleri bul
-            List<TradeOrder> ordersToSettle = tradeOrderRepository.findByStatusAndSettlementStatusAndSettlementDateBefore(
-                    OrderStatus.EXECUTED, SettlementStatus.PENDING, now);
+            log.info("İptal edilen emir işleniyor: ID={}", order.getId());
+            LocalDateTime now = LocalDateTime.now();
 
-            log.info("Takas bekleyen emir sayısı: {}", ordersToSettle.size());
+            // Emir iptal edildi olarak işaretle
+            order.setStatus(OrderStatus.CANCELLED);
 
-            for (TradeOrder order : ordersToSettle) {
-                try {
-                    settleCompletedOrder(order);
-                } catch (Exception e) {
-                    log.error("Emir {} takası sırasında hata, diğer emirlere devam ediliyor: {}",
-                            order.getId(), e.getMessage());
-                }
-            }
+            // Settlement status'u da CANCELLED yap
+            order.setSettlementStatus(SettlementStatus.CANCELLED);
+            order.setSettlementDaysRemaining(0);
+            order.setFundsReserved(false);
 
-            if (!ordersToSettle.isEmpty()) {
-                log.info("{} adet emirin takası tamamlandı", ordersToSettle.size());
-            }
+            tradeOrderRepository.save(order);
+
+            log.info("Emir başarıyla iptal edildi: {}", order.getId());
         } catch (Exception e) {
-            log.error("Emir takası sırasında genel hata oluştu: {}", e.getMessage(), e);
+            log.error("Emir {} iptal edilirken hata: {}", order.getId(), e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -190,13 +190,14 @@ public class TradeOrderService {
 
             Long orderId = order.getId();
             TradeOrder freshOrder = tradeOrderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Emir bulunamadı: " + orderId));
+                    .orElseThrow(() -> new RuntimeException("Emir bulunamadı: " + orderId));
 
             Account account = accountRepository.findById(freshOrder.getAccount().getId())
                     .orElseThrow(() -> new RuntimeException("Hesap bulunamadı: " + freshOrder.getAccount().getId()));
 
             Stock stock = stockRepository.findById(freshOrder.getStock().getId())
-                    .orElseThrow(() -> new RuntimeException("Hisse senedi bulunamadı: " + freshOrder.getStock().getId()));
+                    .orElseThrow(
+                            () -> new RuntimeException("Hisse senedi bulunamadı: " + freshOrder.getStock().getId()));
 
             Client client = clientRepository.findById(freshOrder.getClient().getId())
                     .orElseThrow(() -> new RuntimeException("Müşteri bulunamadı: " + freshOrder.getClient().getId()));
@@ -205,7 +206,7 @@ public class TradeOrderService {
             if (freshOrder.getUser() != null) {
                 Long userId = freshOrder.getUser().getId();
                 user = userRepository.findById(userId)
-                    .orElse(null);
+                        .orElse(null);
             }
 
             // Emirin durumunu önce COMPLETED olarak güncelle
@@ -232,14 +233,13 @@ public class TradeOrderService {
             try {
                 // Proxy nesneler yerine taze yüklenmiş nesneleri gönder
                 portfolioService.updatePortfolioWithEntities(
-                    freshOrder.getId(),
-                    freshOrder.getOrderType(),
-                    freshOrder.getQuantity(),
-                    freshOrder.getPrice(),
-                    stock,
-                    account,
-                    client
-                );
+                        freshOrder.getId(),
+                        freshOrder.getOrderType(),
+                        freshOrder.getQuantity(),
+                        freshOrder.getPrice(),
+                        stock,
+                        account,
+                        client);
                 freshOrder.setPortfolioUpdated(true);
                 log.info("Emir için portfolio güncellendi: {}", freshOrder.getId());
             } catch (Exception e) {
@@ -291,7 +291,7 @@ public class TradeOrderService {
         }
     }
 
-    //  Emir takası tamamlandığında bildirim gönderir
+    // Emir takası tamamlandığında bildirim gönderir
     private void sendOrderSettledNotification(User user, String stockSymbol, OrderType orderType) {
         if (user == null || stockSymbol == null || orderType == null) {
             log.warn("Bildirim gönderilemedi: Eksik bilgi");
@@ -317,48 +317,53 @@ public class TradeOrderService {
 
     // Kullanıcının tüm emirlerini getirir
     @Transactional(readOnly = true)
-    public List<TradeOrder> getAllOrdersByUser(String username) {
-        User user = userRepository.findByUsername(username)
+    public List<TradeOrderDTO> getAllOrdersByUser(String username) {
+        User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
-
-        return tradeOrderRepository.findByUserOrderBySubmittedAtDesc(user);
+        List<TradeOrder> orders = tradeOrderRepository.findByUserOrderBySubmittedAtDesc(user);
+        return orders.stream().map(TradeOrderMapper::toDTO).toList();
     }
 
     // Kullanıcının belirli durumdaki emirlerini getirir
     @Transactional(readOnly = true)
-    public List<TradeOrder> getOrdersByStatusAndUser(String username, OrderStatus status) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Kullanıc�� bulunamadı"));
-
-        return tradeOrderRepository.findByUserAndStatusOrderBySubmittedAtDesc(user, status);
+    public List<TradeOrderDTO> getOrdersByStatusAndUser(String username, OrderStatus status) {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        List<TradeOrder> orders = tradeOrderRepository.findByUserAndStatusOrderBySubmittedAtDesc(user, status);
+        return orders.stream().map(TradeOrderMapper::toDTO).toList();
     }
+
+
 
     // Bekleyen bir emri iptal eder
     @Transactional
-    public TradeOrder cancelOrder(Long orderId, String username) {
-        User user = userRepository.findByUsername(username)
+    public Response<TradeOrderDTO> cancelOrder(Long orderId, String username) {
+        User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
         TradeOrder order = tradeOrderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Emir bulunamadı"));
 
         if (!order.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Bu emir size ait değil");
+            return Response.<TradeOrderDTO>builder()
+                    .statusCode(400)
+                    .message("Bu emir size ait değil")
+                    .build();
         }
 
         if (order.getStatus() != OrderStatus.PENDING) {
-            throw new RuntimeException("Sadece bekleyen emirler iptal edilebilir");
+            return Response.<TradeOrderDTO>builder()
+                    .statusCode(400)
+                    .message("Sadece bekleyen emirler iptal edilebilir")
+                    .build();
         }
 
         order.setStatus(OrderStatus.CANCELLED);
-
-        // İptal edilen emirler hiçbir şekilde portföye yansıtılmamalı
         order.setPortfolioUpdated(false);
-
-        // Settlement status'ü iptal olarak işaretle, böylece takasa girmeyecek
         order.setSettlementStatus(SettlementStatus.CANCELLED);
+        order.setSettlementDaysRemaining(0);
+        order.setFundsReserved(false);
 
-        // Alış emri iptal edildiğinde availableBalance'ı güncelle
         if (order.getOrderType() == OrderType.BUY) {
             restoreAccountBalanceForCancelledBuyOrder(order.getAccount(), order.getNetAmount());
         }
@@ -366,22 +371,27 @@ public class TradeOrderService {
         TradeOrder cancelledOrder = tradeOrderRepository.save(order);
 
         Notification notification = Notification.builder()
-                .recipient(user.getEmail()) // Kullanıcı adı yerine e-posta adresi kullanılıyor
+                .recipient(user.getEmail())
                 .subject("Emir İptal Edildi")
                 .content(order.getStock().getCode() + " hissesi için " + order.getOrderType().name() +
                         " emiriniz iptal edildi.")
                 .type(NotificationType.INFO)
-                .isHtml(false) // isHtml alanı eklendi
+                .isHtml(false)
                 .build();
 
         notificationRepository.save(notification);
-        log.info("İptal bildirimi başarıyla gönderildi: {}", user.getEmail());
 
-        return cancelledOrder;
+        log.info("Emir başarıyla iptal edildi. Emir ID: {}, Kullanıcı: {}", orderId, username);
+
+        return Response.<TradeOrderDTO>builder()
+                .statusCode(200)
+                .message("Emir başarıyla iptal edildi")
+                .data(TradeOrderMapper.toDTO(cancelledOrder))
+                .build();
     }
 
     // Alış işleminde hesap bakiyesini günceller
-    //  AvailableBalance azalır, total balance değişmez
+    // AvailableBalance azalır, total balance değişmez
     @Transactional
     public void updateAccountBalanceForBuyOrder(Account account, BigDecimal amount) {
         // availableBalance'dan tutarı düş, balance aynı kalır
@@ -391,7 +401,7 @@ public class TradeOrderService {
     }
 
     // İptal edilen alış emirleri için hesap bakiyesini geri alır
-    //  AvailableBalance artırılır
+    // AvailableBalance artırılır
     @Transactional
     public void restoreAccountBalanceForCancelledBuyOrder(Account account, BigDecimal amount) {
         // availableBalance'a tutarı geri ekle

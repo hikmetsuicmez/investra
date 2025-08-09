@@ -2,6 +2,8 @@ package com.investra.enums;
 
 public enum SettlementStatus {
     PENDING("Takas Bekliyor"),
+    T1("T+1"),
+    T2("T+2"),
     COMPLETED("Takas Tamamlandı"),
     CANCELLED("Takas İptal Edildi");
 
