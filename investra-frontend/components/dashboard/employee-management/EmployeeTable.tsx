@@ -1,9 +1,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { User } from "./User";
+import { User, EmployeeTableProps } from "@/types/employees";
 import EditUserDialog from "./EditUserDialog";
 import DeleteUserDialog from "./DeleteUserDialog";
 
-export default function EmployeeTable({ employees }: { employees: User[] }) {
+export default function EmployeeTable({ employees }: EmployeeTableProps) {
 	return (
 		<Table className="text-lg">
 			<TableHeader>

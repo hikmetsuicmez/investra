@@ -19,47 +19,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-
-interface AddCustomerDialogProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-}
-
-type CitizenshipType = "tcVatandasi" | "yabanciUyruklu";
-
-export interface IndividualCustomerInfo {
-	clientType: "INDIVIDUAL";
-	fullName: string;
-	citizenshipType: CitizenshipType;
-	nationalityNumber: string;
-	email: string;
-	birthDate: Date;
-	profession: string;
-	gender: string;
-	educationStatus: string;
-	phone: string;
-	monthlyRevenue: string;
-	estimatedTransactionVolume: string;
-	notes: string;
-	isActive: boolean;
-}
-
-type CompanyType = "as" | "ltd" | "kooperatif" | "kollektif" | "komandit";
-
-export interface CorporateCustomerInfo {
-	clientType: "CORPORATE";
-	companyName: string;
-	taxNumber: string;
-	registrationNumber: string;
-	companyType: CompanyType;
-	email: string;
-	address: string;
-	sector: string;
-	phone: string;
-	monthlyRevenue: string;
-	companyNotes: string;
-	isActive: boolean;
-}
+import { 
+	AddCustomerDialogProps, 
+	IndividualCustomerInfo, 
+	CorporateCustomerInfo, 
+	CitizenshipType, 
+	CompanyType 
+} from "@/types/customers";
 
 export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDialogProps) {
 	const [tab, setTab] = useState<"bireysel" | "kurumsal">("bireysel");
@@ -85,7 +51,6 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 		clientType: "CORPORATE",
 		companyName: "",
 		taxNumber: "",
-		registrationNumber: "",
 		companyType: "as",
 		email: "",
 		address: "",
@@ -275,9 +240,9 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 										<SelectValue placeholder="Cinsiyet" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="erkek">Erkek</SelectItem>
-										<SelectItem value="kadın">Kadın</SelectItem>
-										<SelectItem value="diğer">Diğer</SelectItem>
+										<SelectItem value="Male">Erkek</SelectItem>
+										<SelectItem value="Female">Kadın</SelectItem>
+										<SelectItem value="Other">Diğer</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
@@ -359,7 +324,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 
 					<TabsContent value="kurumsal">
 						<form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-							<div className="flex flex-col gap-2 col-span-2">
+							<div className="flex flex-col gap-2">
 								<Label htmlFor="companyName">Kurum Ticari Adı *</Label>
 								<Input
 									id="companyName"
@@ -380,18 +345,6 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 									required
 								/>
 							</div>
-
-							<div className="flex flex-col gap-2">
-								<Label htmlFor="registryNumber">Sicil No *</Label>
-								<Input
-									id="registryNumber"
-									placeholder="Sicil No"
-									value={corporateInfo.registrationNumber}
-									onChange={(e) => setCorporateInfo((prev) => ({ ...prev, registrationNumber: e.target.value }))}
-									required
-								/>
-							</div>
-
 							<div className="flex flex-col gap-2">
 								<Label htmlFor="companyType">Şirket Türü *</Label>
 								<Select
@@ -460,20 +413,13 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 
 							<div className="flex flex-col gap-2">
 								<Label htmlFor="revenue">Ciro *</Label>
-								<Select
-									onValueChange={(value) => setCorporateInfo((prev) => ({ ...prev, monthlyRevenue: value }))}
+								<Input
+									id="revenue"
+									placeholder="Ciro"
 									value={corporateInfo.monthlyRevenue}
-								>
-									<SelectTrigger id="revenue" className="w-full">
-										<SelectValue placeholder="Ciro *" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="0-500.000">0-500.000</SelectItem>
-										<SelectItem value="500.000-1.500.000">500.000-1.500.000</SelectItem>
-										<SelectItem value="1.500.000-3.000.000">1.500.000-3.000.000</SelectItem>
-										<SelectItem value="3.000.000 ve üzeri">3.000.000 ve üzeri</SelectItem>
-									</SelectContent>
-								</Select>
+									onChange={(e) => setCorporateInfo((prev) => ({ ...prev, monthlyRevenue: e.target.value }))}
+									required
+								/>
 							</div>
 
 							<div className="flex flex-col gap-2 col-span-2">
