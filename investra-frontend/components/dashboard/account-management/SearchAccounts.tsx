@@ -26,7 +26,6 @@ export default function SearchAccountByClientId() {
           `/api/accounts/get-accounts?clientId=${clientId}`
         );
         const data = await res.json();
-
         if (res.ok && data.accounts) {
           setAccounts(data.accounts);
         } else {

@@ -47,12 +47,11 @@ export default function Deposit({  clientId,accountId}: { clientId: string,accou
       accountId: Number(accountId),
       clientId: Number(clientId),
       description,
-      amount: Number(amount),
+      amount: Number(amount), 
     }
 
 
     try {
-      console.log(deposit)
       const res = await fetch(`/api/accounts/${clientId}/account/${accountId}/deposit`, {
         method: "POST",
         headers: {
@@ -60,7 +59,7 @@ export default function Deposit({  clientId,accountId}: { clientId: string,accou
         },
         body: JSON.stringify(deposit),
       })
-          const data = await res.json()
+      const data = await res.json()
 
       if (!res.ok) {
         throw new Error(data?.message || "İşlem başarısız oldu.")

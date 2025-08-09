@@ -39,7 +39,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "accounts", allEntries = true)
+    //@CacheEvict(value = "accounts", allEntries = true)
     public Response<AccountResponse> createAccount(AccountCreationRequest request) {
         log.info("Yeni hesap oluşturma isteği alındı. Müşteri ID: {}", request.getClientId());
 

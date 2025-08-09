@@ -71,10 +71,16 @@ export default function SearchClientBySearchTerm () {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-2">
+  <div className="space-y-6">
+    {/* Arama Kutusu */}
+    <div className="bg-white rounded-xl shadow p-4 space-y-2">
+      <p className="text-xs text-muted-foreground px-1">
+        TCKN • VKN • Pasaport No • Mavi Kart No
+      </p>
+
+      <div className="flex items-center gap-2">
         <Input
-          placeholder="TCKN / Müşteri No / İsim / Soyisim"
+          placeholder="Arama yapın..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full"
@@ -98,37 +104,44 @@ export default function SearchClientBySearchTerm () {
           Ara
         </Button>
       </div>
+    </div>
 
-      {client && (
-        <div className="overflow-auto border rounded-md">
-          <div className="grid grid-cols-7 font-semibold bg-gray-100 p-4 text-sm md:text-base">
-            <div>Ad Soyad</div>
-            <div>Müşteri No</div>
-            <div>TCKN</div>
-            <div>Vergi No</div>
-            <div>Telefon</div>
-            <div>E-posta</div>
-            <div>Durum</div>
+    {client && (
+      <div className="overflow-auto border rounded-md">
+        <div className="grid grid-cols-8 font-semibold bg-gray-100 p-4 text-sm md:text-base">
+          <div>Ad Soyad</div>
+          <div>Müşteri No</div>
+          <div>TCKN</div>
+          <div>Vergi No</div>
+          <div>Telefon</div>
+          <div>E-posta</div>
+          <div>Durum</div>
+          <div></div> 
+        </div>
+
+        <div className="grid grid-cols-8 items-center p-4 hover:bg-gray-50 transition">
+          <div>{client.fullName}</div>
+          <div>{client.id}</div>
+          <div>{client.nationalityNumber}</div>
+          <div>{client.taxId || "-"}</div>
+          <div>{client.phone || "-"}</div>
+          <div>{client.email || "-"}</div>
+          <div className={client.isActive ? "text-green-600" : "text-red-600"}>
+            {client.isActive ? "Aktif" : "Pasif"}
           </div>
-
-          <div
-            className="grid grid-cols-7 items-center p-4 hover:bg-gray-50 cursor-pointer transition"
-            onClick={handleSelectCustomer}
-          >
-            <div>{client.fullName}</div>
-            <div>{client.id}</div>
-            <div>{client.nationalityNumber}</div>
-            <div>{client.taxId || "-"}</div>
-            <div>{client.phone || "-"}</div>
-            <div>{client.email || "-"}</div>
-            <div className={client.isActive ? "text-green-600" : "text-red-600"}>
-              {client.isActive ? "Aktif" : "Pasif"}
-            </div>
+          <div>
+            <Button
+              className="text-xs px-4 py-1"
+              onClick={() => router.push(`/accounts/${client.id}/create-account`)}
+            >
+              Hesap Aç
+            </Button>
           </div>
         </div>
-      )}
+      </div>
+    )}
+    {notFound && <p className="text-sm text-red-500">Müşteri bulunamadı.</p>}
+  </div>
+);
 
-      {notFound && <p className="text-sm text-red-500">Müşteri bulunamadı.</p>}
-    </div>
-  );
 }
