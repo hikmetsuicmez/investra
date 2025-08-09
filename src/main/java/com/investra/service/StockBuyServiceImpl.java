@@ -41,6 +41,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
     private final PortfolioUpdateService portfolioUpdateService;
     private final OrderPreviewCacheService previewCacheService;
     private final TradeOrderService tradeOrderService;
+    private final SimulationDateService simulationDateService;
 
     public StockBuyServiceImpl(
             ClientRepository clientRepository,
@@ -53,7 +54,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             OrderCalculationService calculationService,
             PortfolioUpdateService portfolioUpdateService,
             OrderPreviewCacheService previewCacheService,
-            TradeOrderService tradeOrderService) {
+            TradeOrderService tradeOrderService,
+            SimulationDateService simulationDateService) {
         super(clientRepository);
         this.stockRepository = stockRepository;
         this.accountRepository = accountRepository;
@@ -65,6 +67,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
         this.portfolioUpdateService = portfolioUpdateService;
         this.previewCacheService = previewCacheService;
         this.tradeOrderService = tradeOrderService;
+        this.simulationDateService = simulationDateService;
     }
 
     @Override
@@ -205,14 +208,12 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                     .user(currentUser)
                     .submittedAt(LocalDateTime.now())
                     .orderNumber(calculationService.generateOrderNumber())
-                    .tradeDate(LocalDate.now())
-                    .settlementStatus(SettlementStatus.PENDING)
-                    .settlementDaysRemaining(2)
-                    .expectedSettlementDate(LocalDate.now().plusDays(2))
                     .build();
 
-            // Rastgele bir duruma atama (bekleyen, gerçekleşen, iptal)
-            tradeOrder.assignRandomStatus();
+            // Simülasyon tarihi ile trade oluştur ve durum ata (haftasonu yok)
+            LocalDate currentSimulationDate = simulationDateService.getCurrentSimulationDate();
+            tradeOrder.setTradeDate(currentSimulationDate);
+            tradeOrder.assignRandomStatus(currentSimulationDate);
 
             tradeOrder = tradeOrderRepository.save(tradeOrder);
 
@@ -226,15 +227,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 tradeOrderService.updateAccountBalanceForBuyOrder(entities.account(), calculation.netAmount());
             }
 
-            // Eğer emir gerçekleşti ise, portföy güncellenir
-            if (tradeOrder.getStatus() == OrderStatus.EXECUTED) {
-                portfolioUpdateService.updatePortfolioForBuy(
-                        entities.client(),
-                        entities.account(),
-                        entities.stock(),
-                        request.getQuantity(),
-                        calculation.netAmount());
-            }
+            // Portföy güncelleme SADECE T+2 settlement tamamlandığında yapılacak
+            // Burada portföy güncellemesi YOK - T+2 settlement'ta yapılacak
 
             // İşlem sonucu yanıtı oluşturulur
             StockBuyOrderResultResponse response = createBuyOrderResultResponse(tradeOrder, calculation);
@@ -311,7 +305,6 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 .netAmount(calculation.netAmount())
                 .executionType(calculation.executionType())
                 .status(tradeOrder.getStatus())
-                .executionTime(tradeOrder.getExecutedAt())
                 .message("Hisse senedi alım işlemi başarıyla gerçekleştirildi")
                 .build();
     }
@@ -329,7 +322,6 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 .account(entities.account())
                 .stock(entities.stock())
                 .submittedAt(LocalDateTime.now())
-                .executedAt(LocalDateTime.now().plusDays(2))
                 .orderType(OrderType.BUY)
                 .executionType(request.getExecutionType())
                 .price(calculation.price())

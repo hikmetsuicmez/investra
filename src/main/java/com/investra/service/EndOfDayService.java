@@ -44,4 +44,14 @@ public interface EndOfDayService {
 
     // Test amaçlı gün sonu durumunu sıfırlar
     boolean resetEndOfDayStatus();
+
+    // Tek seferde gün atlatma işlemi (T0→T1→T2→Complete + Simülasyon tarihi
+    // ilerletme)
+    boolean advanceFullDay(String username);
+
+    // Simülasyon tarihini getirir
+    java.time.LocalDate getCurrentSimulationDate();
+
+    // Simülasyon tarihini sıfırlar
+    boolean resetSimulationDate(String username);
 }

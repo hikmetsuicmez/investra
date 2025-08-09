@@ -12,7 +12,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
 
@@ -21,9 +20,6 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
         List<TradeOrder> findByUserAndStatusOrderBySubmittedAtDesc(User user, OrderStatus status);
 
         List<TradeOrder> findByStatus(OrderStatus status);
-
-        List<TradeOrder> findByStatusAndSettlementStatusAndSettlementDateBefore(
-                        OrderStatus status, SettlementStatus settlementStatus, LocalDateTime settlementDate);
 
         List<TradeOrder> findByStatusAndSubmittedAtBefore(OrderStatus status, LocalDateTime expiryTime);
 

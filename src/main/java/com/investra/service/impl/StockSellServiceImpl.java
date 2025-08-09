@@ -3,14 +3,13 @@ package com.investra.service.impl;
 import com.investra.dtos.request.StockSellOrderRequest;
 import com.investra.dtos.response.*;
 import com.investra.entity.*;
-import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
-import com.investra.enums.SettlementStatus;
 import com.investra.exception.*;
 import com.investra.mapper.StockMapper;
 import com.investra.repository.*;
 import com.investra.service.AbstractStockTradeService;
+import com.investra.service.SimulationDateService;
 import com.investra.service.StockSellService;
 import com.investra.service.TradeOrderService;
 import com.investra.service.helper.*;
@@ -40,6 +39,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
         private final PortfolioUpdateService portfolioUpdateService;
         private final OrderPreviewCacheService previewCacheService;
         private final TradeOrderService tradeOrderService;
+        private final SimulationDateService simulationDateService;
 
         public StockSellServiceImpl(
                         ClientRepository clientRepository,
@@ -50,7 +50,8 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                         OrderCalculationService calculationService,
                         PortfolioUpdateService portfolioUpdateService,
                         OrderPreviewCacheService previewCacheService,
-                        TradeOrderService tradeOrderService) {
+                        TradeOrderService tradeOrderService,
+                        SimulationDateService simulationDateService) {
                 super(clientRepository);
                 this.portfolioItemRepository = portfolioItemRepository;
                 this.tradeOrderRepository = tradeOrderRepository;
@@ -60,6 +61,7 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                 this.portfolioUpdateService = portfolioUpdateService;
                 this.previewCacheService = previewCacheService;
                 this.tradeOrderService = tradeOrderService;
+                this.simulationDateService = simulationDateService;
         }
 
         @Override
@@ -197,28 +199,17 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                                         .user(submittedBy)
                                         .submittedAt(LocalDateTime.now())
                                         .orderNumber(calculationService.generateOrderNumber())
-                                        .tradeDate(LocalDate.now())
-                                        .settlementStatus(SettlementStatus.PENDING)
-                                        .settlementDaysRemaining(2)
-                                        .expectedSettlementDate(LocalDate.now().plusDays(2))
                                         .build();
 
-                        tradeOrder.assignRandomStatus();
+                        // Simülasyon tarihi ile trade oluştur ve durum ata (haftasonu yok)
+                        LocalDate currentSimulationDate = simulationDateService.getCurrentSimulationDate();
+                        tradeOrder.setTradeDate(currentSimulationDate);
+                        tradeOrder.assignRandomStatus(currentSimulationDate);
 
                         tradeOrder = tradeOrderRepository.save(tradeOrder);
 
-                        // Eğer satış emri gerçekleşti ise, portföyden hisseleri düş
-                        if (tradeOrder.getStatus() == OrderStatus.EXECUTED) {
-                                PortfolioItem updatedPortfolioItem = portfolioUpdateService.updatePortfolioAfterSell(
-                                                entities.portfolioItem(), request.getQuantity());
-
-                                if (updatedPortfolioItem == null) {
-                                        log.info("Müşteri {} tüm {} hisselerini sattı, portföyden kaldırıldı.",
-                                                        entities.client().getId(), entities.stock().getCode());
-                                }
-
-                                // NOT: T+2 süreci sonunda bakiye güncellenecek
-                        }
+                        // Portföy güncelleme SADECE T+2 settlement tamamlandığında yapılacak
+                        // Burada portföy güncellemesi YOK - T+2 settlement'ta yapılacak
 
                         // Önizlemeyi önbellekten kaldır
                         previewCacheService.removeOrderPreview(request.getPreviewId());

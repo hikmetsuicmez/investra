@@ -5,8 +5,10 @@ import com.investra.docs.EndOfDayApiDocs;
 import com.investra.dtos.response.ClientValuationResponse;
 import com.investra.dtos.response.EndOfDayStatusResponse;
 import com.investra.dtos.response.Response;
+import com.investra.dtos.response.SimulationStatusResponse;
 import com.investra.dtos.response.StockPriceResponse;
 import com.investra.service.EndOfDayService;
+import com.investra.service.SimulationDateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,6 +39,7 @@ import com.investra.repository.TradeOrderRepository;
 public class EndOfDayController implements EndOfDayApiDocs {
 
     private final EndOfDayService endOfDayService;
+    private final SimulationDateService simulationDateService;
     private final ClientRepository clientRepository;
     private final TradeOrderRepository tradeOrderRepository;
     private final PortfolioItemRepository portfolioItemRepository;
@@ -54,77 +57,7 @@ public class EndOfDayController implements EndOfDayApiDocs {
                 .build();
     }
 
-    @PostMapping(ApiEndpoints.EndOfDay.FETCH_PRICES)
-    public Response<Boolean> fetchLatestClosingPrices() {
-        log.info("Kapanış fiyatları alınıyor");
-        boolean success = endOfDayService.fetchLatestClosingPrices();
-
-        return Response.<Boolean>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message(success ? "Kapanış fiyatları başarıyla alındı" : "Kapanış fiyatları alınamadı")
-                .data(success)
-                .build();
-    }
-
-    @PostMapping(ApiEndpoints.EndOfDay.START_VALUATION)
-    public Response<Boolean> startEndOfDayValuation(@AuthenticationPrincipal UserDetails userDetails) {
-        log.info("Gün sonu değerleme başlatılıyor");
-        endOfDayService.runEndOfDayValuation(userDetails.getUsername());
-
-        return Response.<Boolean>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Gün sonu değerleme tamamlandı")
-                .data(true)
-                .build();
-    }
-
-    @PostMapping(ApiEndpoints.EndOfDay.PROCESS_T0_TO_T1)
-    public Response<Boolean> processT0ToT1Settlement() {
-        log.info("T+0 işlemleri T+1'e geçiriliyor");
-        endOfDayService.processT0ToT1Settlement();
-
-        return Response.<Boolean>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("T+0 işlemleri T+1'e geçirildi")
-                .data(true)
-                .build();
-    }
-
-    @PostMapping(ApiEndpoints.EndOfDay.PROCESS_T1_TO_T2)
-    public Response<Boolean> processT1ToT2Settlement() {
-        log.info("T+1 işlemleri T+2'ye geçiriliyor");
-        endOfDayService.processT1Settlement();
-
-        return Response.<Boolean>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("T+1 işlemleri T+2'ye geçirildi")
-                .data(true)
-                .build();
-    }
-
-    @PostMapping(ApiEndpoints.EndOfDay.PROCESS_T2_COMPLETION)
-    public Response<Boolean> processT2Completion() {
-        log.info("T+2 işlemleri tamamlanıyor");
-        endOfDayService.processT2Settlement();
-
-        return Response.<Boolean>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("T+2 işlemleri tamamlandı")
-                .data(true)
-                .build();
-    }
-
-    @PostMapping(ApiEndpoints.EndOfDay.PROCESS_ALL_T2_STEPS)
-    public Response<Boolean> processAllT2SettlementSteps() {
-        log.info("Tüm T+2 settlement adımları başlatılıyor");
-        endOfDayService.processAllT2SettlementSteps();
-
-        return Response.<Boolean>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Tüm T+2 settlement adımları tamamlandı")
-                .data(true)
-                .build();
-    }
+    // ESKİ ENDPOINT'LER KALDIRILDI - Şimdi sadece advance-full-day kullanılıyor
 
     @GetMapping(ApiEndpoints.EndOfDay.CLIENT_VALUATIONS)
     public Response<List<ClientValuationResponse>> getClientValuations() {
@@ -161,13 +94,13 @@ public class EndOfDayController implements EndOfDayApiDocs {
 
         return Response.<List<StockPriceResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
-                .message("Hisse fiyatları başarıyla alındı")
+                .message("Hisse senedi kapanış fiyatları başarıyla alındı")
                 .data(prices)
                 .build();
     }
 
     // Debug endpoint'leri
-    @GetMapping("/debug/client/{clientId}/trades")
+    @GetMapping(ApiEndpoints.EndOfDay.DEBUG_CLIENT_TRADES)
     public Response<List<Object>> getClientTrades(@PathVariable Long clientId) {
         log.info("Debug: Müşteri işlemleri sorgulanıyor: {}", clientId);
 
@@ -199,7 +132,7 @@ public class EndOfDayController implements EndOfDayApiDocs {
                 .build();
     }
 
-    @GetMapping("/debug/client/{clientId}/portfolio")
+    @GetMapping(ApiEndpoints.EndOfDay.DEBUG_CLIENT_PORTFOLIO)
     public Response<List<Object>> getClientPortfolio(@PathVariable Long clientId) {
         log.info("Debug: Müşteri portföyü sorgulanıyor: {}", clientId);
 
@@ -221,7 +154,7 @@ public class EndOfDayController implements EndOfDayApiDocs {
                 .build();
     }
 
-    @GetMapping("/debug/valuations/{date}")
+    @GetMapping(ApiEndpoints.EndOfDay.DEBUG_VALUATIONS_BY_DATE)
     public Response<List<Object>> getValuationsByDate(@PathVariable String date) {
         log.info("Debug: Değerlemeler sorgulanıyor: {}", date);
 
@@ -247,7 +180,7 @@ public class EndOfDayController implements EndOfDayApiDocs {
                 .build();
     }
 
-    @GetMapping("/debug/client/{clientId}/settlement-status")
+    @GetMapping(ApiEndpoints.EndOfDay.DEBUG_CLIENT_SETTLEMENT)
     public Response<List<Object>> getClientSettlementStatus(@PathVariable Long clientId) {
         log.info("Debug: Müşteri settlement status'u sorgulanıyor: {}", clientId);
 
@@ -281,7 +214,7 @@ public class EndOfDayController implements EndOfDayApiDocs {
                 .build();
     }
 
-    @GetMapping("/debug/clients-with-no-activity")
+    @GetMapping(ApiEndpoints.EndOfDay.DEBUG_CLIENTS_NO_ACTIVITY)
     public Response<List<Object>> getClientsWithNoActivity() {
         log.info("Debug: İşlemi olmayan müşteriler sorgulanıyor");
 
@@ -315,26 +248,66 @@ public class EndOfDayController implements EndOfDayApiDocs {
                 .build();
     }
 
-    @PostMapping(ApiEndpoints.EndOfDay.MANUALLY_UPDATE_PRICES)
-    public Response<Boolean> manuallyUpdateClosingPrices() {
-        log.info("Kapanış fiyatları manuel olarak güncelleniyor");
-        boolean success = endOfDayService.manuallyUpdateClosingPrices();
+    // RESET/MANUAL ENDPOINT'LER KALDIRILDI - reset-simulation kullan
 
-        return Response.<Boolean>builder()
+    // Yeni Simülasyon Tabanlı Endpoint'ler
+
+    @PostMapping(ApiEndpoints.EndOfDay.ADVANCE_FULL_DAY)
+    public Response<Map<String, Object>> advanceFullDay(@AuthenticationPrincipal UserDetails userDetails) {
+        log.info("Tam gün atlatma işlemi başlatılıyor, kullanıcı: {}", userDetails.getUsername());
+
+        LocalDate oldDate = simulationDateService.getCurrentSimulationDate();
+        boolean success = endOfDayService.advanceFullDay(userDetails.getUsername());
+        LocalDate newDate = simulationDateService.getCurrentSimulationDate();
+
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("success", success);
+        responseData.put("oldDate", oldDate);
+        responseData.put("newDate", newDate);
+        responseData.put("daysAdvanced", simulationDateService.getDaysAdvanced());
+
+        return Response.<Map<String, Object>>builder()
                 .statusCode(HttpStatus.OK.value())
-                .message(success ? "Gün sonu fiyatları başarıyla güncellendi" : "Gün sonu fiyatları güncellenemedi")
-                .data(success)
+                .message(String.format("Gün sonu değerleme tamamlandı: %s", newDate))
+                .data(responseData)
                 .build();
     }
 
-    @PostMapping(ApiEndpoints.EndOfDay.RESET_STATUS)
-    public Response<Boolean> resetEndOfDayStatus() {
-        log.info("Test amaçlı gün sonu durumu sıfırlanıyor");
-        boolean success = endOfDayService.resetEndOfDayStatus();
+    @GetMapping(ApiEndpoints.EndOfDay.SIMULATION_STATUS)
+    public Response<SimulationStatusResponse> getSimulationStatus() {
+        log.info("Simülasyon durumu sorgulanıyor");
+
+        var simulationData = simulationDateService.getSimulationStatus();
+
+        SimulationStatusResponse response = SimulationStatusResponse.builder()
+                .currentSimulationDate(simulationData.getCurrentSimulationDate())
+                .initialDate(simulationData.getInitialDate())
+                .realDate(LocalDate.now())
+                .daysAdvanced(simulationData.getDaysAdvanced())
+                .lastUpdatedBy(simulationData.getUpdatedBy())
+                .lastUpdatedAt(simulationData.getLastUpdatedAt())
+                .description(simulationData.getDescription())
+                .isAdvanced(simulationData.isAdvanced())
+                .status(simulationData.isAdvanced() ? "SIMULATED" : "REAL_TIME")
+                .message(simulationData.isAdvanced() ? "Sistem simülasyon modunda çalışıyor"
+                        : "Sistem gerçek zamanda çalışıyor")
+                .build();
+
+        return Response.<SimulationStatusResponse>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Simülasyon durumu başarıyla alındı")
+                .data(response)
+                .build();
+    }
+
+    @PostMapping(ApiEndpoints.EndOfDay.RESET_SIMULATION)
+    public Response<Boolean> resetSimulationDate(@AuthenticationPrincipal UserDetails userDetails) {
+        log.info("Simülasyon tarihi sıfırlanıyor, kullanıcı: {}", userDetails.getUsername());
+        boolean success = endOfDayService.resetSimulationDate(userDetails.getUsername());
 
         return Response.<Boolean>builder()
                 .statusCode(HttpStatus.OK.value())
-                .message(success ? "Gün sonu durumu başarıyla sıfırlandı" : "Gün sonu durumu sıfırlanamadı")
+                .message(success ? "Simülasyon tarihi başarıyla sıfırlandı" : "Simülasyon tarihi sıfırlanamadı")
                 .data(success)
                 .build();
     }

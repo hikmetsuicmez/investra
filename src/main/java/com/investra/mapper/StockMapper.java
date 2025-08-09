@@ -65,6 +65,7 @@ public class StockMapper {
         return StockResponse.builder()
                 .id(stock.getId())
                 .name(stock.getName())
+                .symbol(stock.getCode())
                 .currentPrice(stock.getPrice())
                 .stockGroup(stock.getGroup().name())
                 .isActive(stock.getIsActive())

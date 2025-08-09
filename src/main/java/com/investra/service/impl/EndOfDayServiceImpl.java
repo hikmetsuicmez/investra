@@ -14,6 +14,7 @@ import com.investra.repository.*;
 import com.investra.service.EndOfDayService;
 import com.investra.service.InfinaApiService;
 import com.investra.service.PortfolioService;
+import com.investra.service.SimulationDateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,6 @@ public class EndOfDayServiceImpl implements EndOfDayService {
     private final InfinaApiService infinaApiService;
     private final StockRepository stockRepository;
     private final StockDailyPriceRepository stockDailyPriceRepository;
-    private final PortfolioRepository portfolioRepository;
     private final PortfolioItemRepository portfolioItemRepository;
     private final PortfolioDailyValuationRepository portfolioDailyValuationRepository;
     private final ClientRepository clientRepository;
@@ -44,12 +44,13 @@ public class EndOfDayServiceImpl implements EndOfDayService {
     private final TradeOrderRepository tradeOrderRepository;
     private final AccountRepository accountRepository;
     private final PortfolioService portfolioService;
+    private final SimulationDateService simulationDateService;
 
     @Override
     @Transactional
     public boolean fetchLatestClosingPrices() {
         try {
-            LocalDate today = LocalDate.now();
+            LocalDate today = simulationDateService.getCurrentSimulationDate();
             log.info("Günlük kapanış fiyatları alınıyor: {}", today);
 
             // API'den tüm hisse fiyatlarını al
@@ -123,7 +124,7 @@ public class EndOfDayServiceImpl implements EndOfDayService {
     @Override
     @Transactional
     public void runEndOfDayValuation(String username) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = simulationDateService.getCurrentSimulationDate();
 
         // 1. BİST verilerini kontrol et
         if (!arePricesUpdatedForToday(today)) {
@@ -193,7 +194,7 @@ public class EndOfDayServiceImpl implements EndOfDayService {
 
     @Override
     public EndOfDayStatusResponse getEndOfDayStatus() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = simulationDateService.getCurrentSimulationDate();
 
         boolean pricesUpdated = arePricesUpdatedForToday(today);
         boolean valuationCompleted = portfolioDailyValuationRepository.existsByValuationDate(today);
@@ -224,8 +225,8 @@ public class EndOfDayServiceImpl implements EndOfDayService {
         log.info("=== MÜŞTERİ DEĞERLEME SORGULANIYOR ===");
         log.info("Müşteri ID: {}", clientId);
 
-        LocalDate today = LocalDate.now();
-        log.info("Bugünün tarihi: {}", today);
+        LocalDate today = simulationDateService.getCurrentSimulationDate();
+        log.info("Simülasyon tarihi: {}", today);
 
         // Müşteri bilgilerini getir
         Client client = clientRepository.findById(clientId)
@@ -417,8 +418,8 @@ public class EndOfDayServiceImpl implements EndOfDayService {
     @Override
     public List<ClientValuationResponse> getAllClientValuations() {
         log.info("=== TÜM MÜŞTERİ DEĞERLEMELERİ SORGULANIYOR ===");
-        LocalDate today = LocalDate.now();
-        log.info("Bugünün tarihi: {}", today);
+        LocalDate today = simulationDateService.getCurrentSimulationDate();
+        log.info("Simülasyon tarihi: {}", today);
 
         List<PortfolioDailyValuation> valuations = portfolioDailyValuationRepository
                 .findAllByValuationDate(today);
@@ -596,7 +597,7 @@ public class EndOfDayServiceImpl implements EndOfDayService {
     @Transactional
     public boolean resetEndOfDayStatus() {
         try {
-            LocalDate today = LocalDate.now();
+            LocalDate today = simulationDateService.getCurrentSimulationDate();
             log.info("Test amaçlı gün sonu durumu sıfırlanıyor: {}", today);
 
             // Bugünkü fiyatları sil
@@ -618,57 +619,106 @@ public class EndOfDayServiceImpl implements EndOfDayService {
     @Override
     @Transactional
     public void processT0ToT1Settlement() {
-        LocalDate today = LocalDate.now();
-        log.info("T+0 işlemleri T+1'e geçiriliyor: {}", today);
+        LocalDate currentDate = simulationDateService.getCurrentSimulationDate();
+        log.info("T+0 işlemleri T+1'e geçiriliyor, mevcut simülasyon tarihi: {}", currentDate);
 
-        // Bugün yapılan işlemleri T+1'e geçir
+        // PENDING status'unda olan ve 1 gün geçmiş olan işlemleri T+1'e geçir
         List<TradeOrder> pendingTrades = tradeOrderRepository
-                .findByStatusAndSettlementStatusAndTradeDate(OrderStatus.EXECUTED, SettlementStatus.PENDING, today);
+                .findByStatusAndSettlementStatus(OrderStatus.EXECUTED, SettlementStatus.PENDING);
 
+        log.info("PENDING durumunda bulunan toplam işlem sayısı: {}", pendingTrades.size());
         for (TradeOrder trade : pendingTrades) {
-            trade.setSettlementStatus(SettlementStatus.T1);
-            trade.setSettlementDaysRemaining(1);
-            tradeOrderRepository.save(trade);
-            log.info("İşlem T+1'e geçirildi: {}", trade.getId());
+            log.info("PENDING Trade: ID={}, TradeDate={}, Status={}, SettlementStatus={}",
+                    trade.getId(), trade.getTradeDate(), trade.getStatus(), trade.getSettlementStatus());
         }
 
-        log.info("Toplam {} işlem T+1'e geçirildi", pendingTrades.size());
+        List<TradeOrder> readyForT1 = pendingTrades.stream()
+                .filter(trade -> {
+                    if (trade.getTradeDate() == null) {
+                        log.warn("Trade {} has null tradeDate!", trade.getId());
+                        return false;
+                    }
+                    long daysPassed = java.time.temporal.ChronoUnit.DAYS.between(trade.getTradeDate(), currentDate);
+                    log.info("Trade {} gün kontrolü: TradeDate={}, CurrentDate={}, DaysPassed={}",
+                            trade.getId(), trade.getTradeDate(), currentDate, daysPassed);
+                    return daysPassed >= 1; // En az 1 gün geçmiş
+                })
+                .toList();
+
+        for (TradeOrder trade : readyForT1) {
+            SettlementStatus oldStatus = trade.getSettlementStatus();
+            trade.setSettlementStatus(SettlementStatus.T1);
+            trade.updateSettlementDaysRemaining(currentDate);
+            tradeOrderRepository.save(trade);
+            log.info("İşlem T+1'e geçirildi: ID={}, TradeDate={}, {} -> {}, DaysRemaining={}",
+                    trade.getId(), trade.getTradeDate(), oldStatus, trade.getSettlementStatus(),
+                    trade.getSettlementDaysRemaining());
+        }
+
+        log.info("Toplam {} işlem T+1'e geçirildi", readyForT1.size());
     }
 
     @Override
     @Transactional
     public void processT1Settlement() {
-        LocalDate today = LocalDate.now();
-        log.info("T+1 işlemleri T+2'ye geçiriliyor: {}", today);
+        LocalDate currentDate = simulationDateService.getCurrentSimulationDate();
+        log.info("T+1 işlemleri T+2'ye geçiriliyor, mevcut simülasyon tarihi: {}", currentDate);
 
-        // T+1'deki işlemleri T+2'ye geçir
+        // T+1'deki işlemleri T+2'ye geçir - 2 gün geçmiş olanları
         List<TradeOrder> t1Trades = tradeOrderRepository
                 .findByStatusAndSettlementStatus(OrderStatus.EXECUTED, SettlementStatus.T1);
 
-        for (TradeOrder trade : t1Trades) {
+        List<TradeOrder> readyForT2 = t1Trades.stream()
+                .filter(trade -> {
+                    if (trade.getTradeDate() == null)
+                        return false;
+                    long daysPassed = java.time.temporal.ChronoUnit.DAYS.between(trade.getTradeDate(), currentDate);
+                    return daysPassed >= 2; // En az 2 gün geçmiş
+                })
+                .toList();
+
+        for (TradeOrder trade : readyForT2) {
+            SettlementStatus oldStatus = trade.getSettlementStatus();
             trade.setSettlementStatus(SettlementStatus.T2);
-            trade.setSettlementDaysRemaining(0);
+            trade.updateSettlementDaysRemaining(currentDate);
             tradeOrderRepository.save(trade);
-            log.info("İşlem T+2'ye geçirildi: {}", trade.getId());
+            log.info("İşlem T+2'ye geçirildi: ID={}, TradeDate={}, {} -> {}, DaysRemaining={}",
+                    trade.getId(), trade.getTradeDate(), oldStatus, trade.getSettlementStatus(),
+                    trade.getSettlementDaysRemaining());
         }
 
-        log.info("Toplam {} işlem T+2'ye geçirildi", t1Trades.size());
+        log.info("Toplam {} işlem T+2'ye geçirildi", readyForT2.size());
     }
 
     @Override
     @Transactional
     public void processT2Settlement() {
-        LocalDate today = LocalDate.now();
-        log.info("T+2 işlemleri tamamlanıyor: {}", today);
+        LocalDate currentDate = simulationDateService.getCurrentSimulationDate();
+        log.info("T+2 işlemleri tamamlanıyor, mevcut simülasyon tarihi: {}", currentDate);
 
+        // Sadece T+2 status'unda olan ve gerçekten settlement için hazır olan işlemleri
+        // al
         List<TradeOrder> t2Trades = tradeOrderRepository
                 .findByStatusAndSettlementStatus(OrderStatus.EXECUTED, SettlementStatus.T2);
 
-        log.info("Bulunan T+2 işlem sayısı: {}", t2Trades.size());
+        // Tarih bazlı kontrol: sadece gerçekten T+2 süresi dolmuş olanları işle (3+ gün
+        // geçmiş)
+        List<TradeOrder> readyToComplete = t2Trades.stream()
+                .filter(trade -> {
+                    if (trade.getTradeDate() == null)
+                        return false;
+                    long daysPassed = java.time.temporal.ChronoUnit.DAYS.between(trade.getTradeDate(), currentDate);
+                    return daysPassed >= 3; // T+2 tamamlanması için 3 gün geçmeli
+                })
+                .toList();
 
-        for (TradeOrder trade : t2Trades) {
-            log.info("İşlem başlatılıyor: ID={}, Status={}, SettlementStatus={}",
-                    trade.getId(), trade.getStatus(), trade.getSettlementStatus());
+        log.info("T+2 status'unda toplam işlem: {}, settlement için hazır: {}",
+                t2Trades.size(), readyToComplete.size());
+
+        for (TradeOrder trade : readyToComplete) {
+            LocalDate expectedSettlement = trade.getTradeDate().plusDays(2);
+            log.info("T+2 Settlement başlatılıyor: ID={}, TradeDate={}, ExpectedSettlement={}",
+                    trade.getId(), trade.getTradeDate(), expectedSettlement);
 
             try {
                 transferStockToBuyer(trade);
@@ -679,36 +729,43 @@ public class EndOfDayServiceImpl implements EndOfDayService {
 
                 trade.setSettlementStatus(SettlementStatus.COMPLETED);
                 trade.setSettledAt(LocalDateTime.now());
+                trade.setSettlementDaysRemaining(0);
 
                 log.info("Kayıt ediliyor: {}", trade.getId());
                 tradeOrderRepository.save(trade);
 
-                log.info("İşlem tamamlandı: {}", trade.getId());
+                log.info("T+2 Settlement tamamlandı: {}", trade.getId());
             } catch (Exception e) {
-                log.error("HATA - İşlem: {}, Mesaj: {}", trade.getId(), e.getMessage(), e);
+                log.error("HATA - T+2 Settlement: {}, Mesaj: {}", trade.getId(), e.getMessage(), e);
                 throw e;
             }
         }
 
-        log.info("Toplam {} işlem tamamlandı", t2Trades.size());
+        log.info("Toplam {} T+2 settlement tamamlandı", readyToComplete.size());
     }
 
     @Override
     @Transactional
     public void processAllT2SettlementSteps() {
-        LocalDate today = LocalDate.now();
-        log.info("Tüm T+2 settlement adımları başlatılıyor: {}", today);
+        LocalDate currentDate = simulationDateService.getCurrentSimulationDate();
+        log.info("T+2 settlement adımları sırayla işleniyor, mevcut simülasyon tarihi: {}", currentDate);
 
-        // 1. T+0 işlemleri T+1'e geçir
-        processT0ToT1Settlement();
+        // DOĞRU SIRA: Geriye doğru işle ki çakışma olmasın
+        // Önce en olgun olanları tamamla, sonra yeni olanları ilerlet
 
-        // 2. T+1 işlemleri T+2'ye geçir
-        processT1Settlement();
-
-        // 3. T+2 işlemleri tamamla
+        // 3. T+2 işlemleri tamamla (önce en olgun olanlar)
+        log.info("Adım 3: T+2 işlemleri tamamlanıyor");
         processT2Settlement();
 
-        log.info("Tüm T+2 settlement adımları tamamlandı: {}", today);
+        // 2. T+1 işlemleri T+2'ye geçir
+        log.info("Adım 2: T+1 işlemleri T+2'ye geçiriliyor");
+        processT1Settlement();
+
+        // 1. T+0 işlemleri T+1'e geçir (en son)
+        log.info("Adım 1: T+0 işlemleri T+1'e geçiriliyor");
+        processT0ToT1Settlement();
+
+        log.info("Tüm T+2 settlement adımları tamamlandı: {}", currentDate);
     }
 
     private boolean arePricesUpdatedForToday(LocalDate date) {
@@ -934,14 +991,78 @@ public class EndOfDayServiceImpl implements EndOfDayService {
         Account account = trade.getAccount();
 
         if (trade.getOrderType() == OrderType.BUY) {
-            // Alış işlemi: Balance'ı availableBalance seviyesine eşitle
-            account.setBalance(account.getAvailableBalance());
+            // Alış işlemi: Balance'dan para tutarını düş
+            // (availableBalance zaten emir verilirken düşürülmüştü)
+            BigDecimal currentBalance = account.getBalance();
+            BigDecimal newBalance = currentBalance.subtract(trade.getNetAmount());
+            account.setBalance(newBalance);
+
+            log.info("Alış settlement: Balance {} -> {}, AvailableBalance: {} (değişmez)",
+                    currentBalance, newBalance, account.getAvailableBalance());
         } else if (trade.getOrderType() == OrderType.SELL) {
             // Satış işlemi: Hem balance hem availableBalance artırılır
             account.setBalance(account.getBalance().add(trade.getNetAmount()));
             account.setAvailableBalance(account.getAvailableBalance().add(trade.getNetAmount()));
+
+            log.info("Satış settlement: Balance ve AvailableBalance {} tutarı kadar artırıldı",
+                    trade.getNetAmount());
         }
 
         accountRepository.save(account);
     }
+
+    @Override
+    @Transactional
+    public boolean advanceFullDay(String username) {
+        try {
+            LocalDate oldDate = simulationDateService.getCurrentSimulationDate();
+            log.info("Tam gün atlatma işlemi başlıyor, kullanıcı: {}, mevcut tarih: {}", username, oldDate);
+
+            // 1. Adım: Simülasyon tarihini ilerlet (YENİ GÜNE GEÇ)
+            log.info("1. Adım: Simülasyon tarihi ilerletiliyor");
+            simulationDateService.advanceSimulationDay(username);
+            LocalDate newDate = simulationDateService.getCurrentSimulationDate();
+            log.info("Tarih ilerletildi: {} -> {}", oldDate, newDate);
+
+            // 2. Adım: Tüm T+2 settlement işlemlerini çalıştır (YENİ TARİHE GÖRE)
+            log.info("2. Adım: Tüm T+2 settlement işlemleri çalıştırılıyor (yeni tarih: {})", newDate);
+            processAllT2SettlementSteps();
+
+            // 3. Adım: Fiyatları güncelle
+            log.info("3. Adım: Kapanış fiyatları güncelleniyor");
+            fetchLatestClosingPrices();
+
+            // 4. Adım: Değerleme yap
+            log.info("4. Adım: Gün sonu değerleme yapılıyor");
+            runEndOfDayValuation(username);
+
+            log.info("Tam gün atlatma işlemi başarıyla tamamlandı, yeni tarih: {}", newDate);
+            return true;
+
+        } catch (Exception e) {
+            log.error("Tam gün atlatma işlemi sırasında hata oluştu", e);
+            throw new BusinessException("Gün atlatma işlemi başarısız: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public LocalDate getCurrentSimulationDate() {
+        return simulationDateService.getCurrentSimulationDate();
+    }
+
+    @Override
+    @Transactional
+    public boolean resetSimulationDate(String username) {
+        try {
+            log.info("Simülasyon tarihi sıfırlanıyor, kullanıcı: {}", username);
+            simulationDateService.resetSimulationDate(username);
+            log.info("Simülasyon tarihi başarıyla sıfırlandı");
+            return true;
+        } catch (Exception e) {
+            log.error("Simülasyon tarihi sıfırlama hatası", e);
+            return false;
+        }
+    }
+
+    // Haftasonu logic'i kaldırıldı - sistem haftasonunu yok sayıyor
 }

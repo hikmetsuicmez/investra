@@ -20,7 +20,7 @@ import com.investra.repository.NotificationRepository;
 import com.investra.repository.StockRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.repository.UserRepository;
-import com.investra.utils.ExceptionUtil;
+import com.investra.service.SimulationDateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -43,6 +44,7 @@ public class TradeOrderService {
     private final ClientRepository clientRepository;
     private final StockRepository stockRepository;
     private final PortfolioService portfolioService;
+    private final SimulationDateService simulationDateService;
 
     /**
      * Bekleyen emirleri işleme - 15 saniye sonra gerçekleştirecek (test için)
@@ -129,17 +131,15 @@ public class TradeOrderService {
     public void processWaitingOrder(TradeOrder order) {
         try {
             log.info("Bekleyen emir işleniyor: ID={}, SubmittedAt={}", order.getId(), order.getSubmittedAt());
-            LocalDateTime now = LocalDateTime.now();
 
             // Emir gerçekleşti olarak işaretle
             order.setStatus(OrderStatus.EXECUTED);
-            order.setExecutedAt(now);
 
-            // Gün bazlı T+2 sistemi için ayarlar
-            order.setTradeDate(now.toLocalDate());
+            // Simülasyon tabanlı T+2 sistemi için ayarlar
+            LocalDate tradeDate = simulationDateService.getCurrentSimulationDate();
+            order.setTradeDate(tradeDate);
             order.setSettlementStatus(SettlementStatus.PENDING);
             order.setSettlementDaysRemaining(2);
-            order.setExpectedSettlementDate(now.toLocalDate().plusDays(2));
             order.setFundsReserved(true);
 
             tradeOrderRepository.save(order);
@@ -185,7 +185,9 @@ public class TradeOrderService {
     @Transactional
     public void settleCompletedOrder(TradeOrder order) {
         try {
-            log.info("Emir takası tamamlanıyor: ID={}, SettlementDate={}", order.getId(), order.getSettlementDate());
+            LocalDate expectedSettlement = order.getTradeDate() != null ? order.getTradeDate().plusDays(2)
+                    : LocalDate.now();
+            log.info("Emir takası tamamlanıyor: ID={}, ExpectedSettlement={}", order.getId(), expectedSettlement);
             LocalDateTime now = LocalDateTime.now();
 
             Long orderId = order.getId();
@@ -240,11 +242,10 @@ public class TradeOrderService {
                         stock,
                         account,
                         client);
-                freshOrder.setPortfolioUpdated(true);
                 log.info("Emir için portfolio güncellendi: {}", freshOrder.getId());
             } catch (Exception e) {
                 log.error("Portfolio güncellenirken hata: {}", e.getMessage(), e);
-                freshOrder.setPortfolioUpdated(false);
+                // Portfolio güncellemesi başarısız, settlement status'u değiştirmeyin
             }
 
             tradeOrderRepository.save(freshOrder);
@@ -333,8 +334,6 @@ public class TradeOrderService {
         return orders.stream().map(TradeOrderMapper::toDTO).toList();
     }
 
-
-
     // Bekleyen bir emri iptal eder
     @Transactional
     public Response<TradeOrderDTO> cancelOrder(Long orderId, String username) {
@@ -359,7 +358,6 @@ public class TradeOrderService {
         }
 
         order.setStatus(OrderStatus.CANCELLED);
-        order.setPortfolioUpdated(false);
         order.setSettlementStatus(SettlementStatus.CANCELLED);
         order.setSettlementDaysRemaining(0);
         order.setFundsReserved(false);

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class TradeOrderMapper {
 
-
     public static TradeOrderDTO toDTO(TradeOrder order) {
         return TradeOrderDTO.builder()
                 .id(order.getId())
@@ -19,8 +18,10 @@ public class TradeOrderMapper {
                 .price(order.getPrice())
                 .settlementStatus(order.getSettlementStatus())
                 .status(order.getStatus().name())
-                .createdAt(order.getSubmittedAt())
-                .executedAt(order.getExecutedAt())
+                .submittedAt(order.getSubmittedAt())
+                .settledAt(order.getSettledAt())
+                .tradeDate(order.getTradeDate())
+                .settlementDaysRemaining(order.getSettlementDaysRemaining())
                 .build();
     }
 }

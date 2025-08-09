@@ -23,9 +23,10 @@ public class TradeOrderDTO {
     private Integer quantity;
     private BigDecimal price;
     private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime executedAt;
+    private LocalDateTime submittedAt;
+    private LocalDateTime settledAt;
     private SettlementStatus settlementStatus;
+    private java.time.LocalDate tradeDate;
+    private Integer settlementDaysRemaining;
 
 }
-

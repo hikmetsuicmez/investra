@@ -107,20 +107,23 @@ public class ApiEndpoints {
 
         public static final String BASE = "/api/v1/end-of-day";
         public static final String STATUS = "/status"; // Gün sonu değerleme durumu
-        public static final String FETCH_PRICES = "/fetch-prices"; // Kapanış fiyatlarını al
-        public static final String START_VALUATION = "/start-valuation"; // Gün sonu değerleme başlat
         public static final String CLIENT_VALUATIONS = "/client-valuations"; // Tüm müşteri değerlemelerini getir
         public static final String CLIENT_VALUATION = "/client-valuation/{clientId}"; // Belirli bir müşteri
                                                                                       // değerlemesini getir
         public static final String STOCK_PRICES = "/stock-prices"; // Hisse fiyatlarını getir
-        public static final String MANUALLY_UPDATE_PRICES = "/manually-update-prices"; // Kapanış fiyatlarını manuel
-                                                                                       // olarak güncelle
 
-        // T+2 Settlement endpoint'leri
-        public static final String PROCESS_T0_TO_T1 = "/process-t0-to-t1"; // T+0 işlemleri T+1'e geçir
-        public static final String PROCESS_T1_TO_T2 = "/process-t1-to-t2"; // T+1 işlemleri T+2'ye geçir
-        public static final String PROCESS_T2_COMPLETION = "/process-t2-completion"; // T+2 işlemleri tamamla
-        public static final String PROCESS_ALL_T2_STEPS = "/process-all-t2-steps"; // Tüm T+2 adımlarını çalıştır
-        public static final String RESET_STATUS = "/reset-status"; // Test amaçlı gün sonu durumunu sıfırla
+        // Simülasyon tabanlı gün atlatma endpoint'leri
+        public static final String ADVANCE_FULL_DAY = "/advance-full-day"; // Tek seferde tam gün atlatma
+        public static final String SIMULATION_STATUS = "/simulation-status"; // Simülasyon durumu
+        public static final String RESET_SIMULATION = "/reset-simulation"; // Simülasyon tarihini sıfırla
+
+        // Debug endpoint'leri
+        public static final String DEBUG_CLIENT_TRADES = "/debug/client/{clientId}/trades"; // Müşteri işlemleri
+        public static final String DEBUG_CLIENT_PORTFOLIO = "/debug/client/{clientId}/portfolio"; // Müşteri portföyü
+        public static final String DEBUG_VALUATIONS_BY_DATE = "/debug/valuations/{date}"; // Tarihe göre değerlemeler
+        public static final String DEBUG_CLIENT_SETTLEMENT = "/debug/client/{clientId}/settlement-status"; // Settlement
+                                                                                                           // durumu
+        public static final String DEBUG_CLIENTS_NO_ACTIVITY = "/debug/clients-with-no-activity"; // İşlemi olmayan
+                                                                                                  // müşteriler
     }
 }
