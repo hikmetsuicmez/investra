@@ -17,7 +17,7 @@ import com.investra.service.TradeOrderService;
 import com.investra.service.helper.*;
 import com.investra.service.helper.EntityFinderService.OrderEntities;
 import com.investra.service.helper.OrderCalculationService.OrderCalculation;
-import com.investra.utils.ExceptionUtil;
+import com.investra.service.helper.ExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -157,7 +157,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
     @Transactional
     public Response<StockBuyOrderResultResponse> executeBuyOrder(StockBuyOrderRequest request, String userEmail) {
         try {
-            log.info("Alış emri işlemi başlatıldı. Kullanıcı: {}, Müşteri ID: {}, Hesap ID: {}, Hisse ID: {}, Adet: {}, Emir Tipi: {}, Fiyat: {}",
+            log.info(
+                    "Alış emri işlemi başlatıldı. Kullanıcı: {}, Müşteri ID: {}, Hesap ID: {}, Hisse ID: {}, Adet: {}, Emir Tipi: {}, Fiyat: {}",
                     userEmail, request.getClientId(), request.getAccountId(), request.getStockId(),
                     request.getQuantity(), request.getExecutionType(), request.getPrice());
 
@@ -173,7 +174,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             Object cachedRequest = previewCacheService.getOrderPreview(request.getPreviewId());
 
             if (cachedRequest == null || !(cachedRequest instanceof StockBuyOrderRequest)) {
-                log.warn("Önizleme ID geçersiz veya süresi dolmuş. ID: {}, Kullanıcı: {}", request.getPreviewId(), userEmail);
+                log.warn("Önizleme ID geçersiz veya süresi dolmuş. ID: {}, Kullanıcı: {}", request.getPreviewId(),
+                        userEmail);
                 throw new ValidationException("Geçersiz veya süresi dolmuş önizleme ID'si");
             }
 
@@ -245,7 +247,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             // Önizleme önbellekten temizlenir
             previewCacheService.removeOrderPreview(request.getPreviewId());
-            log.info("Alım işlemi başarıyla tamamlandı. OrderNo: {}, Status: {}", tradeOrder.getOrderNumber(), tradeOrder.getStatus());
+            log.info("Alım işlemi başarıyla tamamlandı. OrderNo: {}, Status: {}", tradeOrder.getOrderNumber(),
+                    tradeOrder.getStatus());
 
             return Response.<StockBuyOrderResultResponse>builder()
                     .statusCode(HttpStatus.OK.value())

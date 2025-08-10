@@ -51,4 +51,29 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
         @Query("SELECT DISTINCT t.client.id FROM TradeOrder t " +
                         "WHERE t.status = 'EXECUTED'")
         List<Long> findClientIdsWithExecutedTrades();
+
+        /**
+         * Belirli bir tarihteki işlemleri getir
+         */
+        List<TradeOrder> findByTradeDate(LocalDate tradeDate);
+
+        /**
+         * Belirli bir müşterinin belirli bir tarihteki işlemlerini getir
+         */
+        List<TradeOrder> findByClientAndTradeDate(Client client, LocalDate tradeDate);
+
+        /**
+         * Belirli bir müşterinin belirli bir tarihteki EXECUTED işlemlerini getir
+         */
+        List<TradeOrder> findByClientAndStatusAndTradeDate(Client client, OrderStatus status, LocalDate tradeDate);
+
+        /**
+         * Belirli bir tarih aralığındaki işlemleri getir
+         */
+        List<TradeOrder> findByTradeDateBetween(LocalDate startDate, LocalDate endDate);
+
+        /**
+         * Belirli bir müşterinin belirli bir tarih aralığındaki işlemlerini getir
+         */
+        List<TradeOrder> findByClientAndTradeDateBetween(Client client, LocalDate startDate, LocalDate endDate);
 }
