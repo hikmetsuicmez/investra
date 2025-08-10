@@ -71,6 +71,21 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
             account.setBalance(previousBalance.subtract(request.getAmount()));
             account.setAvailableBalance(previousAvailableBalance.subtract(request.getAmount()));
 
+            // Balance validation - negatif olamaz (setter'da da kontrol ediliyor ama ekstra
+            // güvenlik için)
+            if (account.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+                account.setBalance(BigDecimal.ZERO);
+            }
+            if (account.getAvailableBalance().compareTo(BigDecimal.ZERO) < 0) {
+                account.setAvailableBalance(BigDecimal.ZERO);
+            }
+
+            // Balance ve AvailableBalance tutarlılık kontrolü
+            if (account.getBalance().compareTo(account.getAvailableBalance()) < 0) {
+                // Balance, AvailableBalance'dan küçük olamaz
+                account.setBalance(account.getAvailableBalance());
+            }
+
             // Hesabı kaydet
             accountRepository.save(account);
 
@@ -104,7 +119,6 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
 
             return Response.<WithdrawalResponse>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)
                     .message("Bakiye çıkış işlemi başarıyla tamamlandı")
                     .data(response)
                     .build();
@@ -124,37 +138,35 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
 
     private Client findClientById(Long clientId) {
         return clientRepository.findById(clientId)
-                .orElseThrow(() -> new ClientNotFoundException("Müşteri bulunamadı: ID=" + clientId));
+                .orElseThrow(() -> new ClientNotFoundException(clientId));
     }
 
     private Account findAccountById(Long accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Hesap bulunamadı: ID=" + accountId));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
     }
 
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı: Email=" + email));
+                .orElseThrow(() -> new UserNotFoundException(email));
     }
 
     private void validateClientAccount(Client client, Account account) {
         if (!account.getClient().getId().equals(client.getId())) {
-            throw new AccountNotFoundException("Hesap belirtilen müşteriye ait değil");
+            throw new AccountNotFoundException(account.getId());
         }
     }
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("Geçersiz tutar: Tutar sıfırdan büyük olmalıdır");
+            throw new InvalidAmountException();
         }
     }
 
     // Kullanılabilir bakiye kontrolü - EN ÖNEMLİ KONTROL
     private void validateAvailableBalance(Account account, BigDecimal withdrawalAmount) {
         if (account.getAvailableBalance().compareTo(withdrawalAmount) < 0) {
-            throw new InsufficientBalanceException(
-                String.format("Girilen tutar, kullanılabilir bakiyeden fazla olamaz. Kullanılabilir bakiye: %s, İstenen tutar: %s",
-                    account.getAvailableBalance(), withdrawalAmount));
+            throw new InsufficientBalanceException();
         }
     }
 

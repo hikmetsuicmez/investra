@@ -1,6 +1,5 @@
 package com.investra.entity;
 
-
 import com.investra.enums.AccountType;
 import com.investra.enums.Currency;
 import jakarta.persistence.*;
@@ -24,7 +23,7 @@ public class Account {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id",referencedColumnName = "id")
+    @JoinColumn(name = "client_id", referencedColumnName = "id")
     private Client client;
 
     @Column(name = "nickname")
@@ -62,12 +61,12 @@ public class Account {
     @Builder.Default
     private BigDecimal availableBalance = BigDecimal.ZERO;
 
-    //yatırım hesabı mı yoksa takas hesabı mı
+    // yatırım hesabı mı yoksa takas hesabı mı
     @Enumerated(EnumType.STRING)
     @Column(name = "account_type", nullable = false)
     private AccountType accountType;
 
-    //farklı currencylerde varsa hangisi primary belirtmek için
+    // farklı currencylerde varsa hangisi primary belirtmek için
     @Column(name = "is_primary_settlement")
     private boolean isPrimarySettlement;
 
@@ -90,11 +89,31 @@ public class Account {
         if (availableBalance == null) {
             availableBalance = balance;
         }
+
+        // Balance negatif olamaz
+        if (balance != null && balance.compareTo(BigDecimal.ZERO) < 0) {
+            balance = BigDecimal.ZERO;
+        }
+
+        // AvailableBalance negatif olamaz
+        if (availableBalance != null && availableBalance.compareTo(BigDecimal.ZERO) < 0) {
+            availableBalance = BigDecimal.ZERO;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+
+        // Balance negatif olamaz
+        if (balance != null && balance.compareTo(BigDecimal.ZERO) < 0) {
+            balance = BigDecimal.ZERO;
+        }
+
+        // AvailableBalance negatif olamaz
+        if (availableBalance != null && availableBalance.compareTo(BigDecimal.ZERO) < 0) {
+            availableBalance = BigDecimal.ZERO;
+        }
     }
 
     // Benzersiz account number oluşturur
@@ -102,5 +121,23 @@ public class Account {
         long timestamp = System.currentTimeMillis();
         int random = (int) (Math.random() * 1000);
         return String.format("ACC%d%03d", timestamp, random);
+    }
+
+    // Balance setter - negatif değerleri engeller
+    public void setBalance(BigDecimal balance) {
+        if (balance != null && balance.compareTo(BigDecimal.ZERO) < 0) {
+            this.balance = BigDecimal.ZERO;
+        } else {
+            this.balance = balance;
+        }
+    }
+
+    // AvailableBalance setter - negatif değerleri engeller
+    public void setAvailableBalance(BigDecimal availableBalance) {
+        if (availableBalance != null && availableBalance.compareTo(BigDecimal.ZERO) < 0) {
+            this.availableBalance = BigDecimal.ZERO;
+        } else {
+            this.availableBalance = availableBalance;
+        }
     }
 }

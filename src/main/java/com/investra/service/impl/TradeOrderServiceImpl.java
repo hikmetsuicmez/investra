@@ -230,6 +230,21 @@ public class TradeOrderServiceImpl implements TradeOrderService {
                 log.info("Satış T+2 tamamlandı: her ikisine de {} eklendi", freshOrder.getNetAmount());
             }
 
+            // Balance validation - negatif olamaz (setter'da da kontrol ediliyor ama ekstra
+            // güvenlik için)
+            if (account.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+                account.setBalance(BigDecimal.ZERO);
+            }
+            if (account.getAvailableBalance().compareTo(BigDecimal.ZERO) < 0) {
+                account.setAvailableBalance(BigDecimal.ZERO);
+            }
+
+            // Balance ve AvailableBalance tutarlılık kontrolü
+            if (account.getBalance().compareTo(account.getAvailableBalance()) < 0) {
+                // Balance, AvailableBalance'dan küçük olamaz
+                account.setBalance(account.getAvailableBalance());
+            }
+
             accountRepository.save(account);
 
             // Sadece COMPLETED olduktan sonra portfolioyu güncelle
@@ -396,6 +411,19 @@ public class TradeOrderServiceImpl implements TradeOrderService {
     public void updateAccountBalanceForBuyOrder(Account account, BigDecimal amount) {
         // availableBalance'dan tutarı düş, balance aynı kalır
         account.setAvailableBalance(account.getAvailableBalance().subtract(amount));
+
+        // AvailableBalance negatif olamaz (setter'da da kontrol ediliyor ama ekstra
+        // güvenlik için)
+        if (account.getAvailableBalance().compareTo(BigDecimal.ZERO) < 0) {
+            account.setAvailableBalance(BigDecimal.ZERO);
+        }
+
+        // Balance ve AvailableBalance tutarlılık kontrolü
+        if (account.getBalance().compareTo(account.getAvailableBalance()) < 0) {
+            // Balance, AvailableBalance'dan küçük olamaz
+            account.setBalance(account.getAvailableBalance());
+        }
+
         accountRepository.save(account);
         log.info("Alış emri için availableBalance güncellendi: {}", account.getId());
     }
@@ -406,6 +434,19 @@ public class TradeOrderServiceImpl implements TradeOrderService {
     public void restoreAccountBalanceForCancelledBuyOrder(Account account, BigDecimal amount) {
         // availableBalance'a tutarı geri ekle
         account.setAvailableBalance(account.getAvailableBalance().add(amount));
+
+        // AvailableBalance negatif olamaz (setter'da da kontrol ediliyor ama ekstra
+        // güvenlik için)
+        if (account.getAvailableBalance().compareTo(BigDecimal.ZERO) < 0) {
+            account.setAvailableBalance(BigDecimal.ZERO);
+        }
+
+        // Balance ve AvailableBalance tutarlılık kontrolü
+        if (account.getBalance().compareTo(account.getAvailableBalance()) < 0) {
+            // Balance, AvailableBalance'dan küçük olamaz
+            account.setBalance(account.getAvailableBalance());
+        }
+
         accountRepository.save(account);
         log.info("İptal edilen alış emri için availableBalance geri alındı: {}", account.getId());
     }

@@ -1,50 +1,46 @@
 package com.investra.utils;
 
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.investra.exception.ErrorCode;
+import com.investra.exception.ValidationException;
 
+import java.security.SecureRandom;
 
 public class PasswordGenerator {
 
-    private static final String UPPERCASE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static final String LOWERCASE_CHARS = "abcdefghijklmnopqrstuvwxyz";
-    private static final String DIGIT_CHARS = "0123456789";
-    private static final String SYMBOL_CHARS = "!@#$%&*";
-
-    private static final String ALL_POSSIBLE_CHARS =
-            UPPERCASE_CHARS + LOWERCASE_CHARS + DIGIT_CHARS + SYMBOL_CHARS;
-
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String LOWER = "abcdefghijklmnopqrstuvwxyz";
+    private static final String DIGITS = "0123456789";
+    private static final String SPECIAL = "!@#$%^&*()_+-=[]{}|;:,.<>?";
 
     public static String generatePassword(int length) {
         if (length < 4) {
-            throw new IllegalArgumentException("Şifre en az 4 karakter uzunlugunda olmalı");
+            throw new ValidationException();
         }
 
-        List<Character> passwordChars = new ArrayList<>();
+        SecureRandom random = new SecureRandom();
+        StringBuilder password = new StringBuilder();
 
-        passwordChars.add(getRandomChar(UPPERCASE_CHARS));
-        passwordChars.add(getRandomChar(LOWERCASE_CHARS));
-        passwordChars.add(getRandomChar(DIGIT_CHARS));
-        passwordChars.add(getRandomChar(SYMBOL_CHARS));
+        // En az bir karakter her kategoriden
+        password.append(UPPER.charAt(random.nextInt(UPPER.length())));
+        password.append(LOWER.charAt(random.nextInt(LOWER.length())));
+        password.append(DIGITS.charAt(random.nextInt(DIGITS.length())));
+        password.append(SPECIAL.charAt(random.nextInt(SPECIAL.length())));
 
+        // Kalan karakterler
+        String allChars = UPPER + LOWER + DIGITS + SPECIAL;
         for (int i = 4; i < length; i++) {
-            passwordChars.add(getRandomChar(ALL_POSSIBLE_CHARS));
+            password.append(allChars.charAt(random.nextInt(allChars.length())));
         }
 
-        Collections.shuffle(passwordChars, SECURE_RANDOM);
-
-        StringBuilder passwordBuilder = new StringBuilder();
-        for (char c : passwordChars) {
-            passwordBuilder.append(c);
+        // Karakterleri karıştır
+        char[] passwordArray = password.toString().toCharArray();
+        for (int i = passwordArray.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            char temp = passwordArray[i];
+            passwordArray[i] = passwordArray[j];
+            passwordArray[j] = temp;
         }
 
-        return passwordBuilder.toString();
-    }
-
-    private static char getRandomChar(String charSet) {
-        return charSet.charAt(SECURE_RANDOM.nextInt(charSet.length()));
+        return new String(passwordArray);
     }
 }

@@ -79,7 +79,6 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
 
                         return Response.<List<ClientStockHoldingResponse>>builder()
                                         .statusCode(HttpStatus.OK.value())
-                                        .isSuccess(true)
                                         .message("Müşteri portföy bilgileri getirildi")
                                         .data(stockHoldings)
                                         .build();
@@ -87,7 +86,6 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                         log.warn("Müşteri bulunamadı: {}", e.getMessage());
                         return Response.<List<ClientStockHoldingResponse>>builder()
                                         .statusCode(HttpStatus.NOT_FOUND.value())
-                                        .isSuccess(false)
                                         .message(e.getMessage())
                                         .errorCode(ErrorCode.CLIENT_NOT_FOUND)
                                         .build();
@@ -95,7 +93,6 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                         log.error("Müşteri portföy bilgileri getirilirken hata oluştu: {}", e.getMessage(), e);
                         return Response.<List<ClientStockHoldingResponse>>builder()
                                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                                        .isSuccess(false)
                                         .message("Portföy bilgileri getirilirken hata oluştu")
                                         .errorCode(ErrorCode.UNEXPECTED_ERROR)
                                         .build();
@@ -129,7 +126,6 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
 
                         return Response.<StockSellOrderPreviewResponse>builder()
                                         .statusCode(HttpStatus.OK.value())
-                                        .isSuccess(true)
                                         .message("Satış önizleme başarılı")
                                         .data(previewResponse)
                                         .build();
@@ -137,7 +133,6 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                         log.warn("Önizleme hatası: {}", e.getMessage());
                         return Response.<StockSellOrderPreviewResponse>builder()
                                         .statusCode(HttpStatus.BAD_REQUEST.value())
-                                        .isSuccess(false)
                                         .message(e.getMessage())
                                         .errorCode(ExceptionUtil.getErrorCode(e))
                                         .build();
@@ -145,7 +140,6 @@ public class StockSellServiceImpl extends AbstractStockTradeService implements S
                         log.error("Önizleme sırasında beklenmeyen bir hata oluştu: {}", e.getMessage(), e);
                         return Response.<StockSellOrderPreviewResponse>builder()
                                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                                        .isSuccess(false)
                                         .message("Önizleme sırasında bir hata oluştu")
                                         .errorCode(ExceptionUtil.getErrorCode(e))
                                         .build();
