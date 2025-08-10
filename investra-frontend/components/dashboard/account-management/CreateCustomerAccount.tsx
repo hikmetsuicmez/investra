@@ -94,17 +94,6 @@ export default function CreateCustomerAccount({ clientId }: CreateCustomerAccoun
           <CardDescription>Aşağıdaki formu doldurarak yeni bir hesap açabilirsiniz.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-2 gap-4 text-sm font-medium">
-            <div>
-              <span className="text-gray-500">Kullanılabilir Bakiye</span>
-              <p className="text-lg font-semibold text-black">50.000,00 TL</p>
-            </div>
-            <div>
-              <span className="text-gray-500">Güncel Bakiye</span>
-              <p className="text-lg font-semibold text-black">55.000,00 TL</p>
-            </div>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="nickname">Hesap Adı / Rumuz</Label>

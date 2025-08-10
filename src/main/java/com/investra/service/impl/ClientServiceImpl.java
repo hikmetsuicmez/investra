@@ -29,6 +29,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -126,6 +127,8 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                 .orElseThrow(() -> new BusinessException("Kullanıcı bulunamadı: " + userEmail, ErrorCode.USER_NOT_FOUND));
 
         Client client = mapToEntity(request, user);
+        String clientNumber = generateRandomClientNumber();
+        client.setClientNumber(clientNumber);
         client.setIsActive(true);
         client.setCreatedAt(LocalDateTime.now());
         clientRepository.save(client);
@@ -149,6 +152,8 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                 .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı: " + userEmail));
 
         Client client = mapToEntity(request, user);
+        String clientNumber = generateRandomClientNumber();
+        client.setClientNumber(clientNumber);
         client.setIsActive(true);
         client.setCreatedAt(LocalDateTime.now());
         clientRepository.save(client);
@@ -303,5 +308,9 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                     .build();
         }
     }
-
+    private String generateRandomClientNumber() {
+        SecureRandom random = new SecureRandom();
+        int number = 100000 + random.nextInt(900000); // 100000 - 999999 arası 6 haneli sayı üretecek
+        return String.valueOf(number);
+    }
 }

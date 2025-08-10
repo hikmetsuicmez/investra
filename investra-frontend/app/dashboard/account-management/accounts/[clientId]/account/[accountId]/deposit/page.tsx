@@ -10,7 +10,7 @@ export default function DepositPage() {
   const clientId = params.clientId as string
 
   return (
-    <div style={{ maxWidth: 600, margin: "auto", padding: 20 }}>
+    <div style={{ maxWidth: 800, margin: "auto", padding: 20 }}>
       
       <Deposit accountId={accountId} clientId={clientId}  />
     </div>

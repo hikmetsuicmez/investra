@@ -172,7 +172,6 @@ export default function EndOfDayValution() {
           </AlertDialog>
         </div>
         
-        {/* ARAMA ÇUBUĞU EKLENDİ */}
         <div className="flex items-center gap-2 border-t pt-4">
           <Input 
             placeholder="Müşteri ID'si ile ara..."

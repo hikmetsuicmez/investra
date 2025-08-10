@@ -20,6 +20,10 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByEmail(String email);
 
+    Optional<Client> findByClientNumber(String clientNumber);
+
+    Optional<Client> findByFullNameOrCompanyName(String fullName, String companyName);
+
     Optional<Client> findByPassportNo(String passportNo);
 
     Optional<Client> findByTaxNumber(String taxNumber);
