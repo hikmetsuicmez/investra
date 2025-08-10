@@ -1008,6 +1008,20 @@ public class EndOfDayServiceImpl implements EndOfDayService {
                     trade.getNetAmount());
         }
 
+        // Balance validation - negatif olamaz
+        if (account.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+            account.setBalance(BigDecimal.ZERO);
+        }
+        if (account.getAvailableBalance().compareTo(BigDecimal.ZERO) < 0) {
+            account.setAvailableBalance(BigDecimal.ZERO);
+        }
+
+        // Balance ve AvailableBalance tutarlılık kontrolü
+        if (account.getBalance().compareTo(account.getAvailableBalance()) < 0) {
+            // Balance, AvailableBalance'dan küçük olamaz
+            account.setBalance(account.getAvailableBalance());
+        }
+
         accountRepository.save(account);
     }
 
