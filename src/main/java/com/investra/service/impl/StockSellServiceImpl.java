@@ -30,37 +30,34 @@ import java.util.List;
 public class StockSellServiceImpl extends AbstractStockTradeService implements StockSellService {
 
         private final PortfolioItemRepository portfolioItemRepository;
+        private final PortfolioRepository portfolioRepository;
         private final TradeOrderRepository tradeOrderRepository;
 
         // Yardımcı servisler
         private final OrderValidatorService validatorService;
         private final EntityFinderService entityFinderService;
         private final OrderCalculationService calculationService;
-        private final PortfolioUpdateService portfolioUpdateService;
         private final OrderPreviewCacheService previewCacheService;
-        private final TradeOrderService tradeOrderService;
         private final SimulationDateService simulationDateService;
 
         public StockSellServiceImpl(
                         ClientRepository clientRepository,
                         PortfolioItemRepository portfolioItemRepository,
+                        PortfolioRepository portfolioRepository,
                         TradeOrderRepository tradeOrderRepository,
                         OrderValidatorService validatorService,
                         EntityFinderService entityFinderService,
                         OrderCalculationService calculationService,
-                        PortfolioUpdateService portfolioUpdateService,
                         OrderPreviewCacheService previewCacheService,
-                        TradeOrderService tradeOrderService,
                         SimulationDateService simulationDateService) {
                 super(clientRepository);
                 this.portfolioItemRepository = portfolioItemRepository;
+                this.portfolioRepository = portfolioRepository;
                 this.tradeOrderRepository = tradeOrderRepository;
                 this.validatorService = validatorService;
                 this.entityFinderService = entityFinderService;
                 this.calculationService = calculationService;
-                this.portfolioUpdateService = portfolioUpdateService;
                 this.previewCacheService = previewCacheService;
-                this.tradeOrderService = tradeOrderService;
                 this.simulationDateService = simulationDateService;
         }
 

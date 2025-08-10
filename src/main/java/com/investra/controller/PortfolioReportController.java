@@ -7,6 +7,7 @@ import com.investra.dtos.response.PortfolioPerformanceReportResponse;
 import com.investra.dtos.response.Response;
 import com.investra.docs.PortfolioReportApiDocs;
 import com.investra.service.PortfolioReportService;
+import com.investra.service.SimulationDateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,7 @@ import java.util.List;
 public class PortfolioReportController implements PortfolioReportApiDocs {
 
     private final PortfolioReportService portfolioReportService;
+    private final SimulationDateService simulationDateService;
 
     @GetMapping(ApiEndpoints.PortfolioReport.GET_REPORT)
     public ResponseEntity<Response<PortfolioReportResponse>> getPortfolioReport(
@@ -50,7 +52,9 @@ public class PortfolioReportController implements PortfolioReportApiDocs {
 
             String fileName = String.format("portfoy_raporu_%s_%s.xlsx",
                     clientId,
-                    date != null ? date : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                    date != null ? date
+                            : simulationDateService.getCurrentSimulationDate()
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -78,7 +82,9 @@ public class PortfolioReportController implements PortfolioReportApiDocs {
 
             String fileName = String.format("portfoy_raporu_%s_%s.pdf",
                     clientId,
-                    date != null ? date : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                    date != null ? date
+                            : simulationDateService.getCurrentSimulationDate()
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);

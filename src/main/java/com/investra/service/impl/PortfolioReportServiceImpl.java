@@ -9,6 +9,7 @@ import com.investra.entity.TradeOrder;
 import com.investra.enums.ClientStatus;
 import com.investra.enums.ClientType;
 import com.investra.enums.OrderStatus;
+import com.investra.enums.OrderType;
 import com.investra.enums.SettlementStatus;
 import com.investra.exception.ClientNotFoundException;
 import com.investra.repository.*;
@@ -69,43 +70,112 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
             Portfolio portfolio = portfolioRepository.findByClient(client)
                     .orElseThrow(() -> new ClientNotFoundException("Müşteriye ait portföy bulunamadı: " + clientId));
 
-            // Hesap bilgilerini al
-            Account account = accountRepository.findByClientId(clientId)
-                    .orElseThrow(() -> new ClientNotFoundException("Müşteriye ait hesap bulunamadı: " + clientId));
+            // Primary settlement account'ı al
+            Account account = accountRepository.findPrimarySettlementAccountByClientId(clientId)
+                    .orElseGet(() -> {
+                        // Primary settlement account yoksa, ilk hesabı al
+                        log.warn("Müşteri {} için primary settlement account bulunamadı, ilk hesap kullanılıyor",
+                                clientId);
+                        return accountRepository.findByClientIdOrderByCreatedAtDesc(clientId)
+                                .stream()
+                                .findFirst()
+                                .orElseThrow(() -> new ClientNotFoundException(
+                                        "Müşteriye ait hiç hesap bulunamadı: " + clientId));
+                    });
 
             // Settlement status'una göre işlemleri grupla
             Map<Long, PortfolioReportResponse.StockPositionDetail> stockPositionsMap = new HashMap<>();
 
             // 1. COMPLETED settlement'ları PortfolioItem'dan al (T+2 pozisyonları)
-            List<PortfolioItem> portfolioItems = portfolioItemRepository.findByClientId(clientId);
+            // Tüm PortfolioItem'ları al (quantity > 0 filtresi olmadan)
+            List<PortfolioItem> portfolioItems = portfolioItemRepository.findAll().stream()
+                    .filter(item -> {
+                        try {
+                            return item.getPortfolio().getClient().getId().equals(clientId);
+                        } catch (Exception e) {
+                            log.warn("PortfolioItem {} için client bilgisi alınamadı", item.getId());
+                            return false;
+                        }
+                    })
+                    .collect(Collectors.toList());
             log.info("Müşteri {} için {} adet COMPLETED settlement (PortfolioItem) bulundu", clientId,
                     portfolioItems.size());
 
+            // Debug için tüm PortfolioItem'ları logla
             for (PortfolioItem item : portfolioItems) {
-                Long stockId = item.getStock().getId();
-
-                if (!stockPositionsMap.containsKey(stockId)) {
-                    stockPositionsMap.put(stockId, createEmptyStockPosition(item.getStock(), reportDate));
-                }
-
-                // COMPLETED settlement'ları T+2'ye ekle
-                PortfolioReportResponse.StockPositionDetail currentPosition = stockPositionsMap.get(stockId);
-                PortfolioReportResponse.StockPositionDetail updatedPosition = addPortfolioItemToPosition(
-                        currentPosition, item, reportDate);
-                stockPositionsMap.put(stockId, updatedPosition);
+                log.debug(
+                        "PortfolioItem bulundu - ID: {}, Hisse: {}, Miktar: {}, Fiyat: {}, Portfolio: {}, Account: {}",
+                        item.getId(), item.getStock().getCode(), item.getQuantity(), item.getAvgPrice(),
+                        item.getPortfolio().getId(), item.getAccount().getId());
             }
 
-            // 2. EXECUTED işlemleri al (PENDING, T1 settlement'ları)
-            // T+2 settlement'lar zaten PortfolioItem'dan alındı, tekrar ekleme
+            // PortfolioItem'ları hisse senedine göre grupla
+            Map<Long, List<PortfolioItem>> portfolioItemsByStock = portfolioItems.stream()
+                    .collect(Collectors.groupingBy(item -> item.getStock().getId()));
+
+            for (Map.Entry<Long, List<PortfolioItem>> entry : portfolioItemsByStock.entrySet()) {
+                Long stockId = entry.getKey();
+                List<PortfolioItem> itemsForStock = entry.getValue();
+
+                log.info("Hisse {} için {} adet PortfolioItem bulundu", stockId, itemsForStock.size());
+
+                if (!stockPositionsMap.containsKey(stockId)) {
+                    stockPositionsMap.put(stockId,
+                            createEmptyStockPosition(itemsForStock.get(0).getStock(), reportDate));
+                }
+
+                // Aynı hisse için tüm PortfolioItem'ları topla
+                PortfolioReportResponse.StockPositionDetail currentPosition = stockPositionsMap.get(stockId);
+                PortfolioReportResponse.StockPositionDetail updatedPosition = currentPosition;
+
+                for (PortfolioItem item : itemsForStock) {
+                    updatedPosition = addPortfolioItemToPosition(updatedPosition, item, reportDate);
+                    log.debug("PortfolioItem eklendi - Hisse: {}, Miktar: {}, Toplam T+2: {}",
+                            item.getStock().getCode(), item.getQuantity(), updatedPosition.getT2Quantity());
+                }
+
+                stockPositionsMap.put(stockId, updatedPosition);
+
+                log.info("Hisse {} için toplam T+2 miktarı: {}, Toplam pozisyon: {}, Ortalama alış fiyatı: {}",
+                        stockId, updatedPosition.getT2Quantity(), updatedPosition.getTotalQuantity(),
+                        updatedPosition.getBuyPrice());
+            }
+
+            // 2. EXECUTED işlemleri al (PENDING, T1, T2 settlement'ları)
+            // COMPLETED settlement'lar PortfolioItem'dan alındı, tekrar ekleme
             List<TradeOrder> executedTrades = tradeOrderRepository.findByClientAndStatus(client, OrderStatus.EXECUTED);
             log.info("Müşteri {} için toplam {} adet EXECUTED işlem bulundu", clientId, executedTrades.size());
 
-            // Sadece PENDING ve T1 settlement'ları işle
+            // Debug için tüm EXECUTED işlemleri logla
             for (TradeOrder trade : executedTrades) {
-                // COMPLETED ve T2 settlement'lar zaten PortfolioItem'dan alındı, tekrar ekleme
-                if (trade.getSettlementStatus() == SettlementStatus.COMPLETED ||
-                        trade.getSettlementStatus() == SettlementStatus.T2) {
+                log.debug(
+                        "EXECUTED işlem bulundu - ID: {}, Hisse: {}, Miktar: {}, Fiyat: {}, Durum: {}, Settlement: {}",
+                        trade.getId(), trade.getStock().getCode(), trade.getQuantity(),
+                        trade.getPrice(), trade.getStatus(), trade.getSettlementStatus());
+            }
+
+            // PENDING, T1 ve T2 settlement'ları işle
+            for (TradeOrder trade : executedTrades) {
+                // COMPLETED settlement'lar PortfolioItem'dan alındı, tekrar ekleme
+                if (trade.getSettlementStatus() == SettlementStatus.COMPLETED) {
                     continue;
+                }
+
+                // T2 settlement'lar için PortfolioItem'da var mı kontrol et
+                if (trade.getSettlementStatus() == SettlementStatus.T2) {
+                    boolean portfolioItemExists = portfolioItems.stream()
+                            .anyMatch(item -> item.getStock().getId().equals(trade.getStock().getId()) &&
+                                    item.getAccount().getId().equals(trade.getAccount().getId()));
+
+                    if (portfolioItemExists) {
+                        log.debug("T2 settlement atlandı (PortfolioItem'da mevcut) - Hisse: {}, Miktar: {}",
+                                trade.getStock().getCode(), trade.getQuantity());
+                        continue;
+                    } else {
+                        log.info(
+                                "T2 settlement PortfolioItem'da yok, TradeOrder'dan ekleniyor - Hisse: {}, Miktar: {}, TradeOrder ID: {}",
+                                trade.getStock().getCode(), trade.getQuantity(), trade.getId());
+                    }
                 }
 
                 Long stockId = trade.getStock().getId();
@@ -134,7 +204,15 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                 totalNominalValue = totalNominalValue.add(detail.getNominalValue());
                 totalPotentialProfitLoss = totalPotentialProfitLoss.add(detail.getPotentialProfitLoss());
                 totalPositionValue = totalPositionValue.add(detail.getNominalValue());
+
+                log.info(
+                        "Final pozisyon - Hisse: {}, T+0: {}, T+1: {}, T+2: {}, Toplam: {}, Nominal: {}, Kar/Zarar: {}",
+                        detail.getStockCode(), detail.getT0Quantity(), detail.getT1Quantity(), detail.getT2Quantity(),
+                        detail.getTotalQuantity(), detail.getNominalValue(), detail.getPotentialProfitLoss());
             }
+
+            log.info("Toplam hesaplamalar - Nominal: {}, Kar/Zarar: {}, Pozisyon: {}",
+                    totalNominalValue, totalPotentialProfitLoss, totalPositionValue);
 
             // Portföy değerlerini hesapla
             BigDecimal portfolioCurrentValue = totalPositionValue.add(account.getBalance());
@@ -183,12 +261,16 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                 .t0Quantity(0)
                 .t1Quantity(0)
                 .t2Quantity(0)
+                .t0SellQuantity(0)
+                .t1SellQuantity(0)
+                .t2SellQuantity(0)
                 .buyPrice(BigDecimal.ZERO)
                 .closingPrice(closingPrice)
                 .nominalValue(BigDecimal.ZERO)
                 .potentialProfitLoss(BigDecimal.ZERO)
                 .profitLossRatio(BigDecimal.ZERO)
                 .totalQuantity(0)
+                .totalSellQuantity(0)
                 .build();
     }
 
@@ -200,41 +282,84 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
         Stock stock = trade.getStock();
         BigDecimal closingPrice = getClosingPrice(stock, reportDate);
 
-        // Settlement status'una göre miktarları ayır
+        // Alım/satım ayrımını yap ve ayrı ayrı takip et
+        int buyQuantity = 0;
+        int sellQuantity = 0;
+
+        if (trade.getOrderType() == OrderType.SELL) {
+            sellQuantity = trade.getQuantity();
+            log.debug("SATIŞ emri - Hisse: {}, Miktar: {} (pozitif)", stock.getCode(), sellQuantity);
+        } else {
+            buyQuantity = trade.getQuantity();
+            log.debug("ALIM emri - Hisse: {}, Miktar: {} (pozitif)", stock.getCode(), buyQuantity);
+        }
+
+        // Settlement status'una göre miktarları ayır - BUY ve SELL ayrı ayrı
         int t0Quantity = currentPosition.getT0Quantity();
         int t1Quantity = currentPosition.getT1Quantity();
         int t2Quantity = currentPosition.getT2Quantity();
 
+        int t0SellQuantity = currentPosition.getT0SellQuantity();
+        int t1SellQuantity = currentPosition.getT1SellQuantity();
+        int t2SellQuantity = currentPosition.getT2SellQuantity();
+
         switch (trade.getSettlementStatus()) {
             case PENDING:
-                t0Quantity += trade.getQuantity();
-                log.debug("PENDING settlement - Hisse: {}, Miktar: {}, T+0: {}",
-                        stock.getCode(), trade.getQuantity(), t0Quantity);
+                if (buyQuantity > 0) {
+                    t0Quantity += buyQuantity;
+                    log.debug("PENDING BUY settlement - Hisse: {}, Miktar: {}, T+0: {}",
+                            stock.getCode(), buyQuantity, t0Quantity);
+                } else if (sellQuantity > 0) {
+                    t0SellQuantity += sellQuantity;
+                    log.debug("PENDING SELL settlement - Hisse: {}, Miktar: {}, T+0 SELL: {}",
+                            stock.getCode(), sellQuantity, t0SellQuantity);
+                }
                 break;
             case T1:
-                t1Quantity += trade.getQuantity();
-                log.debug("T1 settlement - Hisse: {}, Miktar: {}, T+1: {}",
-                        stock.getCode(), trade.getQuantity(), t1Quantity);
+                if (buyQuantity > 0) {
+                    t1Quantity += buyQuantity;
+                    log.debug("T1 BUY settlement - Hisse: {}, Miktar: {}, T+1: {}",
+                            stock.getCode(), buyQuantity, t1Quantity);
+                } else if (sellQuantity > 0) {
+                    t1SellQuantity += sellQuantity;
+                    log.debug("T1 SELL settlement - Hisse: {}, Miktar: {}, T+1 SELL: {}",
+                            stock.getCode(), sellQuantity, t1SellQuantity);
+                }
                 break;
             case T2:
-                // T+2 settlement'lar PortfolioItem'dan alınıyor, burada ekleme
-                log.debug("T2 settlement atlandı (PortfolioItem'dan alınıyor) - Hisse: {}, Miktar: {}",
-                        stock.getCode(), trade.getQuantity());
+                if (buyQuantity > 0) {
+                    t2Quantity += buyQuantity;
+                    log.debug("T2 BUY settlement işleniyor - Hisse: {}, Miktar: {}, T+2: {}",
+                            stock.getCode(), buyQuantity, t2Quantity);
+                } else if (sellQuantity > 0) {
+                    t2SellQuantity += sellQuantity;
+                    log.debug("T2 SELL settlement işleniyor - Hisse: {}, Miktar: {}, T+2 SELL: {}",
+                            stock.getCode(), sellQuantity, t2SellQuantity);
+                }
                 break;
             case COMPLETED:
                 // COMPLETED işlemler PortfolioItem'da zaten var, burada ekleme
                 log.debug("COMPLETED settlement atlandı - Hisse: {}, Miktar: {}",
-                        stock.getCode(), trade.getQuantity());
+                        stock.getCode(), buyQuantity > 0 ? buyQuantity : sellQuantity);
                 break;
             default:
                 // Diğer durumlar için T+0'a ekle
-                t0Quantity += trade.getQuantity();
-                log.debug("DEFAULT settlement - Hisse: {}, Miktar: {}, T+0: {}",
-                        stock.getCode(), trade.getQuantity(), t0Quantity);
+                if (buyQuantity > 0) {
+                    t0Quantity += buyQuantity;
+                    log.debug("DEFAULT BUY settlement - Hisse: {}, Miktar: {}, T+0: {}",
+                            stock.getCode(), buyQuantity, t0Quantity);
+                } else if (sellQuantity > 0) {
+                    t0SellQuantity += sellQuantity;
+                    log.debug("DEFAULT SELL settlement - Hisse: {}, Miktar: {}, T+0 SELL: {}",
+                            stock.getCode(), sellQuantity, t0SellQuantity);
+                }
                 break;
         }
 
-        int totalQuantity = t0Quantity + t1Quantity + t2Quantity;
+        // Net pozisyon hesapla (BUY - SELL)
+        int totalBuyQuantity = t0Quantity + t1Quantity + t2Quantity;
+        int totalSellQuantity = t0SellQuantity + t1SellQuantity + t2SellQuantity;
+        int totalQuantity = totalBuyQuantity - totalSellQuantity;
 
         // Ortalama alış fiyatını hesapla (sadece T+0 ve T+1 işlemler için)
         BigDecimal totalBuyPrice = calculateTotalBuyPrice(currentPosition, trade, trade.getSettlementStatus());
@@ -244,11 +369,31 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
 
         // Değerleri hesapla
         BigDecimal nominalValue = closingPrice.multiply(BigDecimal.valueOf(totalQuantity));
-        BigDecimal potentialProfitLoss = closingPrice.subtract(avgBuyPrice)
-                .multiply(BigDecimal.valueOf(totalQuantity));
-        BigDecimal profitLossRatio = avgBuyPrice.compareTo(BigDecimal.ZERO) > 0 ? potentialProfitLoss
-                .divide(avgBuyPrice.multiply(BigDecimal.valueOf(totalQuantity)), 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100)) : BigDecimal.ZERO;
+
+        // Kar/Zarar hesaplamasını düzelt - sadece pozitif miktarlar için hesapla
+        BigDecimal potentialProfitLoss = BigDecimal.ZERO;
+        if (totalQuantity > 0) {
+            // Sadece pozitif miktarlar için kar/zarar hesapla (satış emirleri için
+            // hesaplama yapma)
+            potentialProfitLoss = closingPrice.subtract(avgBuyPrice)
+                    .multiply(BigDecimal.valueOf(totalQuantity));
+            log.debug("Kar/Zarar hesaplandı - Hisse: {}, Kapanış: {}, Ortalama: {}, Miktar: {}, Kar/Zarar: {}",
+                    stock.getCode(), closingPrice, avgBuyPrice, totalQuantity, potentialProfitLoss);
+        } else if (totalQuantity < 0) {
+            // Eğer net pozisyon negatifse (daha fazla satış), kar/zarar hesaplama
+            potentialProfitLoss = BigDecimal.ZERO;
+            log.debug("Negatif pozisyon - Kar/Zarar hesaplanmadı - Hisse: {}, Miktar: {}", stock.getCode(),
+                    totalQuantity);
+        } else {
+            log.debug("Sıfır pozisyon - Kar/Zarar hesaplanmadı - Hisse: {}, Miktar: {}", stock.getCode(),
+                    totalQuantity);
+        }
+
+        BigDecimal profitLossRatio = avgBuyPrice.compareTo(BigDecimal.ZERO) > 0 && totalQuantity > 0
+                ? potentialProfitLoss
+                        .divide(avgBuyPrice.multiply(BigDecimal.valueOf(totalQuantity)), 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100))
+                : BigDecimal.ZERO;
 
         return PortfolioReportResponse.StockPositionDetail.builder()
                 .stockCode(stock.getCode())
@@ -256,12 +401,16 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                 .t0Quantity(t0Quantity)
                 .t1Quantity(t1Quantity)
                 .t2Quantity(t2Quantity)
+                .t0SellQuantity(t0SellQuantity)
+                .t1SellQuantity(t1SellQuantity)
+                .t2SellQuantity(t2SellQuantity)
                 .buyPrice(avgBuyPrice)
                 .closingPrice(closingPrice)
                 .nominalValue(nominalValue)
                 .potentialProfitLoss(potentialProfitLoss)
                 .profitLossRatio(profitLossRatio)
                 .totalQuantity(totalQuantity)
+                .totalSellQuantity(totalSellQuantity)
                 .build();
     }
 
@@ -280,20 +429,43 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
 
         // COMPLETED settlement'lar için ortalama alış fiyatını hesapla
         // PortfolioItem'ın avgPrice'ını kullan
-        BigDecimal totalBuyPrice = currentPosition.getBuyPrice()
-                .multiply(BigDecimal.valueOf(currentPosition.getTotalQuantity()))
-                .add(item.getAvgPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+        BigDecimal totalBuyPrice;
+        if (currentPosition.getTotalQuantity() > 0) {
+            // Mevcut pozisyon varsa, mevcut toplam fiyatı kullan
+            totalBuyPrice = currentPosition.getBuyPrice()
+                    .multiply(BigDecimal.valueOf(currentPosition.getTotalQuantity()))
+                    .add(item.getAvgPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+        } else {
+            // Yeni pozisyon ise, sadece PortfolioItem'ın fiyatını kullan
+            totalBuyPrice = item.getAvgPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+        }
+
         BigDecimal avgBuyPrice = totalQuantity > 0
                 ? totalBuyPrice.divide(BigDecimal.valueOf(totalQuantity), 4, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
         // Değerleri hesapla
         BigDecimal nominalValue = closingPrice.multiply(BigDecimal.valueOf(totalQuantity));
-        BigDecimal potentialProfitLoss = closingPrice.subtract(avgBuyPrice)
-                .multiply(BigDecimal.valueOf(totalQuantity));
-        BigDecimal profitLossRatio = avgBuyPrice.compareTo(BigDecimal.ZERO) > 0 ? potentialProfitLoss
-                .divide(avgBuyPrice.multiply(BigDecimal.valueOf(totalQuantity)), 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100)) : BigDecimal.ZERO;
+
+        // Kar/Zarar hesaplamasını düzelt - sadece pozitif miktarlar için hesapla
+        BigDecimal potentialProfitLoss = BigDecimal.ZERO;
+        if (totalQuantity > 0) {
+            // Sadece pozitif miktarlar için kar/zarar hesapla
+            potentialProfitLoss = closingPrice.subtract(avgBuyPrice)
+                    .multiply(BigDecimal.valueOf(totalQuantity));
+            log.debug(
+                    "PortfolioItem Kar/Zarar hesaplandı - Hisse: {}, Kapanış: {}, Ortalama: {}, Miktar: {}, Kar/Zarar: {}",
+                    stock.getCode(), closingPrice, avgBuyPrice, totalQuantity, potentialProfitLoss);
+        } else {
+            log.debug("PortfolioItem Sıfır/Negatif pozisyon - Kar/Zarar hesaplanmadı - Hisse: {}, Miktar: {}",
+                    stock.getCode(), totalQuantity);
+        }
+
+        BigDecimal profitLossRatio = avgBuyPrice.compareTo(BigDecimal.ZERO) > 0 && totalQuantity > 0
+                ? potentialProfitLoss
+                        .divide(avgBuyPrice.multiply(BigDecimal.valueOf(totalQuantity)), 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100))
+                : BigDecimal.ZERO;
 
         log.debug("COMPLETED settlement ekleniyor - Hisse: {}, Miktar: {}, T+2: {}, Toplam: {}, Ortalama Fiyat: {}",
                 stock.getCode(), item.getQuantity(), t2Quantity, totalQuantity, avgBuyPrice);
@@ -304,12 +476,17 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                 .t0Quantity(currentPosition.getT0Quantity())
                 .t1Quantity(currentPosition.getT1Quantity())
                 .t2Quantity(t2Quantity)
+                .t0SellQuantity(currentPosition.getT0SellQuantity())
+                .t1SellQuantity(currentPosition.getT1SellQuantity())
+                .t2SellQuantity(currentPosition.getT2SellQuantity())
                 .buyPrice(avgBuyPrice)
                 .closingPrice(closingPrice)
                 .nominalValue(nominalValue)
                 .potentialProfitLoss(potentialProfitLoss)
                 .profitLossRatio(profitLossRatio)
                 .totalQuantity(totalQuantity)
+                .totalSellQuantity(currentPosition.getT0SellQuantity() + currentPosition.getT1SellQuantity()
+                        + currentPosition.getT2SellQuantity())
                 .build();
     }
 
@@ -318,13 +495,18 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
             TradeOrder trade,
             SettlementStatus settlementStatus) {
 
-        // Sadece T+0 ve T+1 işlemler için alış fiyatını hesapla
-        // T+2 settlement'lar PortfolioItem'dan alınıyor
-        BigDecimal currentTotalPrice = currentPosition.getBuyPrice()
-                .multiply(BigDecimal.valueOf(currentPosition.getTotalQuantity()));
+        // T+0, T+1 ve T+2 işlemler için alış fiyatını hesapla
+        BigDecimal currentTotalPrice;
+        if (currentPosition.getTotalQuantity() > 0) {
+            currentTotalPrice = currentPosition.getBuyPrice()
+                    .multiply(BigDecimal.valueOf(currentPosition.getTotalQuantity()));
+        } else {
+            currentTotalPrice = BigDecimal.ZERO;
+        }
 
         if (settlementStatus == SettlementStatus.PENDING ||
-                settlementStatus == SettlementStatus.T1) {
+                settlementStatus == SettlementStatus.T1 ||
+                settlementStatus == SettlementStatus.T2) {
             return currentTotalPrice.add(trade.getPrice().multiply(BigDecimal.valueOf(trade.getQuantity())));
         }
 
@@ -390,14 +572,18 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                 Row stockColumnsRow = sheet.createRow(4);
                 stockColumnsRow.createCell(0).setCellValue("Hisse Kodu");
                 stockColumnsRow.createCell(1).setCellValue("Hisse Adı");
-                stockColumnsRow.createCell(2).setCellValue("T+0");
-                stockColumnsRow.createCell(3).setCellValue("T+1");
-                stockColumnsRow.createCell(4).setCellValue("T+2");
-                stockColumnsRow.createCell(5).setCellValue("Alış Fiyatı");
-                stockColumnsRow.createCell(6).setCellValue("Kapanış Fiyatı");
-                stockColumnsRow.createCell(7).setCellValue("Nominal Değeri");
-                stockColumnsRow.createCell(8).setCellValue("Potansiyel Kar/Zarar");
-                stockColumnsRow.createCell(9).setCellValue("Kar/Zarar Oranı (%)");
+                stockColumnsRow.createCell(2).setCellValue("T+0 (ALIM)");
+                stockColumnsRow.createCell(3).setCellValue("T+1 (ALIM)");
+                stockColumnsRow.createCell(4).setCellValue("T+2 (ALIM)");
+                stockColumnsRow.createCell(5).setCellValue("T+0 (SATIM)");
+                stockColumnsRow.createCell(6).setCellValue("T+1 (SATIM)");
+                stockColumnsRow.createCell(7).setCellValue("T+2 (SATIM)");
+                stockColumnsRow.createCell(8).setCellValue("Net Pozisyon");
+                stockColumnsRow.createCell(9).setCellValue("Alış Fiyatı");
+                stockColumnsRow.createCell(10).setCellValue("Kapanış Fiyatı");
+                stockColumnsRow.createCell(11).setCellValue("Nominal Değeri");
+                stockColumnsRow.createCell(12).setCellValue("Potansiyel Kar/Zarar");
+                stockColumnsRow.createCell(13).setCellValue("Kar/Zarar Oranı (%)");
 
                 // Hisse senedi verileri
                 int rowNum = 5;
@@ -408,21 +594,25 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                     stockRow.createCell(2).setCellValue(stock.getT0Quantity());
                     stockRow.createCell(3).setCellValue(stock.getT1Quantity());
                     stockRow.createCell(4).setCellValue(stock.getT2Quantity());
-                    stockRow.createCell(5).setCellValue(stock.getBuyPrice().doubleValue());
-                    stockRow.createCell(6).setCellValue(stock.getClosingPrice().doubleValue());
-                    stockRow.createCell(7).setCellValue(stock.getNominalValue().doubleValue());
-                    stockRow.createCell(8).setCellValue(stock.getPotentialProfitLoss().doubleValue());
-                    stockRow.createCell(9).setCellValue(stock.getProfitLossRatio().doubleValue());
+                    stockRow.createCell(5).setCellValue(stock.getT0SellQuantity());
+                    stockRow.createCell(6).setCellValue(stock.getT1SellQuantity());
+                    stockRow.createCell(7).setCellValue(stock.getT2SellQuantity());
+                    stockRow.createCell(8).setCellValue(stock.getTotalQuantity());
+                    stockRow.createCell(9).setCellValue(stock.getBuyPrice().doubleValue());
+                    stockRow.createCell(10).setCellValue(stock.getClosingPrice().doubleValue());
+                    stockRow.createCell(11).setCellValue(stock.getNominalValue().doubleValue());
+                    stockRow.createCell(12).setCellValue(stock.getPotentialProfitLoss().doubleValue());
+                    stockRow.createCell(13).setCellValue(stock.getProfitLossRatio().doubleValue());
                 }
 
                 // Toplam satırı
                 Row totalRow = sheet.createRow(rowNum + 1);
                 totalRow.createCell(0).setCellValue("TOPLAM");
-                totalRow.createCell(7).setCellValue(report.getTotalNominalValue().doubleValue());
-                totalRow.createCell(8).setCellValue(report.getTotalPotentialProfitLoss().doubleValue());
+                totalRow.createCell(11).setCellValue(report.getTotalNominalValue().doubleValue());
+                totalRow.createCell(12).setCellValue(report.getTotalPotentialProfitLoss().doubleValue());
 
                 // Sütun genişliklerini ayarla
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 14; i++) {
                     sheet.autoSizeColumn(i);
                 }
 
@@ -439,8 +629,126 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
 
     @Override
     public byte[] exportPortfolioReportToPdf(Long clientId, String date) {
-        // PDF export şimdilik devre dışı - iText dependency sorunu
-        throw new UnsupportedOperationException("PDF export şimdilik desteklenmiyor");
+        try {
+            log.info("PDF export başlatılıyor. ClientId: {}, Date: {}", clientId, date);
+
+            // Portföy raporunu al
+            Response<PortfolioReportResponse> reportResponse = getPortfolioReport(clientId, date);
+            if (reportResponse.getData() == null) {
+                throw new RuntimeException("Portföy raporu oluşturulamadı");
+            }
+
+            PortfolioReportResponse report = reportResponse.getData();
+
+            // PDF oluştur
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            com.itextpdf.text.Document document = new com.itextpdf.text.Document();
+            com.itextpdf.text.pdf.PdfWriter writer = com.itextpdf.text.pdf.PdfWriter.getInstance(document, baos);
+
+            document.open();
+
+            // Türkçe karakter desteği için font ayarları
+            com.itextpdf.text.Font titleFont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA,
+                    18, com.itextpdf.text.Font.BOLD);
+            com.itextpdf.text.Font headerFont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA,
+                    12, com.itextpdf.text.Font.BOLD);
+            com.itextpdf.text.Font normalFont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA,
+                    10, com.itextpdf.text.Font.NORMAL);
+
+            document.add(new com.itextpdf.text.Paragraph("MÜSTERI PORTFÖY RAPORU", titleFont));
+            document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+            // Rapor tarihi - Sistem simülasyon tarihi
+            document.add(new com.itextpdf.text.Paragraph("Rapor Tarihi: " +
+                    report.getReportDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), headerFont));
+            document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+            // Müşteri bilgileri
+            document.add(new com.itextpdf.text.Paragraph("Müsteri Bilgileri:", headerFont));
+            document.add(
+                    new com.itextpdf.text.Paragraph("Müsteri Numarasi: " + report.getCustomerNumber(), normalFont));
+            document.add(new com.itextpdf.text.Paragraph("Müsteri Adi: " + report.getCustomerName(), normalFont));
+            document.add(new com.itextpdf.text.Paragraph("Müsteri Tipi: " + report.getCustomerType(), normalFont));
+            document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+            // Hesap bilgileri
+            document.add(new com.itextpdf.text.Paragraph("Hesap Bilgileri:", headerFont));
+            document.add(new com.itextpdf.text.Paragraph("Hesap Numarasi: " + report.getAccountNumber(), normalFont));
+            document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+            // Portföy özeti - Hesap bakiyesi göster
+            document.add(new com.itextpdf.text.Paragraph("Portföy Özeti:", headerFont));
+            document.add(new com.itextpdf.text.Paragraph("Hesap Bakiyesi: " + report.getTlBalance() + " TL",
+                    normalFont));
+            document.add(new com.itextpdf.text.Paragraph(
+                    "Portföy Güncel Degeri: " + report.getPortfolioCurrentValue() + " TL",
+                    normalFont));
+            document.add(new com.itextpdf.text.Paragraph(
+                    "Toplam Potansiyel Kar/Zarar: " + report.getTotalPotentialProfitLoss() + " TL", normalFont));
+            document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+            // Hisse pozisyonları tablosu
+            if (report.getStockPositions() != null && !report.getStockPositions().isEmpty()) {
+                document.add(new com.itextpdf.text.Paragraph("Hisse Pozisyonları:", headerFont));
+                document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+                // Tablo oluştur - 14 sütun (SELL kolonları eklendi)
+                com.itextpdf.text.pdf.PdfPTable table = new com.itextpdf.text.pdf.PdfPTable(14);
+                table.setWidthPercentage(100);
+
+                // Tablo başlıkları - SELL kolonları eklendi
+                String[] headers = { "Hisse Kodu", "Hisse Adı", "T+0 (ALIM)", "T+1 (ALIM)", "T+2 (ALIM)",
+                        "T+0 (SATIM)", "T+1 (SATIM)", "T+2 (SATIM)", "Net Pozisyon", "Ort. Alış", "Kapanış", "Nominal",
+                        "Potansiyel Kar/Zarar", "Kar/Zarar Oranı (%)" };
+                for (String header : headers) {
+                    table.addCell(new com.itextpdf.text.Phrase(header, headerFont));
+                }
+
+                // Tablo verileri
+                for (PortfolioReportResponse.StockPositionDetail position : report.getStockPositions()) {
+                    table.addCell(new com.itextpdf.text.Phrase(position.getStockCode(), normalFont));
+                    table.addCell(new com.itextpdf.text.Phrase(position.getStockName(), normalFont));
+                    table.addCell(new com.itextpdf.text.Phrase(String.valueOf(position.getT0Quantity()), normalFont));
+                    table.addCell(new com.itextpdf.text.Phrase(String.valueOf(position.getT1Quantity()), normalFont));
+                    table.addCell(new com.itextpdf.text.Phrase(String.valueOf(position.getT2Quantity()), normalFont));
+                    table.addCell(
+                            new com.itextpdf.text.Phrase(String.valueOf(position.getT0SellQuantity()), normalFont));
+                    table.addCell(
+                            new com.itextpdf.text.Phrase(String.valueOf(position.getT1SellQuantity()), normalFont));
+                    table.addCell(
+                            new com.itextpdf.text.Phrase(String.valueOf(position.getT2SellQuantity()), normalFont));
+                    table.addCell(
+                            new com.itextpdf.text.Phrase(String.valueOf(position.getTotalQuantity()), normalFont));
+                    table.addCell(new com.itextpdf.text.Phrase(position.getBuyPrice().toString(), normalFont));
+                    table.addCell(new com.itextpdf.text.Phrase(position.getClosingPrice().toString(), normalFont));
+                    table.addCell(new com.itextpdf.text.Phrase(position.getNominalValue().toString(), normalFont));
+                    table.addCell(
+                            new com.itextpdf.text.Phrase(position.getPotentialProfitLoss().toString(), normalFont));
+                    table.addCell(
+                            new com.itextpdf.text.Phrase(position.getProfitLossRatio().toString() + "%", normalFont));
+                }
+
+                document.add(table);
+
+                // Toplam satırı
+                document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+                document.add(new com.itextpdf.text.Paragraph(
+                        "TOPLAM NOMINAL DEGER: " + report.getTotalNominalValue() + " TL", headerFont));
+                document.add(new com.itextpdf.text.Paragraph(
+                        "TOPLAM POTANSIYEL KAR/ZARAR: " + report.getTotalPotentialProfitLoss() + " TL", headerFont));
+            } else {
+                document.add(new com.itextpdf.text.Paragraph("Hisse pozisyonu bulunamadı.", normalFont));
+            }
+
+            document.close();
+
+            log.info("PDF export başarıyla tamamlandı. Boyut: {} bytes", baos.size());
+            return baos.toByteArray();
+
+        } catch (Exception e) {
+            log.error("PDF export hatası: {}", e.getMessage(), e);
+            throw new RuntimeException("PDF export hatası: " + e.getMessage());
+        }
     }
 
     @Override

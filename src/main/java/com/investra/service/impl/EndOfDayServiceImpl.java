@@ -723,8 +723,14 @@ public class EndOfDayServiceImpl implements EndOfDayService {
                     trade.getId(), trade.getTradeDate(), expectedSettlement);
 
             try {
-                transferStockToBuyer(trade);
-                log.info("Hisse transferi OK: {}", trade.getId());
+                // Emir tipine göre hisse transferi yap
+                if (trade.getOrderType() == OrderType.BUY) {
+                    transferStockToBuyer(trade);
+                    log.info("Alış hisse transferi OK: {}", trade.getId());
+                } else if (trade.getOrderType() == OrderType.SELL) {
+                    transferStockToSeller(trade);
+                    log.info("Satış hisse transferi OK: {}", trade.getId());
+                }
 
                 transferMoneyToSeller(trade);
                 log.info("Para transferi OK: {}", trade.getId());
@@ -1002,6 +1008,13 @@ public class EndOfDayServiceImpl implements EndOfDayService {
     private void transferStockToBuyer(TradeOrder trade) {
         // Alış işlemi ise portföye hisse ekle
         if (trade.getOrderType() == OrderType.BUY) {
+            portfolioService.updatePortfolioAfterSettlement(trade);
+        }
+    }
+
+    private void transferStockToSeller(TradeOrder trade) {
+        // Satış işlemi ise portföyden hisse çıkar
+        if (trade.getOrderType() == OrderType.SELL) {
             portfolioService.updatePortfolioAfterSettlement(trade);
         }
     }

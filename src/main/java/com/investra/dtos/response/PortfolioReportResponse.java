@@ -42,10 +42,15 @@ public class PortfolioReportResponse {
         private String stockCode;
         private String stockName;
 
-        // T+0, T+1, T+2 pozisyonları
+        // T+0, T+1, T+2 pozisyonları (BUY orders)
         private Integer t0Quantity;
         private Integer t1Quantity;
         private Integer t2Quantity;
+
+        // T+0, T+1, T+2 pozisyonları (SELL orders) - ayrı kolonlar
+        private Integer t0SellQuantity;
+        private Integer t1SellQuantity;
+        private Integer t2SellQuantity;
 
         // Fiyat bilgileri
         private BigDecimal buyPrice;
@@ -56,7 +61,10 @@ public class PortfolioReportResponse {
         private BigDecimal potentialProfitLoss;
         private BigDecimal profitLossRatio;
 
-        // Elde bulunan toplam adet
+        // Elde bulunan toplam adet (net pozisyon)
         private Integer totalQuantity;
+
+        // Toplam SELL miktarı
+        private Integer totalSellQuantity;
     }
 }
