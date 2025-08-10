@@ -150,9 +150,9 @@ export default function EndOfDayValution() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 p-6 space-y-6">
-      <div className="p-4 mb-4 bg-white rounded-xl shadow space-y-4">
+      <div className="p-4 mb-4 mt-4 bg-white rounded-xl shadow space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold">Gün Sonu Değerleme</h1>
+          <h1 className="text-2xl font-semibold ">Gün Sonu Değerleme</h1>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button disabled={isLoadingProcess || isLoadingInitial}>
