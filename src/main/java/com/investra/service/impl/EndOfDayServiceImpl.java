@@ -239,13 +239,13 @@ public class EndOfDayServiceImpl implements EndOfDayService {
                 client, OrderStatus.EXECUTED);
 
         // Settlement status'una göre filtrele
+        // T+2 settlement'lar PortfolioItem'dan alınıyor, tekrar ekleme
         List<TradeOrder> validTrades = executedTrades.stream()
                 .filter(trade -> trade.getSettlementStatus() == SettlementStatus.PENDING ||
-                        trade.getSettlementStatus() == SettlementStatus.T1 ||
-                        trade.getSettlementStatus() == SettlementStatus.T2)
+                        trade.getSettlementStatus() == SettlementStatus.T1)
                 .collect(Collectors.toList());
 
-        log.info("Portföy pozisyonları: {} adet, Geçerli işlemler: {} adet",
+        log.info("Portföy pozisyonları: {} adet, Geçerli işlemler (PENDING, T1): {} adet",
                 portfolioItems.size(), validTrades.size());
 
         // Eğer müşterinin hiç işlemi yoksa, sıfır değerli değerleme döndür
@@ -453,10 +453,10 @@ public class EndOfDayServiceImpl implements EndOfDayService {
                     client, OrderStatus.EXECUTED);
 
             // Settlement status'una göre filtrele
+            // T+2 settlement'lar PortfolioItem'dan alınıyor, tekrar ekleme
             List<TradeOrder> validTrades = executedTrades.stream()
                     .filter(trade -> trade.getSettlementStatus() == SettlementStatus.PENDING ||
-                            trade.getSettlementStatus() == SettlementStatus.T1 ||
-                            trade.getSettlementStatus() == SettlementStatus.T2)
+                            trade.getSettlementStatus() == SettlementStatus.T1)
                     .collect(Collectors.toList());
 
             // Eğer müşterinin hiç işlemi yoksa, değerlemeyi atla
@@ -465,8 +465,10 @@ public class EndOfDayServiceImpl implements EndOfDayService {
                 continue;
             }
 
-            log.info("Müşteri değerlemesi işleniyor: ID: {}, Ad: {}, Toplam değer: {}",
-                    client.getId(), client.getFullName(), valuation.getTotalPortfolioValue());
+            log.info(
+                    "Müşteri değerlemesi işleniyor: ID: {}, Ad: {}, Toplam değer: {}, Pozisyonlar: {} adet, İşlemler: {} adet",
+                    client.getId(), client.getFullName(), valuation.getTotalPortfolioValue(),
+                    portfolioItems.size(), validTrades.size());
 
             List<StockPositionResponse> positions = new ArrayList<>();
 
@@ -721,8 +723,14 @@ public class EndOfDayServiceImpl implements EndOfDayService {
                     trade.getId(), trade.getTradeDate(), expectedSettlement);
 
             try {
-                transferStockToBuyer(trade);
-                log.info("Hisse transferi OK: {}", trade.getId());
+                // Emir tipine göre hisse transferi yap
+                if (trade.getOrderType() == OrderType.BUY) {
+                    transferStockToBuyer(trade);
+                    log.info("Alış hisse transferi OK: {}", trade.getId());
+                } else if (trade.getOrderType() == OrderType.SELL) {
+                    transferStockToSeller(trade);
+                    log.info("Satış hisse transferi OK: {}", trade.getId());
+                }
 
                 transferMoneyToSeller(trade);
                 log.info("Para transferi OK: {}", trade.getId());
@@ -787,12 +795,12 @@ public class EndOfDayServiceImpl implements EndOfDayService {
         log.info("EXECUTED işlemler bulundu: {} adet", executedTrades.size());
 
         // Settlement status'una göre filtrele
+        // T+2 settlement'lar PortfolioItem'dan alınıyor, tekrar ekleme
         List<TradeOrder> validTrades = executedTrades.stream()
                 .filter(trade -> trade.getSettlementStatus() == SettlementStatus.PENDING ||
-                        trade.getSettlementStatus() == SettlementStatus.T1 ||
-                        trade.getSettlementStatus() == SettlementStatus.T2)
+                        trade.getSettlementStatus() == SettlementStatus.T1)
                 .collect(Collectors.toList());
-        log.info("Geçerli settlement status'undaki işlemler: {} adet", validTrades.size());
+        log.info("Geçerli settlement status'undaki işlemler (PENDING, T1): {} adet", validTrades.size());
 
         // İşlem detaylarını logla
         for (TradeOrder trade : validTrades) {
@@ -965,24 +973,48 @@ public class EndOfDayServiceImpl implements EndOfDayService {
     }
 
     private BigDecimal getInitialInvestment(Long clientId) {
-        // Bu basitleştirilmiş bir yaklaşımdır
-        // Gerçek hesaplama için, yatırım tarihçesi analiz edilmelidir
-
+        // COMPLETED settlement'lar (PortfolioItem) + EXECUTED işlemler (PENDING, T1,
+        // T2)
         BigDecimal total = BigDecimal.ZERO;
-        List<PortfolioItem> portfolioItems = portfolioItemRepository.findByClientId(clientId);
 
+        // 1. COMPLETED settlement'lar (PortfolioItem)
+        List<PortfolioItem> portfolioItems = portfolioItemRepository.findByClientId(clientId);
         for (PortfolioItem item : portfolioItems) {
             BigDecimal itemCost = item.getAvgPrice()
                     .multiply(new BigDecimal(item.getQuantity()));
             total = total.add(itemCost);
         }
 
+        // 2. EXECUTED işlemler (PENDING, T1) - COMPLETED ve T2 olmayanlar
+        // T+2 settlement'lar PortfolioItem'dan alınıyor, tekrar ekleme
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new BusinessException("Müşteri bulunamadı: " + clientId));
+
+        List<TradeOrder> executedTrades = tradeOrderRepository.findByClientAndStatus(client, OrderStatus.EXECUTED);
+        for (TradeOrder trade : executedTrades) {
+            // Sadece PENDING ve T1 settlement'ları dahil et
+            if (trade.getSettlementStatus() == SettlementStatus.PENDING ||
+                    trade.getSettlementStatus() == SettlementStatus.T1) {
+                BigDecimal tradeCost = trade.getPrice()
+                        .multiply(new BigDecimal(trade.getQuantity()));
+                total = total.add(tradeCost);
+            }
+        }
+
+        log.debug("Müşteri {} için başlangıç yatırımı hesaplandı: {}", clientId, total);
         return total;
     }
 
     private void transferStockToBuyer(TradeOrder trade) {
         // Alış işlemi ise portföye hisse ekle
         if (trade.getOrderType() == OrderType.BUY) {
+            portfolioService.updatePortfolioAfterSettlement(trade);
+        }
+    }
+
+    private void transferStockToSeller(TradeOrder trade) {
+        // Satış işlemi ise portföyden hisse çıkar
+        if (trade.getOrderType() == OrderType.SELL) {
             portfolioService.updatePortfolioAfterSettlement(trade);
         }
     }

@@ -45,4 +45,9 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     Optional<Client> findByName(@Param("name") String name);
 
     List<Client> findAllByIsActive(boolean b);
+
+    List<Client> findByStatus(com.investra.enums.ClientStatus status);
+
+    List<Client> findByClientTypeAndStatus(com.investra.enums.ClientType clientType,
+            com.investra.enums.ClientStatus status);
 }

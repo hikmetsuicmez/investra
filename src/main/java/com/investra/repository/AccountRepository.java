@@ -10,8 +10,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface AccountRepository extends JpaRepository<Account,Long> {
+public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findAllByClientId(Long clientId);
+
     Optional<Account> findByClientId(Long clientId);
 
     List<Account> findByClientIdOrderByCreatedAtDesc(Long clientId);
@@ -30,6 +31,10 @@ public interface AccountRepository extends JpaRepository<Account,Long> {
 
     @Query("SELECT COUNT(a) FROM Account a WHERE a.client.id = :clientId")
     int countAccountsByClientId(@Param("clientId") Long clientId);
+
+    // Primary settlement account'ı bul
+    @Query("SELECT a FROM Account a WHERE a.client.id = :clientId AND a.isPrimarySettlement = true")
+    Optional<Account> findPrimarySettlementAccountByClientId(@Param("clientId") Long clientId);
 
     boolean existsByIban(String iban);
 

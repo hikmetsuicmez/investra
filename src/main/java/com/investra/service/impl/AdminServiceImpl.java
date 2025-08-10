@@ -29,6 +29,7 @@ import java.util.Map;
 
 import static com.investra.service.helper.AdminOperationsValidator.duplicateResourceCheck;
 import static com.investra.mapper.UserMapper.*;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -51,7 +52,8 @@ public class AdminServiceImpl implements AdminService {
 
         try {
             log.debug("TCKN kontrolü yapılıyor");
-            duplicateResourceCheck(() -> userRepository.findByNationalityNumber(request.getNationalityNumber()).isPresent(),
+            duplicateResourceCheck(
+                    () -> userRepository.findByNationalityNumber(request.getNationalityNumber()).isPresent(),
                     "Bu TCKN ile kayıtlı bir kullanıcı mevcut", ErrorCode.OPERATION_FAILED);
 
             log.debug("Email kontrolü yapılıyor");
@@ -71,7 +73,8 @@ public class AdminServiceImpl implements AdminService {
             Map<String, Object> templateVariables = new HashMap<>();
             templateVariables.put("title", "Investra'ya Hoş Geldiniz!");
             templateVariables.put("userName", user.getFirstName() + " " + user.getLastName());
-            templateVariables.put("welcomeMessage", "Investra ailesine katıldığınız için teşekkür ederiz. Hesabınız başarıyla oluşturulmuştur.");
+            templateVariables.put("welcomeMessage",
+                    "Investra ailesine katıldığınız için teşekkür ederiz. Hesabınız başarıyla oluşturulmuştur.");
             templateVariables.put("email", user.getEmail());
             templateVariables.put("password", rawPassword);
             templateVariables.put("loginUrl", FRONTEND_URL + "/auth/login");
