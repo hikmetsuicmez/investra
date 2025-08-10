@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 public class ClientStockHoldingResponse {
 
     private Long stockId;
-    private String stockSymbol;
+    private String stockCode;
     private String stockName;
     private StockGroup stockGroup;
     private Integer availableQuantity;

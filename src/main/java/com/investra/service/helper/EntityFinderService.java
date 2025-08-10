@@ -27,22 +27,23 @@ public class EntityFinderService {
                     .orElseThrow(() -> new ClientNotFoundException(request.getClientId()));
 
             Stock stock = stockRepository.findById(request.getStockId())
-                    .orElseThrow(() -> new StockNotFoundException("Geçersiz hisse senedi ID: " + request.getStockId()));
+                    .orElseThrow(() -> new StockNotFoundException(request.getStockId()));
 
-            PortfolioItem portfolioItem = portfolioItemRepository.findByClientIdAndStockId(client.getId(), stock.getId())
-                    .orElseThrow(() -> new StockNotFoundException("Müşterinin portföyünde hisse senedi bulunamadı"));
+            PortfolioItem portfolioItem = portfolioItemRepository
+                    .findByClientIdAndStockId(client.getId(), stock.getId())
+                    .orElseThrow(() -> new StockNotFoundException(stock.getId()));
 
             Account account = accountRepository.findByClientId(client.getId())
-                    .orElseThrow(() -> new AccountNotFoundException("Müşteri hesabı bulunamadı: " + client.getId()));
+                    .orElseThrow(() -> new AccountNotFoundException(client.getId()));
 
             if (portfolioItem.getQuantity() < request.getQuantity()) {
-                throw new InsufficientStockException("Yetersiz hisse senedi miktarı: " + request.getQuantity());
+                throw new InsufficientStockException();
             }
 
             return new OrderEntities(client, stock, portfolioItem, account);
-        } catch (ClientNotFoundException | StockNotFoundException | AccountNotFoundException |
-                InsufficientStockException e) {
-            log.warn("İş kuralı hatası: {} - İstek: {}", e.getMessage(), request);
+        } catch (ClientNotFoundException | StockNotFoundException | AccountNotFoundException
+                | InsufficientStockException e) {
+            log.warn(e.getMessage());
             throw e;
         } catch (DataAccessException e) {
             log.error("Varlıklar aranırken veritabanı hatası oluştu: {}", e.getMessage());
@@ -59,16 +60,14 @@ public class EntityFinderService {
                     .orElseThrow(() -> new ClientNotFoundException(clientId));
 
             Stock stock = stockRepository.findById(stockId)
-                    .orElseThrow(() -> new StockNotFoundException("Geçersiz hisse senedi ID: " + stockId));
+                    .orElseThrow(() -> new StockNotFoundException(stockId));
 
             Account account = accountRepository.findById(accountId)
-                    .orElseThrow(() -> new AccountNotFoundException("Hesap bulunamadı: " + accountId));
+                    .orElseThrow(() -> new AccountNotFoundException(accountId));
 
             // Hesabın bu müşteriye ait olduğu kontrol edilir
             if (!account.getClient().getId().equals(clientId)) {
-                log.warn("Validasyon hatası: Hesap (id={}) belirtilen müşteriyle (id={}) eşleşmiyor.",
-                        account.getClient().getId(), clientId);
-                throw new ValidationException("Hesap belirtilen müşteriye ait değil");
+                throw new ValidationException();
             }
 
             // Portföy öğesi satış işlemi için zorunlu, alış işlemi için gerekli değil
@@ -77,8 +76,7 @@ public class EntityFinderService {
                     .orElse(null);
 
             return new OrderEntities(client, stock, portfolioItem, account);
-        } catch (ClientNotFoundException | StockNotFoundException | AccountNotFoundException |
-                ValidationException e) {
+        } catch (ClientNotFoundException | StockNotFoundException | AccountNotFoundException | ValidationException e) {
             log.warn(e.getMessage());
             throw e;
         } catch (DataAccessException e) {
@@ -93,7 +91,7 @@ public class EntityFinderService {
     public User findUserByEmail(String userEmail) {
         try {
             return userRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı: " + userEmail));
+                    .orElseThrow(() -> new UserNotFoundException(userEmail));
         } catch (UserNotFoundException e) {
             log.warn(e.getMessage());
             throw e;
@@ -105,5 +103,7 @@ public class EntityFinderService {
             throw new DatabaseOperationException("Kullanıcı aranırken beklenmeyen bir hata oluştu", e);
         }
     }
-    public record OrderEntities(Client client, Stock stock, PortfolioItem portfolioItem, Account account) {}
+
+    public record OrderEntities(Client client, Stock stock, PortfolioItem portfolioItem, Account account) {
+    }
 }

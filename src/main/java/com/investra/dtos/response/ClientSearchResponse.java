@@ -24,6 +24,7 @@ public class ClientSearchResponse {
     private ClientStatus clientStatus;
     private ClientType clientType; // BIREYSEL , KURUMSAL
     private LocalDateTime createdAt;
+    private Boolean isActive;
 
     private List<AccountSummaryResponse> accounts;
 }

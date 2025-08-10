@@ -21,7 +21,9 @@ import {
 	ChartLine,
 	ChevronDown,
 	ChevronsUpDown,
+	HomeIcon,
 	Key,
+	List,
 	ListChecks,
 	LogOut,
 	Network,
@@ -30,21 +32,44 @@ import {
 	Wallet,
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { redirect } from "next/navigation";
 
 // Example item config
 const items = [
 	{
+		label: "Ana Sayfa",
+		icon: <HomeIcon />,
+		href: "/dashboard",
+		subitems: [],
+	},
+	{
 		label: "Portföyüm",
 		icon: <Wallet />,
-		href: "/dashboard/portfolio",
-		subitems: [],
+		href: "/dashboard/portfolio-management",
+		subitems: [
+			{
+				label: "Gün Sonu Değerleme",
+				icon: <ChartLine />,
+				href: "/dashboard/portfolio-management",				
+			},
+			
+		],
 	},
 	{
 		label: "Müşteri Yönetimi",
 		icon: <Users />,
 		href: "/dashboard/customer-management",
-		subitems: [],
+		subitems: [
+			{
+				label: "Müşteri İşlemleri",
+				icon: <	List />,
+				href: "/dashboard/customer-management",
+			},
+			{
+				label: "Hesap İşlemleri",
+				icon: <	List />,
+				href: "/dashboard/customer-search",
+			}
+		],
 	},
 	{
 		label: "Personel Yönetimi",
@@ -57,14 +82,19 @@ const items = [
 		icon: <ChartLine />,
 		subitems: [
 			{
+				label: "Hisse Senedi Listeleme",
+				icon: <List />,
+				href: "/dashboard/stock-management/list",
+			},
+			{
 				label: "Hisse Senedi Alış",
 				icon: <ArrowDownCircle />,
-				href: "",
+				href: "/dashboard/stock-management/buy",
 			},
 			{
 				label: "Hisse Senedi Satış",
 				icon: <ArrowUpCircle />,
-				href: "",
+				href: "/dashboard/stock-management/sell",
 			},
 			{
 				label: "Emir Takibi",

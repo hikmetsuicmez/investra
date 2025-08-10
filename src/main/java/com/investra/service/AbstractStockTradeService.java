@@ -46,7 +46,6 @@ public abstract class AbstractStockTradeService implements StockTradeService {
 
         return Response.<List<ClientSearchResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
                 .message("Müşteri arama işlemi tamamlandı")
                 .data(responseClients)
                 .build();

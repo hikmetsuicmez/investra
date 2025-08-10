@@ -28,7 +28,7 @@ public class StockMapper {
     public static StockSellOrderPreviewResponse mapToStockSellOrderPreviewResponse(
             String accountNumber,
             String stockName,
-            String stockSymbol,
+            String stockCode,
             BigDecimal price,
             Integer quantity,
             BigDecimal totalAmount,
@@ -44,7 +44,7 @@ public class StockMapper {
         return StockSellOrderPreviewResponse.builder()
                 .accountNumber(accountNumber)
                 .stockName(stockName)
-                .stockSymbol(stockSymbol)
+                .stockSymbol(stockCode)
                 .price(price)
                 .quantity(quantity)
                 .totalAmount(totalAmount)
@@ -65,6 +65,7 @@ public class StockMapper {
         return StockResponse.builder()
                 .id(stock.getId())
                 .name(stock.getName())
+                .symbol(stock.getCode())
                 .currentPrice(stock.getPrice())
                 .stockGroup(stock.getGroup().name())
                 .isActive(stock.getIsActive())

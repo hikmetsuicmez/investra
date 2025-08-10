@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -69,10 +70,7 @@ public class TradeOrder {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
-    @Column(name = "executed_at")
-    private LocalDateTime executedAt;
-
-    // T+2 sistemi için yeni alanlar
+    // T+2 sistemi için gerekli alanlar
     @Column(name = "settled_at")
     private LocalDateTime settledAt;
 
@@ -80,18 +78,25 @@ public class TradeOrder {
     @Column(name = "settlement_status")
     private SettlementStatus settlementStatus;
 
-    @Column(name = "settlement_date")
-    private LocalDateTime settlementDate;
-
     @Column(name = "funds_reserved")
     private boolean fundsReserved;
 
-    @Column(name = "portfolio_updated")
-    private boolean portfolioUpdated;
+    // Simülasyon tabanlı T+2 sistemi
+    @Column(name = "trade_date")
+    private LocalDate tradeDate;
+
+    @Column(name = "settlement_days_remaining")
+    private Integer settlementDaysRemaining;
 
     // Rastgele duruma atama için yardımcı metot
     @Transient
     public void assignRandomStatus() {
+        assignRandomStatus(LocalDate.now());
+    }
+
+    // Belirli bir tarihle rastgele durum atama
+    @Transient
+    public void assignRandomStatus(LocalDate currentDate) {
         int randomValue = (int) (Math.random() * 100);
 
         if (this.executionType == ExecutionType.LIMIT) {
@@ -104,13 +109,60 @@ public class TradeOrder {
         } else if (randomValue < 90) {
             // %30 ihtimalle gerçekleşen emir
             this.status = OrderStatus.EXECUTED;
-            // T+2 sistemine göre 2 gün sonra takas tamamlanacak
+            // Gün bazlı T+2 sistemi için ayarlar (haftasonu yok, her zaman hafta içi)
+            this.tradeDate = currentDate;
             this.settlementStatus = SettlementStatus.PENDING;
-            this.settlementDate = LocalDateTime.now().plusSeconds(15); // Test için 15 saniye
+            this.settlementDaysRemaining = 2;
             this.fundsReserved = true;
         } else {
             // %10 ihtimalle iptal edilen emir
             this.status = OrderStatus.CANCELLED;
+            // İptal edilen emirler için settlement status'u da CANCELLED yap
+            this.settlementStatus = SettlementStatus.CANCELLED;
+            this.settlementDaysRemaining = 0;
+            this.fundsReserved = false;
+        }
+    }
+
+    // Simülasyon tarihi ile settlement kontrolü
+    @Transient
+    public boolean isReadyForSettlement(LocalDate currentSimulationDate) {
+        if (this.status != OrderStatus.EXECUTED || this.settlementStatus == SettlementStatus.COMPLETED) {
+            return false;
+        }
+
+        if (this.tradeDate == null)
+            return false;
+
+        // T+2 = trade + 2 gün, yani 3. günde settlement
+        LocalDate expectedSettlementDate = this.tradeDate.plusDays(2);
+        return !currentSimulationDate.isBefore(expectedSettlementDate);
+    }
+
+    // Settlement günlerini güncelleme (status'a göre doğru hesaplama)
+    @Transient
+    public void updateSettlementDaysRemaining(LocalDate currentSimulationDate) {
+        if (this.tradeDate != null && this.status == OrderStatus.EXECUTED) {
+            // Status'a göre doğru kalan gün sayısını hesapla
+            switch (this.settlementStatus) {
+                case PENDING:
+                    this.settlementDaysRemaining = 2;
+                    break;
+                case T1:
+                    this.settlementDaysRemaining = 1;
+                    break;
+                case T2:
+                    this.settlementDaysRemaining = 0;
+                    break;
+                case COMPLETED:
+                    this.settlementDaysRemaining = 0;
+                    break;
+                default:
+                    // Tarih bazlı hesaplama (fallback)
+                    long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(this.tradeDate,
+                            currentSimulationDate);
+                    this.settlementDaysRemaining = Math.max(0, 2 - (int) daysBetween);
+            }
         }
     }
 }

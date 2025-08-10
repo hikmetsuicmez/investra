@@ -24,7 +24,7 @@ public class OrderValidatorService {
     private final StockRepository stockRepository;
 
     private static final LocalTime MARKET_OPEN_TIME = LocalTime.of(10, 0);
-    private static final LocalTime MARKET_CLOSE_TIME = LocalTime.of(18, 0);
+    private static final LocalTime MARKET_CLOSE_TIME = LocalTime.of(23, 0);
 
     public void validateSellOrderRequest(StockSellOrderRequest request) {
         try {

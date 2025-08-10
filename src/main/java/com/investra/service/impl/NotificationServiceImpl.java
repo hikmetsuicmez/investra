@@ -9,6 +9,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,22 @@ public class NotificationServiceImpl implements NotificationService {
             helper.setTo(notificationDTO.getRecipient());
             helper.setSubject(notificationDTO.getSubject());
             helper.setText(notificationDTO.getContent(), notificationDTO.isHtml());
+
+            // Logo ekleme işlemi
+            try {
+                ClassPathResource logoResource = new ClassPathResource("static/images/logo.png");
+                if (logoResource.exists()) {
+                    helper.addInline("logoImage", logoResource);
+                    log.debug("Logo başarıyla eklendi: {}", logoResource.getFilename());
+                } else {
+                    log.warn("Logo dosyası bulunamadı: static/images/logo.png");
+                }
+            } catch (Exception e) {
+                log.error("Logo eklenirken hata oluştu: {}", e.getMessage());
+            }
+
+            log.debug("MimeMessage hazırlandı - To: {}, Subject: {}, HTML: {}",
+                    notificationDTO.getRecipient(), notificationDTO.getSubject(), notificationDTO.isHtml());
 
             javaMailSender.send(mimeMessage);
             log.info("E-posta başarıyla gönderildi - Alıcı: {}", notificationDTO.getRecipient());

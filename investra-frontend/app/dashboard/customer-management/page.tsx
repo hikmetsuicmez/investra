@@ -1,10 +1,8 @@
 "use client";
 
-import AddCustomerDialog, {
-	CorporateCustomerInfo,
-	IndividualCustomerInfo,
-} from "@/components/dashboard/customer-management/AddCustomerDialog";
+import AddCustomerDialog from "@/components/dashboard/customer-management/AddCustomerDialog";
 import CustomerTable from "@/components/dashboard/customer-management/CustomerTable";
+import { CorporateCustomerInfo, IndividualCustomerInfo } from "@/types/customers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";

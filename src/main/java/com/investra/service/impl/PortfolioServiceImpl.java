@@ -49,6 +49,16 @@ public class PortfolioServiceImpl implements PortfolioService {
             log.error("Geçersiz portföy oluşturma isteği.");
             throw new InvalidPortfolioCreateRequestException("Geçersiz portföy oluşturma isteği");
         }
+
+        Client client = clientRepository.findById(request.getClientId())
+                .orElseThrow(() -> new ClientNotFoundException("Müşteri bulunamadı: " + request.getClientId()));
+
+        Optional<Portfolio> existingPortfolio = portfolioRepository.findByClient(client);
+        if (existingPortfolio.isPresent()) {
+            throw new InvalidPortfolioCreateRequestException(
+                    "Bu müşteri için zaten bir portföy mevcut. Client ID: " + request.getClientId());
+        }
+
         Portfolio portfolio = Portfolio.builder()
                 .client(Client.builder().id(request.getClientId()).build())
                 .createdAt(LocalDateTime.now())
@@ -106,21 +116,26 @@ public class PortfolioServiceImpl implements PortfolioService {
         log.info("Portföy güncellemesi başlatılıyor. Emir ID: {}, Hisse: {}, Client ID: {}",
                  order.getId(), stockCode, clientId);
 
-        // Client'a ait portföyü bul veya oluştur
         Portfolio portfolio;
-        Optional<Portfolio> existingPortfolio = portfolioRepository.findByClient(order.getClient());
+        try {
+            Optional<Portfolio> existingPortfolio = portfolioRepository.findByClient(order.getClient());
 
-        if (existingPortfolio.isPresent()) {
-            portfolio = existingPortfolio.get();
-            log.info("Müşteriye ait mevcut portföy bulundu: {}", portfolio.getId());
-        } else {
-            log.info("Müşteriye ait portföy bulunamadı, yeni oluşturuluyor. Client ID: {}", order.getClient().getId());
-            portfolio = Portfolio.builder()
-                    .client(order.getClient())
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            portfolio = portfolioRepository.save(portfolio);
-            log.info("Yeni portföy oluşturuldu: {}", portfolio.getId());
+            if (existingPortfolio.isPresent()) {
+                portfolio = existingPortfolio.get();
+                log.info("Müşteriye ait mevcut portföy bulundu: {}", portfolio.getId());
+            } else {
+                log.info("Müşteriye ait portföy bulunamadı, yeni oluşturuluyor. Client ID: {}", order.getClient().getId());
+                portfolio = Portfolio.builder()
+                        .client(order.getClient())
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                portfolio = portfolioRepository.save(portfolio);
+                log.info("Yeni portföy oluşturuldu: {}", portfolio.getId());
+            }
+        } catch (org.springframework.dao.IncorrectResultSizeDataAccessException e) {
+            // Multiple portfolio durumu - bu durumda hata ver
+            log.error("KRITIK: Client için birden fazla portföy bulundu! Client ID: {}", clientId);
+            throw new IllegalStateException("Client için birden fazla portföy bulundu. Veri bütünlüğü problemi! Client ID: " + clientId);
         }
 
         log.info("Portföyde hisse aranıyor. Client ID: {}, Stock ID: {}",

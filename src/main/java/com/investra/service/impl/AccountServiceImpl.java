@@ -39,7 +39,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "accounts", allEntries = true)
+    // @CacheEvict(value = "accounts", allEntries = true)
     public Response<AccountResponse> createAccount(AccountCreationRequest request) {
         log.info("Yeni hesap oluşturma isteği alındı. Müşteri ID: {}", request.getClientId());
 
@@ -58,7 +58,8 @@ public class AccountServiceImpl implements AccountService {
 
         // Aracı kurum hesap numarası kontrolü
         if (accountRepository.existsByAccountNumberAtBroker(request.getAccountNumberAtBroker())) {
-            log.error("Bu hesap numarası ile kayıtlı bir hesap zaten var. Hesap No: {}", request.getAccountNumberAtBroker());
+            log.error("Bu hesap numarası ile kayıtlı bir hesap zaten var. Hesap No: {}",
+                    request.getAccountNumberAtBroker());
             throw new AccountAlreadyExistsException("Hesap Numarası", request.getAccountNumberAtBroker());
         }
 
@@ -79,7 +80,14 @@ public class AccountServiceImpl implements AccountService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // Eğer hesap Takas Hesabı ise ve müşterinin başka takas hesabı yoksa, bu hesabı primary olarak işaretle
+        // Balance ve AvailableBalance tutarlılık kontrolü
+        if (account.getBalance().compareTo(account.getAvailableBalance()) < 0) {
+            // Balance, AvailableBalance'dan küçük olamaz
+            account.setBalance(account.getAvailableBalance());
+        }
+
+        // Eğer hesap Takas Hesabı ise ve müşterinin başka takas hesabı yoksa, bu hesabı
+        // primary olarak işaretle
         if (request.getAccountType() == AccountType.SETTLEMENT) {
             List<Account> existingSettlementAccounts = accountRepository.findByClientIdAndAccountTypeAndCurrency(
                     client.getId(), AccountType.SETTLEMENT, request.getCurrency());
@@ -98,14 +106,13 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<AccountResponse>builder()
                 .statusCode(HttpStatus.CREATED.value())
-                .isSuccess(true)
                 .message("Hesap başarıyla oluşturuldu")
                 .data(accountResponse)
                 .build();
     }
 
     @Override
-    //@Cacheable(value = "accounts", key = "'client_' + #clientId")
+    // @Cacheable(value = "accounts", key = "'client_' + #clientId")
     public Response<List<AccountResponse>> getAccountsByClientId(Long clientId) {
         log.info("Müşterinin hesapları isteniyor. Müşteri ID: {}", clientId);
 
@@ -122,14 +129,13 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<List<AccountResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
                 .message("Müşteri hesapları başarıyla getirildi")
                 .data(accountResponses)
                 .build();
     }
 
     @Override
-    //@Cacheable(value = "accounts", key = "#id")
+    // @Cacheable(value = "accounts", key = "#id")
     public Response<AccountResponse> getAccountById(Long id) {
         log.info("Hesap detayları isteniyor. Hesap ID: {}", id);
 
@@ -143,7 +149,6 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<AccountResponse>builder()
                 .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
                 .message("Hesap detayları başarıyla getirildi")
                 .data(accountResponse)
                 .build();
@@ -182,7 +187,8 @@ public class AccountServiceImpl implements AccountService {
                 case "ALL":
                 default:
                     // Tüm alanlarda ara
-                    Optional<Client> byNationality = clientRepository.findByNationalityNumberContaining(request.getSearchTerm());
+                    Optional<Client> byNationality = clientRepository
+                            .findByNationalityNumberContaining(request.getSearchTerm());
                     Optional<Client> byTaxId = clientRepository.findByTaxIdContaining(request.getSearchTerm());
                     Optional<Client> byPassport = clientRepository.findByPassportNoContaining(request.getSearchTerm());
                     Optional<Client> byBlueCard = clientRepository.findByBlueCardNoContaining(request.getSearchTerm());
@@ -191,8 +197,7 @@ public class AccountServiceImpl implements AccountService {
                             byNationality.orElse(null),
                             byTaxId.orElse(null),
                             byPassport.orElse(null),
-                            byBlueCard.orElse(null)
-                    ).stream()
+                            byBlueCard.orElse(null)).stream()
                             .filter(c -> c != null)
                             .collect(Collectors.toList());
                     break;
@@ -211,7 +216,6 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<List<ClientForAccountResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
                 .message("Müşteri araması başarıyla tamamlandı")
                 .data(clientResponses)
                 .build();
@@ -222,7 +226,7 @@ public class AccountServiceImpl implements AccountService {
         log.info("Son eklenen {} müşteri isteniyor", limit);
 
         if (limit <= 0) {
-            limit = 20;  // Varsayılan limit
+            limit = 20; // Varsayılan limit
         }
 
         List<Client> clients = clientRepository.findTopNByOrderByCreatedAtDesc(limit);
@@ -239,7 +243,6 @@ public class AccountServiceImpl implements AccountService {
 
         return Response.<List<ClientForAccountResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
-                .isSuccess(true)
                 .message("Son eklenen müşteriler başarıyla getirildi")
                 .data(clientResponses)
                 .build();

@@ -6,21 +6,25 @@ import com.investra.entity.*;
 import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderStatus;
 import com.investra.enums.OrderType;
+import com.investra.enums.SettlementStatus;
 import com.investra.exception.*;
 import com.investra.mapper.StockMapper;
 import com.investra.repository.*;
 import com.investra.service.AbstractStockTradeService;
+import com.investra.service.SimulationDateService;
 import com.investra.service.StockBuyService;
 import com.investra.service.TradeOrderService;
 import com.investra.service.helper.*;
 import com.investra.service.helper.EntityFinderService.OrderEntities;
 import com.investra.service.helper.OrderCalculationService.OrderCalculation;
+import com.investra.utils.ExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +45,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
     private final PortfolioUpdateService portfolioUpdateService;
     private final OrderPreviewCacheService previewCacheService;
     private final TradeOrderService tradeOrderService;
+    private final SimulationDateService simulationDateService;
 
     public StockBuyServiceImpl(
             ClientRepository clientRepository,
@@ -53,7 +58,8 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             OrderCalculationService calculationService,
             PortfolioUpdateService portfolioUpdateService,
             OrderPreviewCacheService previewCacheService,
-            TradeOrderService tradeOrderService) {
+            TradeOrderService tradeOrderService,
+            SimulationDateService simulationDateService) {
         super(clientRepository);
         this.stockRepository = stockRepository;
         this.accountRepository = accountRepository;
@@ -65,6 +71,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
         this.portfolioUpdateService = portfolioUpdateService;
         this.previewCacheService = previewCacheService;
         this.tradeOrderService = tradeOrderService;
+        this.simulationDateService = simulationDateService;
     }
 
     @Override
@@ -76,16 +83,14 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             return Response.<List<StockResponse>>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)
                     .data(stocks.stream().map(StockMapper::toStockResponse).toList())
                     .build();
         } catch (Exception e) {
             log.error("Mevcut hisse senetleri listelenirken hata oluştu: {}", e.getMessage());
             return Response.<List<StockResponse>>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .isSuccess(false)
                     .message("Mevcut hisse senetleri listelenirken hata oluştu")
-                    .errorCode(ErrorCode.UNEXPECTED_ERROR)
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -115,9 +120,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                     OrderType.BUY);
 
             if (entities.account().getBalance().doubleValue() < calculation.netAmount().doubleValue()) {
-                log.warn("Yetersiz bakiye: hesap bakiyesi={}, gerekli tutar={}",
-                        entities.account().getBalance(), calculation.netAmount());
-                throw new InsufficientBalanceException(String.valueOf(ErrorCode.INSUFFICIENT_BALANCE));
+                throw new InsufficientBalanceException();
             }
 
             // Önizleme yanıtı oluşturulur
@@ -130,7 +133,6 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             return Response.<StockBuyOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)
                     .message("Hisse senedi alış önizlemesi başarıyla oluşturuldu")
                     .data(response)
                     .build();
@@ -138,17 +140,15 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             log.error("Error previewing buy order: {}", e.getMessage());
             return Response.<StockBuyOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .isSuccess(false)
                     .message(e.getMessage())
-                    .errorCode(e.getErrorCode())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Unexpected error previewing buy order: {}", e.getMessage(), e);
             return Response.<StockBuyOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .isSuccess(false)
                     .message("Hisse senedi alış önizlemesi oluşturulurken beklenmeyen bir hata oluştu")
-                    .errorCode(ErrorCode.UNEXPECTED_ERROR)
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -197,8 +197,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             // Hesap bakiyesi kontrol edilir
             if (entities.account().getAvailableBalance().doubleValue() < calculation.netAmount().doubleValue()) {
-                log.warn("Yetersiz bakiye. Gerekli: {}, Mevcut: {}", calculation.netAmount(), entities.account().getAvailableBalance());
-                throw new InsufficientBalanceException("Yetersiz bakiye: " + ErrorCode.INSUFFICIENT_BALANCE);
+                throw new InsufficientBalanceException();
             }
 
             // İşlemi yapan kullanıcıyı bulma
@@ -221,30 +220,25 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                     .orderNumber(calculationService.generateOrderNumber())
                     .build();
 
-            // Rastgele bir duruma atama (bekleyen, gerçekleşen, iptal)
-            tradeOrder.assignRandomStatus();
+            // Simülasyon tarihi ile trade oluştur ve durum ata (haftasonu yok)
+            LocalDate currentSimulationDate = simulationDateService.getCurrentSimulationDate();
+            tradeOrder.setTradeDate(currentSimulationDate);
+            tradeOrder.assignRandomStatus(currentSimulationDate);
 
             tradeOrder = tradeOrderRepository.save(tradeOrder);
 
             // Eğer alış emri bekleyen veya gerçekleşen ise, available balance azaltılır
             if (tradeOrder.getExecutionType() == ExecutionType.MARKET &&
-                (tradeOrder.getStatus() == OrderStatus.PENDING || tradeOrder.getStatus() == OrderStatus.EXECUTED)) {
+                    (tradeOrder.getStatus() == OrderStatus.PENDING || tradeOrder.getStatus() == OrderStatus.EXECUTED)) {
                 tradeOrderService.updateAccountBalanceForBuyOrder(entities.account(), calculation.netAmount());
             } else if (tradeOrder.getExecutionType() == ExecutionType.LIMIT &&
-                      tradeOrder.getStatus() == OrderStatus.EXECUTED) {
+                    tradeOrder.getStatus() == OrderStatus.EXECUTED) {
                 // Limit emirlerde sadece emir gerçekleştiğinde bakiyeyi güncelle
                 tradeOrderService.updateAccountBalanceForBuyOrder(entities.account(), calculation.netAmount());
             }
 
-            // Eğer emir gerçekleşti ise, portföy güncellenir
-            if (tradeOrder.getStatus() == OrderStatus.EXECUTED) {
-                portfolioUpdateService.updatePortfolioForBuy(
-                        entities.client(),
-                        entities.account(),
-                        entities.stock(),
-                        request.getQuantity(),
-                        calculation.netAmount());
-            }
+            // Portföy güncelleme SADECE T+2 settlement tamamlandığında yapılacak
+            // Burada portföy güncellemesi YOK - T+2 settlement'ta yapılacak
 
             // İşlem sonucu yanıtı oluşturulur
             StockBuyOrderResultResponse response = createBuyOrderResultResponse(tradeOrder, calculation);
@@ -255,7 +249,6 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             return Response.<StockBuyOrderResultResponse>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)
                     .data(response)
                     .message("Hisse senedi alım işlemi başarıyla gerçekleştirildi")
                     .build();
@@ -264,17 +257,15 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             log.error("Error executing buy order: {}", e.getMessage());
             return Response.<StockBuyOrderResultResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .isSuccess(false)
                     .message(e.getMessage())
-                    .errorCode(e.getErrorCode())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Unexpected error executing buy order: {}", e.getMessage(), e);
             return Response.<StockBuyOrderResultResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .isSuccess(false)
                     .message("Hisse senedi alış işlemi gerçekleştirilirken beklenmeyen bir hata oluştu")
-                    .errorCode(ErrorCode.UNEXPECTED_ERROR)
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -317,14 +308,14 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 .tradeDate(calculation.tradeDate())
                 .valueDate(calculation.valueDate())
                 .totalAmount(calculation.totalAmount())
-                .stockGroup(tradeOrder.getStock().getGroup() != null ? tradeOrder.getStock().getGroup().name() : "UNKNOWN")
+                .stockGroup(
+                        tradeOrder.getStock().getGroup() != null ? tradeOrder.getStock().getGroup().name() : "UNKNOWN")
                 .commission(calculation.commission())
                 .bsmv(calculation.bsmv())
                 .totalTaxAndCommission(calculation.totalTaxAndCommission())
                 .netAmount(calculation.netAmount())
                 .executionType(calculation.executionType())
                 .status(tradeOrder.getStatus())
-                .executionTime(tradeOrder.getExecutedAt())
                 .message("Hisse senedi alım işlemi başarıyla gerçekleştirildi")
                 .build();
     }
@@ -342,7 +333,6 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 .account(entities.account())
                 .stock(entities.stock())
                 .submittedAt(LocalDateTime.now())
-                .executedAt(LocalDateTime.now().plusDays(2))
                 .orderType(OrderType.BUY)
                 .executionType(request.getExecutionType())
                 .price(calculation.price())
@@ -353,6 +343,5 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                 .user(currentUser)
                 .build();
     }
-
 
 }

@@ -15,6 +15,7 @@ import com.investra.exception.UserNotFoundException;
 import com.investra.repository.UserRepository;
 import com.investra.security.AuthUser;
 import com.investra.security.JwtUtil;
+import com.investra.utils.ExceptionUtil;
 import com.investra.service.AuthService;
 import com.investra.service.EmailTemplateService;
 import com.investra.service.NotificationService;
@@ -99,7 +100,6 @@ public class AuthServiceImpl implements AuthService {
 
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)  // Bu eksikti!
                     .message("Giriş başarılı")
                     .data(loginResponse)
                     .build();
@@ -108,15 +108,15 @@ public class AuthServiceImpl implements AuthService {
             log.warn("Geçersiz giriş denemesi. email: {}", email);
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.UNAUTHORIZED.value())
-                    .isSuccess(false)
                     .message("E-posta veya şifre hatalı")
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Giriş işlemi sırasında beklenmeyen bir hata oluştu. email: {}, hata: {}", email, e.getMessage(), e);
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .isSuccess(false)
                     .message("Giriş işlemi sırasında bir hata oluştu")
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -158,22 +158,21 @@ public class AuthServiceImpl implements AuthService {
 
             return Response.<Void>builder()
                     .statusCode(HttpStatus.OK.value())
-                    .isSuccess(true)
                     .message("Şifreniz başarıyla değiştirildi")
                     .build();
         } catch (InvalidCredentialsException e) {
             log.warn("Şifre değiştirme hatası: {}", e.getMessage());
             return Response.<Void>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .isSuccess(false)
                     .message(e.getMessage())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
             log.error("Şifre değiştirme sırasında beklenmeyen hata: {}", e.getMessage(), e);
             return Response.<Void>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .isSuccess(false)
                     .message("Şifre değiştirme sırasında bir hata oluştu")
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
@@ -233,7 +232,6 @@ public class AuthServiceImpl implements AuthService {
                     log.info("Şifre sıfırlama işlemi tamamlandı. email: {}", user.getEmail());
                     return Response.<Void>builder()
                             .statusCode(HttpStatus.OK.value())
-                            .isSuccess(true)
                             .message("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
                             .build();
                 })
@@ -270,7 +268,6 @@ public class AuthServiceImpl implements AuthService {
 
                     return Response.<Void>builder()
                             .statusCode(HttpStatus.OK.value())
-                            .isSuccess(true)
                             .message("Şifreniz başarıyla sıfırlandı")
                             .build();
                 })

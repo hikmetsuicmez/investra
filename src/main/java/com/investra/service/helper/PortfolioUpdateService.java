@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -39,16 +40,29 @@ public class PortfolioUpdateService {
             }
         } catch (DataAccessException e) {
             log.error("Portföy güncellenirken veritabanı hatası oluştu: {}", e.getMessage());
-            throw new DatabaseOperationException("Portföy güncellenirken bir hata oluştu", e);
+            throw new DatabaseOperationException();
         } catch (Exception e) {
             log.error("Portföy güncellenirken beklenmeyen bir hata oluştu: {}", e.getMessage());
-            throw new DatabaseOperationException("Portföy güncellenirken beklenmeyen bir hata oluştu", e);
+            throw new DatabaseOperationException();
         }
     }
 
     public void updateAccountBalanceAfterSell(Account account, BigDecimal amount) {
         try {
             account.setBalance(account.getBalance().add(amount));
+
+            // Balance validation - negatif olamaz (setter'da da kontrol ediliyor ama ekstra
+            // güvenlik için)
+            if (account.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+                account.setBalance(BigDecimal.ZERO);
+            }
+
+            // Balance ve AvailableBalance tutarlılık kontrolü
+            if (account.getBalance().compareTo(account.getAvailableBalance()) < 0) {
+                // Balance, AvailableBalance'dan küçük olamaz
+                account.setBalance(account.getAvailableBalance());
+            }
+
             accountRepository.save(account);
         } catch (DataAccessException e) {
             log.error("Hesap bakiyesi güncellenirken veritabanı hatası oluştu: {}", e.getMessage());
@@ -59,7 +73,8 @@ public class PortfolioUpdateService {
         }
     }
 
-    public void updatePortfolioForBuy(Client client, Account account, Stock stock, int quantity, BigDecimal totalAmount) {
+    public void updatePortfolioForBuy(Client client, Account account, Stock stock, int quantity,
+            BigDecimal totalAmount) {
         try {
             // Hesap bakiyesi güncellenir (tutar düşülür)
             updateAccountBalanceAfterBuy(account, totalAmount);
@@ -67,17 +82,31 @@ public class PortfolioUpdateService {
             // Portföy güncellenir
             updateOrCreatePortfolioItem(client, stock, quantity);
 
-            log.info("Alış işlemi sonrası portföy ve hesap bakiyesi güncellendi. Müşteri ID: {}, Hisse: {}, Miktar: {}, Tutar: {}",
+            log.info(
+                    "Alış işlemi sonrası portföy ve hesap bakiyesi güncellendi. Müşteri ID: {}, Hisse: {}, Miktar: {}, Tutar: {}",
                     client.getId(), stock.getCode(), quantity, totalAmount);
         } catch (Exception e) {
             log.error("Alış işlemi sonrası güncelleme yapılırken hata oluştu: {}", e.getMessage());
-            throw new DatabaseOperationException("Alış işlemi sonrası güncelleme yapılırken hata oluştu", e);
+            throw new DatabaseOperationException();
         }
     }
 
     private void updateAccountBalanceAfterBuy(Account account, BigDecimal amount) {
         try {
             account.setBalance(account.getBalance().subtract(amount));
+
+            // Balance validation - negatif olamaz (setter'da da kontrol ediliyor ama ekstra
+            // güvenlik için)
+            if (account.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+                account.setBalance(BigDecimal.ZERO);
+            }
+
+            // Balance ve AvailableBalance tutarlılık kontrolü
+            if (account.getBalance().compareTo(account.getAvailableBalance()) < 0) {
+                // Balance, AvailableBalance'dan küçük olamaz
+                account.setBalance(account.getAvailableBalance());
+            }
+
             accountRepository.save(account);
             log.info("Hesap bakiyesi güncellendi: {} - {}", account.getAccountNumber(), amount);
         } catch (DataAccessException e) {
@@ -98,18 +127,31 @@ public class PortfolioUpdateService {
 
             if (portfolioItem != null) {
                 // Varsa miktarı güncellenir
-                portfolioItem.setQuantity(portfolioItem.getQuantity() + quantity);
+                int newQuantity = portfolioItem.getQuantity() + quantity;
+                portfolioItem.setQuantity(newQuantity);
                 portfolioItem.setLastUpdated(LocalDateTime.now());
-                log.info("Portföy öğesi güncellendi. ID: {}, Yeni miktar: {}",
-                        portfolioItem.getId(), portfolioItem.getQuantity());
+                log.debug("Portföy öğesi güncellendi. ID: {}, Önceki miktar: {}, Yeni miktar: {}",
+                        portfolioItem.getId(), portfolioItem.getQuantity() - quantity, newQuantity);
             } else {
                 // Yoksa yeni bir portföy öğesi oluşturulur
-                Portfolio portfolio = portfolioRepository.findByClientId(client.getId())
-                        .orElseThrow(() -> new IllegalStateException("Müşterinin portföyü bulunamadı: " + client.getId()));
+
+                // DÜZELTME: List olarak al ve ilkini kullan
+                List<Portfolio> portfolios = portfolioRepository.findAllByClientId(client.getId());
+
+                if (portfolios.isEmpty()) {
+                    throw new IllegalStateException("Müşterinin portföyü bulunamadı: " + client.getId());
+                }
+
+                if (portfolios.size() > 1) {
+                    log.warn("Müşteri için birden fazla portföy bulundu: {}. İlki kullanılıyor.", client.getId());
+                }
+
+                Portfolio portfolio = portfolios.get(0); // İlk portföyü kullan
 
                 // Müşterinin hesabını repository üzerinden bulalım
                 Account account = accountRepository.findByClientId(client.getId())
-                        .orElseThrow(() -> new IllegalStateException("Müşterinin hesabı bulunamadı: " + client.getId()));
+                        .orElseThrow(
+                                () -> new IllegalStateException("Müşterinin hesabı bulunamadı: " + client.getId()));
 
                 portfolioItem = PortfolioItem.builder()
                         .account(account)

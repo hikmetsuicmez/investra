@@ -1,5 +1,7 @@
 package com.investra.service;
 
+import com.investra.dtos.response.Response;
+import com.investra.dtos.response.TradeOrderDTO;
 import com.investra.entity.*;
 import com.investra.enums.*;
 import com.investra.repository.*;
@@ -117,10 +119,10 @@ public class TradeOrderServiceTest {
         when(notificationRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
 
         // Act
-        TradeOrder cancelledOrder = tradeOrderService.cancelOrder(1L, "username");
+        Response<TradeOrderDTO> cancelledOrder = tradeOrderService.cancelOrder(1L, "username");
 
         // Assert
-        assertEquals(OrderStatus.CANCELLED, cancelledOrder.getStatus());
+        assertEquals(OrderStatus.CANCELLED, cancelledOrder.getStatusCode());
         verify(notificationRepository, times(1)).save(any(Notification.class));
         verify(accountRepository, times(1)).save(account);
     }
@@ -137,7 +139,7 @@ public class TradeOrderServiceTest {
         when(tradeOrderRepository.findByUserOrderBySubmittedAtDesc(user))
                 .thenReturn(List.of(order1, order2));
 
-        List<TradeOrder> orders = tradeOrderService.getAllOrdersByUser("username");
+        List<TradeOrderDTO> orders = tradeOrderService.getAllOrdersByUser("username");
 
         assertEquals(2, orders.size());
         verify(userRepository).findByUsername("username");
@@ -155,7 +157,7 @@ public class TradeOrderServiceTest {
         when(tradeOrderRepository.findByUserAndStatusOrderBySubmittedAtDesc(user, OrderStatus.PENDING))
                 .thenReturn(List.of(order1, order2));
 
-        List<TradeOrder> orders = tradeOrderService.getOrdersByStatusAndUser("username", OrderStatus.PENDING);
+        List<TradeOrderDTO> orders = tradeOrderService.getOrdersByStatusAndUser("username", OrderStatus.PENDING);
 
         assertEquals(2, orders.size());
         verify(userRepository).findByUsername("username");
