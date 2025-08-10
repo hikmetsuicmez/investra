@@ -19,15 +19,14 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
 
     @Override
     public String processTemplate(String templateName, Map<String, Object> variables) {
-        log.debug("processTemplate() çağrıldı - templateName: {}", templateName);
+        log.info("processTemplate() çağrıldı - templateName: {}", templateName);
 
         try {
             Context context = new Context();
 
             if (variables != null) {
                 log.info("Şablona aktarılacak {} adet değişken bulundu.", variables.size());
-                         variables.forEach((key, value) -> log.trace("Değişken - {}: {}", key, value));
-                         variables.forEach(context::setVariable);
+                         variables.forEach((key, value) -> log.info("Değişken - {}: {}", key, value));
                 variables.forEach(context::setVariable);
             }else {
             log.info("Şablon için değişken listesi boş ya da null.");

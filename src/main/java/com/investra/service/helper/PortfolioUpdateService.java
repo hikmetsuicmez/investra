@@ -108,7 +108,7 @@ public class PortfolioUpdateService {
             }
 
             accountRepository.save(account);
-            log.debug("Hesap bakiyesi güncellendi: {} - {}", account.getAccountNumber(), amount);
+            log.info("Hesap bakiyesi güncellendi: {} - {}", account.getAccountNumber(), amount);
         } catch (DataAccessException e) {
             log.error("Hesap bakiyesi güncellenirken veritabanı hatası oluştu: {}", e.getMessage());
             throw new DatabaseOperationException("Hesap bakiyesi güncellenirken bir hata oluştu", e);

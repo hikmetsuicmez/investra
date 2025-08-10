@@ -57,7 +57,6 @@ export default function BuyStockPreviewDialog({
 			toast(result.message);
 
 			if (res.ok) {
-				console.log(result);
 				setPreviewResults(result.data);
 			} else {
 				setPreviewFailed(true);
