@@ -53,7 +53,7 @@ export default function SearchAccountByClientId() {
 
   const handleAction = (accountId: number, action: "deposit" | "withdrawal") => {
     setActiveDropdown(null);
-    router.push(`/accounts/${clientId}/account/${accountId}/${action}`);
+    router.push(`/dashboard/account-management/accounts/${clientId}/account/${accountId}/${action}`);
   };
     return (
     <div className="p-6 space-y-4">

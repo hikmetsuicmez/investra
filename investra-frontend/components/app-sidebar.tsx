@@ -44,14 +44,32 @@ const items = [
 	{
 		label: "Portföyüm",
 		icon: <Wallet />,
-		href: "/dashboard/portfolio",
-		subitems: [],
+		href: "/dashboard/portfolio-management",
+		subitems: [
+			{
+				label: "Gün Sonu Değerleme",
+				icon: <ChartLine />,
+				href: "/dashboard/portfolio-management",				
+			},
+			
+		],
 	},
 	{
 		label: "Müşteri Yönetimi",
 		icon: <Users />,
 		href: "/dashboard/customer-management",
-		subitems: [],
+		subitems: [
+			{
+				label: "Müşteri İşlemleri",
+				icon: <	List />,
+				href: "/dashboard/customer-management",
+			},
+			{
+				label: "Hesap İşlemleri",
+				icon: <	List />,
+				href: "/dashboard/customer-search",
+			}
+		],
 	},
 	{
 		label: "Personel Yönetimi",

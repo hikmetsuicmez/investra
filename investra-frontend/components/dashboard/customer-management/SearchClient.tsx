@@ -63,7 +63,7 @@ export default function SearchClientBySearchTerm () {
 
   function handleSelectCustomer() {
     if (client?.id) {
-      router.push(`/dashboard/account-selection/${client.id}`);
+      router.push(`/dashboard/account-management/account-selection/${client.id}`);
 
     }
   }
@@ -72,6 +72,9 @@ export default function SearchClientBySearchTerm () {
   <div className="flex flex-col h-screen bg-gray-100 p-6 space-y-6">
     <div className="flex justify-between items-center p-4 mb-4 flex-shrink-0 bg-white rounded-xl shadow">
       <h1 className="text-2xl font-semibold">Müşteri Arama</h1>
+    </div>
+      <div className="flex justify-between items-center p-4 mb-4 rounded-xl ">
+      <h6 >İşlem yapmak istediğiniz müşteriyi bilgileri girerek arayınız</h6>
     </div>
 
     <div className="bg-white rounded-xl shadow p-6 space-y-4">
@@ -119,7 +122,7 @@ export default function SearchClientBySearchTerm () {
           <div>Vergi No</div>
           <div>Telefon</div>
           <div>E-posta</div>
-          <div>Durum</div>
+          <div className="pl-10">Durum</div>
           <div></div>
         </div>
 
@@ -132,13 +135,13 @@ export default function SearchClientBySearchTerm () {
           <div>{client.taxId || "-"}</div>
           <div>{client.phone || "-"}</div>
           <div>{client.email || "-"}</div>
-          <div className={client.isActive ? "text-green-600" : "text-red-600"}>
+          <div className={client.isActive ? "text-green-600 pl-10" : "text-red-600 pl-10"}>
             {client.isActive ? "Aktif" : "Pasif"}
           </div>
           <div>
             <Button
               className="text-xs px-4 py-1"
-              onClick={() => router.push(`/accounts/${client.id}/create-account`)}
+              onClick={() => router.push(`/dashboard/account-management/accounts/${client.id}/create-account`)}
             >
               Hesap Aç
             </Button>
