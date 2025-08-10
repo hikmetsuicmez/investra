@@ -21,13 +21,15 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     @Override
     public void commence(HttpServletRequest request,
-                         HttpServletResponse response,
-                         AuthenticationException authException)
+            HttpServletResponse response,
+            AuthenticationException authException)
             throws IOException, ServletException {
 
         Response<?> errorResponse = Response.builder()
-                .statusCode(HttpStatus.UNAUTHORIZED.value()) // 401 error code
-                .message(authException.getMessage())
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .message("Bu işlem için giriş yapmanız gerekmektedir")
+                .errorCode(ErrorCode.UNAUTHORIZED)
+                .success(false)
                 .build();
 
         response.setContentType("application/json");

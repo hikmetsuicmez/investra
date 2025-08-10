@@ -118,7 +118,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
                     OrderType.BUY);
 
             if (entities.account().getBalance().doubleValue() < calculation.netAmount().doubleValue()) {
-                throw new InsufficientBalanceException(String.valueOf(ErrorCode.INSUFFICIENT_BALANCE));
+                throw new InsufficientBalanceException();
             }
 
             // Önizleme yanıtı oluşturulur
@@ -138,7 +138,6 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             log.error("Error previewing buy order: {}", e.getMessage());
             return Response.<StockBuyOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .isSuccess(false)
                     .message(e.getMessage())
                     .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
@@ -146,7 +145,6 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
             log.error("Unexpected error previewing buy order: {}", e.getMessage(), e);
             return Response.<StockBuyOrderPreviewResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .isSuccess(false)
                     .message("Hisse senedi alış önizlemesi oluşturulurken beklenmeyen bir hata oluştu")
                     .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
@@ -191,7 +189,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
 
             // Hesap bakiyesi kontrol edilir
             if (entities.account().getAvailableBalance().doubleValue() < calculation.netAmount().doubleValue()) {
-                throw new InsufficientBalanceException("Yetersiz bakiye: " + ErrorCode.INSUFFICIENT_BALANCE);
+                throw new InsufficientBalanceException();
             }
 
             // İşlemi yapan kullanıcıyı bulma

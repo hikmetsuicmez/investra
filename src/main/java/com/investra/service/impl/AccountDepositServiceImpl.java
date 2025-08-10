@@ -66,6 +66,21 @@ public class AccountDepositServiceImpl implements AccountDepositService {
             account.setBalance(previousBalance.add(request.getAmount()));
             account.setAvailableBalance(account.getAvailableBalance().add(request.getAmount()));
 
+            // Balance validation - negatif olamaz (setter'da da kontrol ediliyor ama ekstra
+            // güvenlik için)
+            if (account.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+                account.setBalance(BigDecimal.ZERO);
+            }
+            if (account.getAvailableBalance().compareTo(BigDecimal.ZERO) < 0) {
+                account.setAvailableBalance(BigDecimal.ZERO);
+            }
+
+            // Balance ve AvailableBalance tutarlılık kontrolü
+            if (account.getBalance().compareTo(account.getAvailableBalance()) < 0) {
+                // Balance, AvailableBalance'dan küçük olamaz
+                account.setBalance(account.getAvailableBalance());
+            }
+
             // Hesabı kaydet
             accountRepository.save(account);
 
@@ -117,28 +132,28 @@ public class AccountDepositServiceImpl implements AccountDepositService {
 
     private Client findClientById(Long clientId) {
         return clientRepository.findById(clientId)
-                .orElseThrow(() -> new ClientNotFoundException("Müşteri bulunamadı: ID=" + clientId));
+                .orElseThrow(() -> new ClientNotFoundException(clientId));
     }
 
     private Account findAccountById(Long accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Hesap bulunamadı: ID=" + accountId));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
     }
 
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı: Email=" + email));
+                .orElseThrow(() -> new UserNotFoundException(email));
     }
 
     private void validateClientAccount(Client client, Account account) {
         if (!account.getClient().getId().equals(client.getId())) {
-            throw new AccountNotFoundException("Hesap belirtilen müşteriye ait değil");
+            throw new AccountNotFoundException(account.getId());
         }
     }
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("Geçersiz tutar: Tutar sıfırdan büyük olmalıdır");
+            throw new InvalidAmountException();
         }
     }
 
