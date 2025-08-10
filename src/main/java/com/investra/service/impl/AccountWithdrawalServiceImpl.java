@@ -44,18 +44,24 @@ public class AccountWithdrawalServiceImpl implements AccountWithdrawalService {
     @Transactional
     public Response<WithdrawalResponse> withdrawFromAccount(WithdrawalRequest request, String userEmail) {
         try {
+            log.info("Hesaptan para çekme işlemi başlatıldı. Kullanıcı email: {}", userEmail);
             // Müşteri ve hesap kontrolleri
             Client client = findClientById(request.getClientId());
             Account account = findAccountById(request.getAccountId());
             User user = findUserByEmail(userEmail);
 
             // Müşteri-hesap ilişkisi kontrolü
+            log.info("Müşteri-hesap ilişkisi doğrulanıyor. Client ID: {}, Account ID: {}",
+                    client.getId(), account.getId());
             validateClientAccount(client, account);
 
             // Tutar kontrolü
+            log.info("Tutar kontrolü yapılıyor. Çekilecek tutar: {}", request.getAmount());
             validateAmount(request.getAmount());
 
             // Kullanılabilir bakiye kontrolü (EN ÖNEMLİ KONTROL)
+            log.info("Kullanılabilir bakiye kontrol ediliyor. Mevcut bakiye: {}, Mevcut kullanılabilir bakiye: {}",
+                    account.getBalance(), account.getAvailableBalance());
             validateAvailableBalance(account, request.getAmount());
 
             // İşlem tarihi kontrolü ve varsayılan değer atama

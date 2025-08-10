@@ -44,7 +44,9 @@ public class PortfolioServiceImpl implements PortfolioService {
 
     @Override
     public Response<PortfolioDTO> createPortfolio(PortfolioCreateRequest request) {
+        log.info("createPortfolio metodu çağrıldı. İstek verisi: {}", request);
         if (request == null || request.getClientId() == null) {
+            log.error("Geçersiz portföy oluşturma isteği.");
             throw new InvalidPortfolioCreateRequestException("Geçersiz portföy oluşturma isteği");
         }
 
@@ -63,6 +65,7 @@ public class PortfolioServiceImpl implements PortfolioService {
                 .build();
 
         Portfolio savedPortfolio = portfolioRepository.save(portfolio);
+        log.info("Portföy başarıyla veritabanına kaydedildi. Portfolio ID: {}", savedPortfolio.getId());
 
         PortfolioDTO portfolioDTO = PortfolioDTO.builder()
                 .id(savedPortfolio.getId())
@@ -82,21 +85,33 @@ public class PortfolioServiceImpl implements PortfolioService {
     @Override
     public void updatePortfolioAfterSettlement(TradeOrder order) {
         if (order == null) {
+            log.error("Emir bilgisi null geldi. Portföy güncelleme işlemi başlatılamıyor.");
             throw new IllegalArgumentException("Emir bilgisi boş olamaz");
         }
         Long stockId = order.getStock().getId();
         String stockCode = order.getStock().getCode();
         Long accountId = order.getAccount().getId();
         Long clientId = order.getClient().getId();
+        log.info("Emir bilgileri: Emir ID: {}, Hisse: {}, Hesap ID: {}, Client ID: {}",
+                order.getId(), stockCode, accountId, clientId);
 
         Stock stock = stockRepository.findById(stockId)
-                .orElseThrow(() -> new StockNotFoundException("Hisse senedi bulunamadı: " + stockId));
+                .orElseThrow(() -> {
+                    log.error("Hisse senedi bulunamadı. Stock ID: {}", stockId);
+                    return new StockNotFoundException("Hisse senedi bulunamadı: " + stockId);
+                });
 
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Hesap bulunamadı: " + accountId));
+                .orElseThrow(() -> {
+                    log.error("Hesap bulunamadı. Account ID: {}", accountId);
+                    return new AccountNotFoundException("Hesap bulunamadı: " + accountId);
+                });
 
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new ClientNotFoundException("Müşteri bulunamadı: " + clientId));
+                .orElseThrow(() -> {
+                    log.error("Müşteri bulunamadı. Client ID: {}", clientId);
+                    return new ClientNotFoundException("Müşteri bulunamadı: " + clientId);
+                });
 
         log.info("Portföy güncellemesi başlatılıyor. Emir ID: {}, Hisse: {}, Client ID: {}",
                  order.getId(), stockCode, clientId);
@@ -138,8 +153,10 @@ public class PortfolioServiceImpl implements PortfolioService {
 
         try {
             if (order.getOrderType() == OrderType.BUY) {
+                log.info("Alım emri işleniyor. Emir ID: {}", order.getId());
                 processBuyOrder(order, existingItemOpt, portfolio, account, stock);
             } else if (order.getOrderType() == OrderType.SELL) {
+                log.info("Satım emri işleniyor. Emir ID: {}", order.getId());
                 processSellOrder(order, existingItemOpt, portfolio, account, stock);
             } else {
                 log.warn("Bilinmeyen emir tipi: {}", order.getOrderType());

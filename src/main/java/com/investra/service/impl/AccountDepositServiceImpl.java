@@ -43,12 +43,20 @@ public class AccountDepositServiceImpl implements AccountDepositService {
     @Transactional
     public Response<DepositResponse> depositToAccount(DepositRequest request, String userEmail) {
         try {
+            log.info("Bakiye yükleme işlemi başlatıldı. Kullanıcı: {}, Müşteri ID: {}, Hesap ID: {}, Tutar: {}",
+                    userEmail, request.getClientId(), request.getAccountId(), request.getAmount());
+
             // Müşteri ve hesap kontrolleri
+            log.info("Müşteri ve hesap bilgileri kontrol ediliyor. Client ID: {}, Account ID: {}, Tutar: {}",
+                    request.getClientId(), request.getAccountId(), request.getAmount());
+
             Client client = findClientById(request.getClientId());
             Account account = findAccountById(request.getAccountId());
             User user = findUserByEmail(userEmail);
 
             // Müşteri-hesap ilişkisi kontrolü
+            log.info("Müşteri-hesap ilişkisi doğrulanıyor. Client ID: {}, Account ID: {}",
+                    client.getId(), account.getId());
             validateClientAccount(client, account);
 
             // Tutar kontrolü

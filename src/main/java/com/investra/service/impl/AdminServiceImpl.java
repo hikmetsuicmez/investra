@@ -3,6 +3,7 @@ package com.investra.service.impl;
 import com.investra.dtos.request.CreateUserRequest;
 import com.investra.dtos.request.UpdateUserRequest;
 import com.investra.dtos.response.*;
+import com.investra.utils.ExceptionUtil;
 import com.investra.entity.User;
 import com.investra.enums.NotificationType;
 import com.investra.exception.ErrorCode;
@@ -12,9 +13,8 @@ import com.investra.repository.UserRepository;
 import com.investra.service.AdminService;
 import com.investra.service.EmailTemplateService;
 import com.investra.service.NotificationService;
-import com.investra.utils.ExceptionUtil;
-import com.investra.utils.PasswordGenerator;
-import com.investra.utils.EmployeeNumberGenerator;
+import com.investra.service.helper.PasswordGenerator;
+import com.investra.service.helper.EmployeeNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.investra.utils.AdminOperationsValidator.duplicateResourceCheck;
+import static com.investra.service.helper.AdminOperationsValidator.duplicateResourceCheck;
 import static com.investra.mapper.UserMapper.*;
 @Service
 @RequiredArgsConstructor
@@ -62,7 +62,6 @@ public class AdminServiceImpl implements AdminService {
             String rawPassword = PasswordGenerator.generatePassword(10);
             String encodedPassword = passwordEncoder.encode(rawPassword);
 
-            log.debug("User nesnesi oluşturuluyor ve kaydediliyor");
             User user = toEntity(request, encodedPassword, generatedEmployeeNumber);
             user.setActive(true);
             user.setCreatedAt(LocalDateTime.now());
@@ -77,7 +76,6 @@ public class AdminServiceImpl implements AdminService {
             templateVariables.put("password", rawPassword);
             templateVariables.put("loginUrl", FRONTEND_URL + "/auth/login");
 
-            log.debug("Email içeriği hazırlanıyor");
             String emailContent = emailTemplateService.processTemplate("user-welcome", templateVariables);
 
             NotificationDTO notificationDTO = NotificationDTO.builder()
@@ -89,7 +87,6 @@ public class AdminServiceImpl implements AdminService {
                     .build();
 
             try {
-                log.debug("Email gönderimi başlatılıyor: {}", user.getEmail());
                 notificationService.sendEmail(notificationDTO);
                 log.info("Email başarıyla gönderildi: {}", user.getEmail());
             } catch (Exception e) {
@@ -133,11 +130,11 @@ public class AdminServiceImpl implements AdminService {
                         log.warn(msg);
                         return new IllegalArgumentException(msg);
                     });
-            log.debug("Kullanıcı bulundu. employeeNumber: {} - Güncelleme başlatılıyor", employeeNumber);
+            log.info("Kullanıcı bulundu. employeeNumber: {} - Güncelleme başlatılıyor", employeeNumber);
 
             updateFields(user, request);
             userRepository.save(user);
-            log.debug("Kullanıcı veritabanına kaydedildi. employeeNumber: {}", employeeNumber);
+            log.info("Kullanıcı veritabanına kaydedildi. employeeNumber: {}", employeeNumber);
 
             UpdateUserResponse response = toUpdateResponse(user);
             log.info("Kullanıcı başarıyla güncellendi. employeeNumber: {}", employeeNumber);
@@ -223,7 +220,7 @@ public class AdminServiceImpl implements AdminService {
                     .data(List.of())
                     .build();
         }
-        log.debug("Kullanıcılar başarıyla alındı. Toplam kullanıcı sayısı: {}", users.size());
+        log.info("Kullanıcılar başarıyla alındı. Toplam kullanıcı sayısı: {}", users.size());
         List<UserDTO> userDTOS = users.stream()
                 .map(UserMapper::toUserDTO)
                 .toList();
@@ -240,9 +237,10 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public Response<UserDTO> retrieveUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-        log.info("retrieveUser çağrıldı. Kullanıcı ID: {}", userId);
-        log.debug("Kullanıcı bulundu. ID: {}, Email: {}", user.getId(), user.getEmail());
+                .orElseThrow(() -> {
+                    log.warn("Kullanıcı bulunamadı: {}", userId);
+                    return new UserNotFoundException(userId);
+                });
 
         UserDTO userDTO = UserMapper.toUserDTO(user);
         return Response.<UserDTO>builder()

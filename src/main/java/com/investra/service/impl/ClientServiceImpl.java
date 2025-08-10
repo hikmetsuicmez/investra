@@ -34,7 +34,7 @@ import java.util.*;
 
 import static com.investra.mapper.ClientMapper.mapToEntity;
 import static com.investra.mapper.ClientMapper.mapToResponse;
-import static com.investra.utils.AdminOperationsValidator.duplicateResourceCheck;
+import static com.investra.service.helper.AdminOperationsValidator.duplicateResourceCheck;
 
 @Service
 @Slf4j
@@ -64,17 +64,23 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
     @Transactional
     public Response<CreateClientResponse> createClient(CreateClientRequest request, String userEmail) {
         try {
+            log.info("Müşteri oluşturma işlemi başlatıldı. Kullanıcı: {}, Müşteri Tipi: {}",
+                    userEmail, request.getClass().getSimpleName());
+
             if (request instanceof CreateIndividualClientRequest individualRequest) {
                 return createIndividualClient(individualRequest, userEmail);
             } else if (request instanceof CreateCorporateClientRequest corporateRequest) {
                 return createCorporateClient(corporateRequest, userEmail);
             } else {
+                log.warn("Geçersiz müşteri tipi ile oluşturma denemesi yapıldı. Tip: {}", request.getClass().getName());
+
                 return Response.<CreateClientResponse>builder()
                         .statusCode(400)
                         .message("Geçersiz müşteri tipi")
                         .build();
             }
         } catch (IllegalArgumentException e) {
+            log.error("Müşteri oluşturma hatası (geçersiz argüman): {}", e.getMessage(), e);
             return Response.<CreateClientResponse>builder()
                     .statusCode(400)
                     .message(e.getMessage())
@@ -129,6 +135,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
         client.setIsActive(true);
         client.setCreatedAt(LocalDateTime.now());
         clientRepository.save(client);
+        log.info("Bireysel müşteri oluşturuldu. ID: {}, Email: {}", client.getId(), client.getEmail());
 
         CreateClientResponse response = mapToResponse(request);
 
@@ -146,12 +153,15 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
         duplicateResourceCheck(() -> clientRepository.findByTaxNumber(request.getTaxNumber()).isPresent(), "Bu vergi numarası ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı: " + userEmail));
-
+                .orElseThrow(() -> {
+                        log.warn("Kullanıcı bulunamadı: id={} ",userEmail);
+                        return new UserNotFoundException("Kullanıcı bulunamadı: id= " + userEmail);
+                        });
         Client client = mapToEntity(request, user);
         client.setIsActive(true);
         client.setCreatedAt(LocalDateTime.now());
         clientRepository.save(client);
+        log.info("Kurumsal müşteri oluşturuldu. ID: {}, Vergi No: {}", client.getId(), request.getTaxNumber());
 
         CreateClientResponse response = mapToResponse(request);
 
@@ -165,7 +175,10 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
     @Override
     public Client findEntityById(Long id) {
         return clientRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Müşteri bulunamadı: id=" + id));
+                .orElseThrow(() -> {
+                    log.warn("Müşteri bulunamadı: id={}", id);
+                    return new EntityNotFoundException("Müşteri bulunamadı: id=" + id);
+                });
     }
 
 
@@ -268,7 +281,6 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
             Map<String, Object> templateVariables = new HashMap<>();
             templateVariables.put("userName", client.getFullName());
             templateVariables.put("deactivationMessage", "Hesabınız talebiniz doğrultusunda inaktif hale getirilmiştir.");
-            log.debug("Email içeriği hazırlanıyor");
             String emailContent = emailTemplateService.processTemplate("client-deactivation-info", templateVariables);
 
             NotificationDTO notificationDTO = NotificationDTO.builder()
