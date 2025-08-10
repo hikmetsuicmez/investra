@@ -44,7 +44,6 @@ export default function SearchClientBySearchTerm () {
       });
 
       const data = await res.json();
-      console.log(data)
       if (res.ok && data.client) {
         setClient(data.client);
         setNotFound(false);
@@ -79,7 +78,7 @@ export default function SearchClientBySearchTerm () {
 
     <div className="bg-white rounded-xl shadow p-6 space-y-4">
       <p className="text-xs text-muted-foreground">
-        TCKN • VKN • Pasaport No • Mavi Kart No
+        Müşteri Ad - Soyad • Müşteri Numarası
       </p>
 
       <div className="flex items-center gap-4">
@@ -98,12 +97,9 @@ export default function SearchClientBySearchTerm () {
             <SelectValue placeholder="Arama Tipi" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="TCKN">TCKN</SelectItem>
-            <SelectItem value="VERGI_ID">Vergi Kimlik No</SelectItem>
-            <SelectItem value="MAVI_KART_NO">Mavi Kart No</SelectItem>
-            <SelectItem value="PASSPORT_NO">Pasaport No</SelectItem>
-            <SelectItem value="VERGI_NO">Vergi No</SelectItem>
-            <SelectItem value="ISIM">İsim</SelectItem>
+            <SelectItem value="ISIM">Ad - Soyad</SelectItem>
+            <SelectItem value="MUSTERI_NUMARASI">Müşteri Numarası</SelectItem>
+            
           </SelectContent>
         </Select>
 
@@ -126,9 +122,10 @@ export default function SearchClientBySearchTerm () {
           <div></div>
         </div>
 
-    <div 
-      className="grid grid-cols-8 items-center p-4 hover:bg-gray-100 transition cursor-pointer" 
-      onClick={handleSelectCustomer}>
+        <div 
+          className="grid grid-cols-8 items-center p-4 hover:bg-gray-100 transition cursor-pointer" 
+          onClick={handleSelectCustomer}
+        >
           <div>{client.fullName}</div>
           <div>{client.id}</div>
           <div>{client.nationalityNumber}</div>
@@ -141,7 +138,10 @@ export default function SearchClientBySearchTerm () {
           <div>
             <Button
               className="text-xs px-4 py-1"
-              onClick={() => router.push(`/dashboard/account-management/accounts/${client.id}/create-account`)}
+              onClick={(e) => {
+                e.stopPropagation(); // Satır tıklamasını engelle
+                router.push(`/dashboard/account-management/accounts/${client.id}/create-account`);
+              }}
             >
               Hesap Aç
             </Button>

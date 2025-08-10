@@ -53,13 +53,13 @@ public abstract class AbstractStockTradeService implements StockTradeService {
 
     protected Function<String, Optional<Client>> getStringOptionalFunction(ClientSearchRequest request) {
         Map<String, Function<String, Optional<Client>>> searchStrategy = Map.of(
+                "MUSTERI_NUMARASI",clientRepository::findByClientNumber,
                 "TCKN", clientRepository::findByNationalityNumber,
                 "VERGI_ID", clientRepository::findByTaxId,
                 "MAVI_KART_NO", clientRepository::findByBlueCardNo,
                 "PASSPORT_NO", clientRepository::findByPassportNo,
                 "VERGI_NO", clientRepository::findByTaxNumber,
-                "ISIM", this::findClientByName
-        );
+                "ISIM", term -> clientRepository.findByFullNameOrCompanyName(term, term)        );
 
         return searchStrategy.get(request.getSearchType());
     }

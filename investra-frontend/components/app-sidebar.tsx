@@ -49,7 +49,8 @@ const items = [
 			{
 				label: "Gün Sonu Değerleme",
 				icon: <ChartLine />,
-				href: "/dashboard/portfolio-management",				
+				href: "/dashboard/portfolio-management"
+				
 			},
 			
 		],

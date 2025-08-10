@@ -190,20 +190,6 @@ export default function Withdrawal({
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
-
-            <Alert variant="warning" className="border-l-4 border-yellow-500">
-              <AlertTitle>Önemli Bilgi:</AlertTitle>
-              <AlertDescription>
-                - Bakiye tutarının ilk önce paranın olduğu yatırım hesabından
-                çıkış yapmış olması gerekmektedir.
-                <br />
-                - Çıkış bakiyesi "Kullanılabilir Bakiye" tutarından büyük
-                olamaz.
-                <br />- Para birimi seçilen hesaba göre otomatik olarak
-                belirlenir.
-              </AlertDescription>
-            </Alert>
-
             {error && <p className="text-sm text-red-500">{error}</p>}
 
             <div className="flex justify-between">

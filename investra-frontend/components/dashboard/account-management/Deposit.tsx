@@ -120,14 +120,6 @@ export default function Deposit({ clientId, accountId }: { clientId: string; acc
 							/>
 						</div>
 
-						<Alert className="border-l-4 border-yellow-500">
-							<AlertTitle>Önemli Bilgi:</AlertTitle>
-							<AlertDescription>
-								Bakiye yükleme işlemi, yatırım hesabındaki mevcut bakiye durumuna göre değerlendirilir. Eğer yeterli
-								bakiye yoksa provizyon alma seçeneği sunulacaktır.
-							</AlertDescription>
-						</Alert>
-
 						{error && <p className="text-sm text-red-500">{error}</p>}
 
 						<div className="flex justify-between">

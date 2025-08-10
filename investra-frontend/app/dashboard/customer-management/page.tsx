@@ -10,23 +10,23 @@ import { useEffect, useState } from "react";
 
 export default function CustomerManagement() {
 	const [openDialog, setOpenDialog] = useState(false);
-	const [customers, setCustomers] = useState<(IndividualCustomerInfo | CorporateCustomerInfo)[]>([]);
+	const [activeCustomers, setActiveCustomers] = useState<(IndividualCustomerInfo | CorporateCustomerInfo)[]>([]);
 
 	async function fetchCustomers() {
 		try {
 			const [activeRes, passiveRes] = await Promise.all([
 				fetch("/api/clients/active-clients"),
-				fetch("/api/clients/passive-clients"),
+				//fetch("/api/clients/passive-clients"),
 			]);
 
-			if (!activeRes.ok || !passiveRes.ok) {
-				throw new Error("Failed to fetch one or both customer lists");
-			}
+			// if (!activeRes.ok || !passiveRes.ok) {
+			// 	throw new Error("Failed to fetch one or both customer lists");
+			// }
 
 			const activeData = await activeRes.json();
-			const passiveData = await passiveRes.json();
+			//const passiveData = await passiveRes.json();
 
-			setCustomers([...(activeData.data || []), ...(passiveData.data || [])]);
+			setActiveCustomers([...(activeData.data || [])]);
 		} catch (error) {
 			console.error("Error fetching customers:", error);
 		}
@@ -48,7 +48,7 @@ export default function CustomerManagement() {
 
 			<Card className="flex-grow flex flex-col overflow-hidden">
 				<CardContent className="flex-grow overflow-auto">
-					<CustomerTable customers={customers} />
+					<CustomerTable customers={activeCustomers} />
 				</CardContent>
 			</Card>
 

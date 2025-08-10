@@ -69,7 +69,7 @@ public class ClientController implements ClientApiDocs {
     public ResponseEntity<Response<ClientSearchResponse>> findClient(@RequestBody ClientSearchRequest request) {
         Response<List<ClientSearchResponse>> searchResponse = clientService.searchClients(request);
         List<ClientSearchResponse> clients = searchResponse.getData();
-
+    
         if (clients == null || clients.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Response.<ClientSearchResponse>builder()
