@@ -26,7 +26,7 @@ export default function SearchAccountByClientId() {
           `/api/accounts/get-accounts?clientId=${clientId}`
         );
         const data = await res.json();
-
+        console.log("aaaaaaaaaaaaa",data)
         if (res.ok && data.accounts) {
           setAccounts(data.accounts);
         } else {
@@ -53,7 +53,7 @@ export default function SearchAccountByClientId() {
 
   const handleAction = (accountId: number, action: "deposit" | "withdrawal") => {
     setActiveDropdown(null);
-    router.push(`/accounts/${clientId}/account/${accountId}/${action}`);
+    router.push(`/dashboard/account-management/accounts/${clientId}/account/${accountId}/${action}`);
   };
     return (
     <div className="p-6 space-y-4">
@@ -72,7 +72,6 @@ export default function SearchAccountByClientId() {
             <div>Hesap No</div>
             <div>Bakiye</div>
             <div>Oluşturulma</div>
-            <div>Durum</div>
             <div>İşlem</div>
           </div>
 
@@ -84,12 +83,6 @@ export default function SearchAccountByClientId() {
               <div>{account.accountNumber}</div>
               <div>{account.balance} ₺</div>
               <div>{new Date(account.createdAt).toLocaleDateString()}</div>
-              <div
-                className={account.isActive ? "text-green-600" : "text-red-600"}
-              >
-                {account.isActive ? "Aktif" : "Pasif"}
-              </div>
-
               <div>
                 <button
                   onClick={() => toggleDropdown(account.id)}

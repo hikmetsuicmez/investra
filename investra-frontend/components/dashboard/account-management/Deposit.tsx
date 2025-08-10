@@ -131,8 +131,11 @@ export default function Deposit({ clientId, accountId }: { clientId: string; acc
 						{error && <p className="text-sm text-red-500">{error}</p>}
 
 						<div className="flex justify-between">
-							<Button type="button" variant="outline">
-								Geri Dön
+							<Button
+							type="button"
+							variant="outline"
+							onClick={() => router.back()}>
+							Geri Dön
 							</Button>
 							<Button type="submit" disabled={isLoading}>
 								{isLoading ? "Yükleniyor..." : "✓ Onayla"}
