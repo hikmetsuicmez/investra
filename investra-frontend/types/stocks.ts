@@ -136,3 +136,19 @@ export type BuyStockPreviewDialogProps = {
 	selectedAccount: Account;
 	executionType: ExecutionType;
 };
+
+export type TradeOrder = {
+	id: number;
+	clientId: number;
+	clientFullName: string;
+	stockCode: string;
+	orderType: string;
+	quantity: number;
+	price: number;
+	status: string;
+	submittedAt: string;
+	settledAt: string | null;
+	settlementStatus: string;
+	tradeDate: string;
+	settlementDaysRemaining: number;
+};

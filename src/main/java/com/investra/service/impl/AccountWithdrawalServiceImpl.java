@@ -18,7 +18,7 @@ import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.TransactionRepository;
 import com.investra.repository.UserRepository;
-import com.investra.utils.ExceptionUtil;
+import com.investra.service.helper.ExceptionUtil;
 import com.investra.service.AccountWithdrawalService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

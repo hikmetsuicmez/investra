@@ -3,7 +3,7 @@ package com.investra.service.impl;
 import com.investra.dtos.request.CreateUserRequest;
 import com.investra.dtos.request.UpdateUserRequest;
 import com.investra.dtos.response.*;
-import com.investra.utils.ExceptionUtil;
+import com.investra.service.helper.ExceptionUtil;
 import com.investra.entity.User;
 import com.investra.enums.NotificationType;
 import com.investra.exception.ErrorCode;
