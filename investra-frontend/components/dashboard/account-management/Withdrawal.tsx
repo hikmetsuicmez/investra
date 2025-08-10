@@ -128,7 +128,7 @@ export default function Withdrawal({
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <Card className="w-full max-w-10xl shadow-md border min-h-[600px]">
+      <Card className="w-full max-w-10xl shadow-md border">
         <CardHeader>
           <CardTitle>Bakiye Çıkış İşlemi</CardTitle>
           <CardDescription>
