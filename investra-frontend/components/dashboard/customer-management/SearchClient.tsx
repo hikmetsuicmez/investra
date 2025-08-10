@@ -112,7 +112,7 @@ export default function SearchClientBySearchTerm () {
 
     {client && (
       <div className="bg-white rounded-xl shadow overflow-auto border">
-        <div className="grid grid-cols-8 font-semibold bg-gray-100 p-4 text-sm md:text-base">
+        <div className="grid grid-cols-8 font-semibold bg-gray-100 p-4 text-sm md:text-base" >
           <div>Ad Soyad</div>
           <div>Müşteri No</div>
           <div>TCKN</div>
@@ -123,7 +123,9 @@ export default function SearchClientBySearchTerm () {
           <div></div>
         </div>
 
-        <div className="grid grid-cols-8 items-center p-4 hover:bg-gray-50 transition">
+    <div 
+      className="grid grid-cols-8 items-center p-4 hover:bg-gray-100 transition cursor-pointer" 
+      onClick={handleSelectCustomer}>
           <div>{client.fullName}</div>
           <div>{client.id}</div>
           <div>{client.nationalityNumber}</div>

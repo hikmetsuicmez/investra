@@ -72,7 +72,6 @@ export default function SearchAccountByClientId() {
             <div>Hesap No</div>
             <div>Bakiye</div>
             <div>Oluşturulma</div>
-            <div>Durum</div>
             <div>İşlem</div>
           </div>
 
@@ -84,12 +83,6 @@ export default function SearchAccountByClientId() {
               <div>{account.accountNumber}</div>
               <div>{account.balance} ₺</div>
               <div>{new Date(account.createdAt).toLocaleDateString()}</div>
-              <div
-                className={account.isActive ? "text-green-600" : "text-red-600"}
-              >
-                {account.isActive ? "Aktif" : "Pasif"}
-              </div>
-
               <div>
                 <button
                   onClick={() => toggleDropdown(account.id)}
