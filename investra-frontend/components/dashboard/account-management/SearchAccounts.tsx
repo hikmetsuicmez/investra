@@ -51,7 +51,8 @@ export default function SearchAccountByClientId() {
     }
   };
 
-  const handleAction = (accountId: number, action: "deposit" | "withdrawal") => {
+  const handleAction = (accountId: number, action: "deposit" | "withdrawal" | "get-account-info"
+) => {
     setActiveDropdown(null);
     router.push(`/dashboard/account-management/accounts/${clientId}/account/${accountId}/${action}`);
   };
@@ -95,6 +96,12 @@ export default function SearchAccountByClientId() {
 
                 {activeDropdown === account.id && (
                   <div className="absolute  bg-white border rounded shadow-lg z-10 w-40">
+                    <button
+                      onClick={() => handleAction(account.id, "get-account-info")}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      Hesap Detayı
+                    </button>
                     <button
                       onClick={() => handleAction(account.id, "deposit")}
                       className="block w-full text-left px-4 py-2 hover:bg-gray-100"
