@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 interface CreateCustomerAccountProps {
   clientId: string;
@@ -88,6 +89,8 @@ export default function CreateCustomerAccount({ clientId }: CreateCustomerAccoun
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
+      <SimulationDateDisplay />
+      
       <Card>
         <CardHeader>
           <CardTitle>Portföy Yöneticisi Hesap Açma</CardTitle>

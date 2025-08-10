@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Account } from "./Account";
 import { useRouter } from "next/navigation";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function SearchAccountByClientId() {
   const { clientId } = useParams();
@@ -57,6 +58,8 @@ export default function SearchAccountByClientId() {
   };
     return (
     <div className="p-6 space-y-4">
+      <SimulationDateDisplay />
+      
       <h1 className="text-2xl font-semibold">Müşteri Hesapları</h1>
 
       {isLoading && <p>Yükleniyor...</p>}

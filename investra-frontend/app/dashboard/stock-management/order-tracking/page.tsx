@@ -23,6 +23,7 @@ import {
 import TradeOrderDetails from "@/components/dashboard/stock-management/order-tracking/TradeOrderDetails";
 import { toast } from "sonner";
 import CancelOrderDialog from "@/components/dashboard/stock-management/order-tracking/CancelOrderDialog";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function OrderTracking() {
 	const [allTradeOrders, setTradeAllOrders] = useState<TradeOrder[]>([]);
@@ -70,6 +71,8 @@ export default function OrderTracking() {
 
 	return (
 		<div className="flex flex-col h-screen bg-gray-100 p-6 gap-6">
+			<SimulationDateDisplay />
+			
 			<div className="flex justify-between items-center p-4 flex-shrink-0">
 				<h1 className="text-2xl font-semibold">Emir Takibi</h1>
 			</div>

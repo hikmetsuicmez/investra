@@ -23,6 +23,7 @@ import {
   AlertDialogFooter,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function Withdrawal({
   clientId,
@@ -128,6 +129,8 @@ export default function Withdrawal({
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
+      <SimulationDateDisplay />
+      
       <Card className="w-full max-w-10xl shadow-md border">
         <CardHeader>
           <CardTitle>Bakiye Çıkış İşlemi</CardTitle>
