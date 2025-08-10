@@ -27,7 +27,6 @@ export default function SearchAccountByClientId() {
           `/api/accounts/get-accounts?clientId=${clientId}`
         );
         const data = await res.json();
-        console.log("aaaaaaaaaaaaa",data)
         if (res.ok && data.accounts) {
           setAccounts(data.accounts);
         } else {
@@ -95,7 +94,7 @@ export default function SearchAccountByClientId() {
                 </button>
 
                 {activeDropdown === account.id && (
-                  <div className="absolute right-0 mt-8 bg-white border rounded shadow-lg z-10 w-40">
+                  <div className="absolute  bg-white border rounded shadow-lg z-10 w-40">
                     <button
                       onClick={() => handleAction(account.id, "deposit")}
                       className="block w-full text-left px-4 py-2 hover:bg-gray-100"
