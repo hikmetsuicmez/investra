@@ -16,7 +16,7 @@ import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.repository.UserRepository;
-import com.investra.utils.ExceptionUtil;
+import com.investra.service.helper.ExceptionUtil;
 import com.investra.service.AbstractStockTradeService;
 import com.investra.service.ClientService;
 import com.investra.service.EmailTemplateService;

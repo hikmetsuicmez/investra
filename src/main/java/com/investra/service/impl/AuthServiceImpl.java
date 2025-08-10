@@ -15,7 +15,7 @@ import com.investra.exception.UserNotFoundException;
 import com.investra.repository.UserRepository;
 import com.investra.security.AuthUser;
 import com.investra.security.JwtUtil;
-import com.investra.utils.ExceptionUtil;
+import com.investra.service.helper.ExceptionUtil;
 import com.investra.service.AuthService;
 import com.investra.service.EmailTemplateService;
 import com.investra.service.NotificationService;

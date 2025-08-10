@@ -18,8 +18,8 @@ export const SellStockSelector: React.FC<StockSelectorProps> = ({ selectedStock,
 		const res = await fetch(`/api/stocks/sell/client/${clientId}/stocks`);
 		if (!res.ok) throw new Error("Failed to fetch stocks");
 		const data = await res.json();
-		setStocks(data.data || []);
-		setSelectedStock(data.data[0]);
+		setStocks(data || []);
+		setSelectedStock(data[0]);
 	}
 
 	useEffect(() => {
@@ -27,6 +27,12 @@ export const SellStockSelector: React.FC<StockSelectorProps> = ({ selectedStock,
 		fetchStocks();
 		setLoading(false);
 	}, []);
+
+	useEffect(() => {
+		setLoading(true);
+		fetchStocks();
+		setLoading(false);
+	}, [clientId]);
 
 	useEffect(() => {
 		if (selectedStock && stocks.length) {
