@@ -24,7 +24,7 @@ public class OrderValidatorService {
     private final StockRepository stockRepository;
 
     private static final LocalTime MARKET_OPEN_TIME = LocalTime.of(10, 0);
-    private static final LocalTime MARKET_CLOSE_TIME = LocalTime.of(23, 0);
+    private static final LocalTime MARKET_CLOSE_TIME = LocalTime.of(18, 0);
 
     public void validateSellOrderRequest(StockSellOrderRequest request) {
         try {
@@ -108,9 +108,9 @@ public class OrderValidatorService {
             }
 
             // Borsa açık mı kontrolü
-            if (!isMarketOpen()) {
-                throw new ValidationException("Borsa şu anda kapalı. İşlem saatleri: 10:00 - 18:00");
-            }
+//            if (!isMarketOpen()) {
+//                throw new ValidationException("Borsa şu anda kapalı. İşlem saatleri: 10:00 - 18:00");
+//            }
 
             // Hisse senedi aktif mi kontrolü
             if (!entities.stock().getIsActive()) {
@@ -129,9 +129,9 @@ public class OrderValidatorService {
 
     public void validateOrderExecution(Long stockId) {
         // Borsa açık mı kontrolü
-        if (!isMarketOpen()) {
-            throw new ValidationException("Borsa şu anda kapalı. İşlem saatleri: 10:00 - 18:00");
-        }
+//        if (!isMarketOpen()) {
+//            throw new ValidationException("Borsa şu anda kapalı. İşlem saatleri: 10:00 - 18:00");
+//        }
 
         // Hisse senedi aktif mi kontrolü
         Stock stock = stockRepository.findById(stockId)

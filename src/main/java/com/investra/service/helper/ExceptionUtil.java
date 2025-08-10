@@ -3,7 +3,8 @@ package com.investra.service.helper;
 import com.investra.exception.*;
 
 public class ExceptionUtil {
-    private ExceptionUtil() {}
+    private ExceptionUtil() {
+    }
 
     public static ErrorCode getErrorCode(Exception e) {
         if (e instanceof ClientNotFoundException) {

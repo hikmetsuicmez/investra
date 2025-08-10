@@ -7,12 +7,14 @@ import com.investra.dtos.response.ClientForAccountResponse;
 import com.investra.dtos.response.Response;
 import com.investra.entity.Account;
 import com.investra.entity.Client;
+import com.investra.entity.Portfolio;
 import com.investra.enums.AccountType;
 import com.investra.exception.AccountAlreadyExistsException;
 import com.investra.exception.ClientNotFoundException;
 import com.investra.mapper.AccountMapper;
 import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
+import com.investra.repository.PortfolioRepository;
 import com.investra.service.AccountService;
 import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final ClientRepository clientRepository;
+    private final PortfolioRepository portfolioRepository;
 
     @Override
     @Transactional
@@ -101,6 +104,20 @@ public class AccountServiceImpl implements AccountService {
         // Hesabı kaydet
         account = accountRepository.save(account);
         log.info("Yeni hesap başarıyla oluşturuldu. Hesap ID: {}", account.getId());
+
+        // Müşteri için otomatik portfolio oluştur (eğer yoksa)
+        try {
+            if (!portfolioRepository.findByClient(client).isPresent()) {
+                Portfolio portfolio = Portfolio.builder()
+                        .client(client)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                portfolioRepository.save(portfolio);
+                log.info("Müşteri için otomatik portfolio oluşturuldu. Portfolio ID: {}", portfolio.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Portfolio otomatik oluşturulurken hata: {}. Manuel oluşturulması gerekebilir.", e.getMessage());
+        }
 
         AccountResponse accountResponse = AccountMapper.toAccountResponse(account);
 

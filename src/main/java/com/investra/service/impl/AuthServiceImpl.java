@@ -63,9 +63,7 @@ public class AuthServiceImpl implements AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
-                            loginRequest.getPassword()
-                    )
-            );
+                            loginRequest.getPassword()));
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             log.debug("Authentication başarılı. email: {}", userDetails.getUsername());
@@ -112,7 +110,8 @@ public class AuthServiceImpl implements AuthService {
                     .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
-            log.error("Giriş işlemi sırasında beklenmeyen bir hata oluştu. email: {}, hata: {}", email, e.getMessage(), e);
+            log.error("Giriş işlemi sırasında beklenmeyen bir hata oluştu. email: {}, hata: {}", email, e.getMessage(),
+                    e);
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("Giriş işlemi sırasında bir hata oluştu")
@@ -204,8 +203,10 @@ public class AuthServiceImpl implements AuthService {
                     try {
                         Map<String, Object> templateVariables = new HashMap<>();
                         templateVariables.put("title", "Şifre Sıfırlama İsteği");
-                        templateVariables.put("userName", user.getFirstName() != null ? user.getFirstName() : "Değerli Kullanıcımız");
-                        templateVariables.put("message", "Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için aşağıdaki butona tıklayın.");
+                        templateVariables.put("userName",
+                                user.getFirstName() != null ? user.getFirstName() : "Değerli Kullanıcımız");
+                        templateVariables.put("message",
+                                "Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için aşağıdaki butona tıklayın.");
                         templateVariables.put("actionUrl", resetLink);
                         templateVariables.put("actionText", "Şifremi Sıfırla");
                         templateVariables.put("expiryTime", "24 saat");
@@ -225,8 +226,10 @@ public class AuthServiceImpl implements AuthService {
                         log.info("Şifre sıfırlama email başarıyla gönderildi. email: {}", user.getEmail());
 
                     } catch (NotificationException e) {
-                        log.error("Email gönderimi sırasında hata oluştu. email: {}, hata: {}", user.getEmail(), e.getMessage(), e);
-                        throw new NotificationException("Şifre sıfırlama e-postası gönderilirken bir hata oluştu: " + e.getMessage());
+                        log.error("Email gönderimi sırasında hata oluştu. email: {}, hata: {}", user.getEmail(),
+                                e.getMessage(), e);
+                        throw new NotificationException(
+                                "Şifre sıfırlama e-postası gönderilirken bir hata oluştu: " + e.getMessage());
                     }
 
                     log.info("Şifre sıfırlama işlemi tamamlandı. email: {}", user.getEmail());
@@ -236,7 +239,8 @@ public class AuthServiceImpl implements AuthService {
                             .build();
                 })
                 .orElseThrow(() -> {
-                    log.error("Beklenmeyen hata: Kullanıcı bulunamamasına rağmen map bloğuna girildi. email: {}", email);
+                    log.error("Beklenmeyen hata: Kullanıcı bulunamamasına rağmen map bloğuna girildi. email: {}",
+                            email);
                     return new IllegalStateException("Bu hata asla oluşmamalı - Kontrol zaten yapıldı");
                 });
     }
