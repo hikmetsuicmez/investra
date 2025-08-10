@@ -57,7 +57,7 @@ export default function SellStockPreviewDialog({
 			toast(result.message);
 
 			if (res.ok) {
-				console.log(result);
+				setPreviewFailed(false);
 				setPreviewResults(result.data);
 			} else {
 				setPreviewFailed(true);
@@ -126,7 +126,7 @@ export default function SellStockPreviewDialog({
 							<p className="font-semibold">{previewResults.stockName + " " + previewResults.stockSymbol}</p>
 
 							<p className="text-gray-500">İşlem Türü:</p>
-							<p className="font-semibold">{previewResults.operation}</p>
+							<p className="font-semibold">Satış</p>
 
 							<p className="text-gray-500">Fiyat:</p>
 							<p className="font-semibold">{previewResults.price} TL</p>
