@@ -176,9 +176,6 @@ export default function BuyStockPreviewDialog({
 							<p className="font-semibold">{previewResults.valueDate}</p>
 
 							<p className="text-gray-500">Hisse Grubu:</p>
-							<p className="font-semibold">{previewResults.stockGroup}</p>
-
-							<p className="text-gray-500">Kategori:</p>
 							<p className="font-semibold">{selectedStock.category}</p>
 						</div>
 						<DialogFooter>

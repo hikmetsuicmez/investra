@@ -56,7 +56,7 @@ export default function StockSell() {
 		setCost(newCost);
 		setCommission(newCommission);
 		setBsmv(newBsmv);
-		setTotalCost(newCost + newCommission + newBsmv);
+		setTotalCost(newCost - newCommission - newBsmv);
 	};
 
 	const handleTotalCostChange = (tc: number) => {
@@ -68,7 +68,7 @@ export default function StockSell() {
 		const newCost = safeQuantity * price;
 		const newCommission = newCost * 0.002;
 		const newBsmv = newCommission * 0.05;
-		const newTotalCost = newCost + newCommission + newBsmv;
+		const newTotalCost = newCost - newCommission - newBsmv;
 
 		setQuantity(safeQuantity);
 		setCost(newCost);
@@ -151,7 +151,7 @@ export default function StockSell() {
 			setCost(newCost);
 			setCommission(newCommission);
 			setBsmv(newBsmv);
-			setTotalCost(newCost + newCommission + newBsmv);
+			setTotalCost(newCost - newCommission - newBsmv);
 		}
 	}, [price, quantity]);
 
