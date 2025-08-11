@@ -32,6 +32,5 @@ public class CreateCorporateClientRequest extends CreateClientRequest {
     private String sector;
 
     @Positive(message = "Ciro pozitif bir değer olmalıdır")
-    @NotNull(message = "Ciro zorunludur")
     private BigDecimal monthlyRevenue;
 }

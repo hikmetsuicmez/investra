@@ -30,6 +30,7 @@ public class StockBuyServiceImplTest {
     @Mock private StockRepository stockRepository;
     @Mock private AccountRepository accountRepository;
     @Mock private PortfolioItemRepository portfolioItemRepository;
+    @Mock private PortfolioRepository portfolioRepository;
     @Mock private TradeOrderRepository tradeOrderRepository;
 
     @Mock private OrderValidatorService validatorService;
@@ -51,6 +52,7 @@ public class StockBuyServiceImplTest {
                 stockRepository,
                 accountRepository,
                 portfolioItemRepository,
+                portfolioRepository,
                 tradeOrderRepository,
                 validatorService,
                 entityFinderService,

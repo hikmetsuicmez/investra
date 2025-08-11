@@ -15,7 +15,7 @@ import com.investra.exception.UserNotFoundException;
 import com.investra.repository.UserRepository;
 import com.investra.security.AuthUser;
 import com.investra.security.JwtUtil;
-import com.investra.utils.ExceptionUtil;
+import com.investra.service.helper.ExceptionUtil;
 import com.investra.service.AuthService;
 import com.investra.service.EmailTemplateService;
 import com.investra.service.NotificationService;
@@ -63,9 +63,7 @@ public class AuthServiceImpl implements AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
-                            loginRequest.getPassword()
-                    )
-            );
+                            loginRequest.getPassword()));
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             log.debug("Authentication başarılı. email: {}", userDetails.getUsername());
@@ -92,7 +90,6 @@ public class AuthServiceImpl implements AuthService {
             log.info("Kullanıcı bilgileri güncellendi. email: {}", user.getEmail());
 
             String token = jwtUtil.generateToken(user.getEmail());
-            log.debug("JWT token üretildi. email: {}", user.getEmail());
 
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setToken(token);
@@ -113,7 +110,8 @@ public class AuthServiceImpl implements AuthService {
                     .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         } catch (Exception e) {
-            log.error("Giriş işlemi sırasında beklenmeyen bir hata oluştu. email: {}, hata: {}", email, e.getMessage(), e);
+            log.error("Giriş işlemi sırasında beklenmeyen bir hata oluştu. email: {}, hata: {}", email, e.getMessage(),
+                    e);
             return Response.<LoginResponse>builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("Giriş işlemi sırasında bir hata oluştu")
@@ -185,7 +183,7 @@ public class AuthServiceImpl implements AuthService {
         boolean emailExists = userRepository.findByEmail(email).isPresent();
 
         if (!emailExists) {
-            log.info("Şifre s��fırlama isteği yapılan email bulunamadı: {}", email);
+            log.info("Şifre sıfırlama isteği yapılan email bulunamadı: {}", email);
             throw new UserNotFoundException("Bu e-posta adresi ile kayıtlı bir kullanıcı bulunamadı");
         }
 
@@ -200,20 +198,20 @@ public class AuthServiceImpl implements AuthService {
                     user.setPasswordResetTokenExpiry(tokenExpiry);
                     userRepository.save(user);
 
-                    log.debug("Şifre sıfırlama token'ı oluşturuldu ve kaydedildi. email: {}, token: {}", user.getEmail(), resetToken);
-
                     String resetLink = FRONTEND_URL + "/auth" + RESET_PASSWORD_URL + resetToken;
 
                     try {
                         Map<String, Object> templateVariables = new HashMap<>();
                         templateVariables.put("title", "Şifre Sıfırlama İsteği");
-                        templateVariables.put("userName", user.getFirstName() != null ? user.getFirstName() : "Değerli Kullanıcımız");
-                        templateVariables.put("message", "Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için aşağıdaki butona tıklayın.");
+                        templateVariables.put("userName",
+                                user.getFirstName() != null ? user.getFirstName() : "Değerli Kullanıcımız");
+                        templateVariables.put("message",
+                                "Hesabınız için bir şifre sıfırlama talebi aldık. Şifrenizi sıfırlamak için aşağıdaki butona tıklayın.");
                         templateVariables.put("actionUrl", resetLink);
                         templateVariables.put("actionText", "Şifremi Sıfırla");
                         templateVariables.put("expiryTime", "24 saat");
 
-                        log.debug("Şifre sıfırlama email içeriği hazırlanıyor. email: {}", user.getEmail());
+                        log.info("Şifre sıfırlama email içeriği hazırlanıyor. email: {}", user.getEmail());
                         String emailContent = emailTemplateService.processTemplate("password-reset", templateVariables);
 
                         NotificationDTO notificationDTO = NotificationDTO.builder()
@@ -224,13 +222,14 @@ public class AuthServiceImpl implements AuthService {
                                 .isHtml(true)
                                 .build();
 
-                        log.info("Şifre sıfırlama email gönderiliyor. email: {}", user.getEmail());
                         notificationService.sendEmail(notificationDTO);
                         log.info("Şifre sıfırlama email başarıyla gönderildi. email: {}", user.getEmail());
 
                     } catch (NotificationException e) {
-                        log.error("Email gönderimi sırasında hata oluştu. email: {}, hata: {}", user.getEmail(), e.getMessage(), e);
-                        throw new NotificationException("Şifre sıfırlama e-postası gönderilirken bir hata oluştu: " + e.getMessage());
+                        log.error("Email gönderimi sırasında hata oluştu. email: {}, hata: {}", user.getEmail(),
+                                e.getMessage(), e);
+                        throw new NotificationException(
+                                "Şifre sıfırlama e-postası gönderilirken bir hata oluştu: " + e.getMessage());
                     }
 
                     log.info("Şifre sıfırlama işlemi tamamlandı. email: {}", user.getEmail());
@@ -240,7 +239,8 @@ public class AuthServiceImpl implements AuthService {
                             .build();
                 })
                 .orElseThrow(() -> {
-                    log.error("Beklenmeyen hata: Kullanıcı bulunamamasına rağmen map bloğuna girildi. email: {}", email);
+                    log.error("Beklenmeyen hata: Kullanıcı bulunamamasına rağmen map bloğuna girildi. email: {}",
+                            email);
                     return new IllegalStateException("Bu hata asla oluşmamalı - Kontrol zaten yapıldı");
                 });
     }
@@ -263,7 +263,6 @@ public class AuthServiceImpl implements AuthService {
                     return isValid;
                 })
                 .map(user -> {
-                    log.debug("Token geçerli. Şifre güncelleniyor. email: {}", user.getEmail());
                     user.setPassword(passwordEncoder.encode(request.getPassword()));
 
                     user.setPasswordResetToken(null);

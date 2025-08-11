@@ -26,7 +26,6 @@ export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDia
 		name: "",
 		surname: "",
 		nationalId: "",
-		registrationNumber: "",
 		phone: "",
 		email: "",
 		role: "VIEWER",
@@ -41,7 +40,6 @@ export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDia
 			return (
 				employee.name.trim() !== "" &&
 				employee.surname.trim() !== "" &&
-				employee.registrationNumber.trim() !== "" &&
 				isValidEmail &&
 				isValidPhone &&
 				isValidNationalId
@@ -69,11 +67,16 @@ export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDia
 			if (response.ok) {
 				setUserCreateFail(false);
 				setUserCreateSuccess(true);
-
-				setTimeout(() => {
-					setIsSendingForm(false);
-					onOpenChange(false);
-				}, 1000);
+				setEmployee({
+					name: "",
+					surname: "",
+					nationalId: "",
+					phone: "",
+					email: "",
+					role: "VIEWER",
+				});
+				setIsSendingForm(false);
+				onOpenChange(false);
 			} else {
 				setUserCreateSuccess(false);
 				setUserCreateFail(true);
@@ -139,15 +142,6 @@ export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDia
 					</div>
 
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="registrationNumber">Sicil Numarası *</Label>
-						<Input
-							id="registrationNumber"
-							value={employee.registrationNumber}
-							onChange={(e) => setEmployee((prev) => ({ ...prev, registrationNumber: e.target.value }))}
-						/>
-					</div>
-
-					<div className="flex flex-col gap-2">
 						<Label htmlFor="phone">Telefon Numarası *</Label>
 						<Input
 							id="phone"
@@ -158,7 +152,7 @@ export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDia
 					</div>
 
 					<div className="flex flex-col gap-2">
-						<Label htmlFor="role">Vatandaşlık Türü *</Label>
+						<Label htmlFor="role">Yetki Seviyesi *</Label>
 						<Select
 							onValueChange={(value) =>
 								setEmployee((prev) => ({ ...prev, role: value as "ADMIN" | "TRADER" | "VIEWER" }))

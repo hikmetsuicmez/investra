@@ -35,6 +35,9 @@ public class ClientDTO {
 
     private LocalDateTime createdAt;
 
+    private String clientNumber;
+
+
     // Bireysel müşteri alanları
     private String fullName;
 
@@ -72,6 +75,5 @@ public class ClientDTO {
     private String sector;
 
     private BigDecimal monthlyRevenue;
-
 }
 

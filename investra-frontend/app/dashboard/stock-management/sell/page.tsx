@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Customer, Account, ExecutionType, AccountType, Stock } from "@/types/stocks";
 import SellStockPreviewDialog from "@/components/dashboard/stock-management/SellStockPreviewDialog";
 import { SellStockSelector } from "@/components/dashboard/stock-management/SellStockSelector";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function StockSell() {
 	const [customers, setCustomers] = useState<Customer[]>([]);
@@ -90,12 +91,27 @@ export default function StockSell() {
 	async function fetchAccounts(clientId: string) {
 		try {
 			const res = await fetch(`/api/accounts/client/${clientId}`);
-			if (!res.ok) throw new Error("Failed to fetch accounts");
-			const responseJson: Account[] = await res.json();
+			if (!res.ok) {
+				console.error(`Failed to fetch accounts for client ${clientId}:`, res.status, res.statusText);
+				return;
+			}
+			const json = await res.json();
 
-			setAccountsByClient((prev) => [...prev, ...(responseJson || [])]);
+			if (!json.success) {
+				console.error(`API error for client ${clientId}:`, json.message);
+				return;
+			}
+
+			const accounts = json.data;
+
+			if (!Array.isArray(accounts)) {
+				console.error(`Invalid accounts data for client ${clientId}: expected array, got`, accounts);
+				return;
+			}
+
+			setAccountsByClient((prev) => [...prev, ...accounts]);
 		} catch (error) {
-			console.error("Error fetching accounts for client:", clientId, error);
+			console.error("Network or unexpected error fetching accounts for client:", clientId, error);
 		}
 	}
 
@@ -110,9 +126,34 @@ export default function StockSell() {
 		});
 	}, [customers]);
 
+	// Handle initial stock selection - set price to current stock price
 	useEffect(() => {
-		setPrice(selectedStock.currentPrice);
-	}, [selectedStock, executionType]);
+		if (selectedStock.id > 0) {
+			setPrice(selectedStock.currentPrice);
+		}
+	}, [selectedStock.id]);
+
+	// Handle execution type changes
+	useEffect(() => {
+		// Only set price to stock's current price when execution type changes to MARKET
+		// This preserves user's manual input for LIMIT orders
+		if (executionType === "MARKET") {
+			setPrice(selectedStock.currentPrice);
+		}
+	}, [executionType, selectedStock.currentPrice]);
+
+	// Recalculate costs when price changes
+	useEffect(() => {
+		if (price > 0 && quantity > 0) {
+			const newCost = price * quantity;
+			const newCommission = newCost * 0.002;
+			const newBsmv = newCommission * 0.05;
+			setCost(newCost);
+			setCommission(newCommission);
+			setBsmv(newBsmv);
+			setTotalCost(newCost + newCommission + newBsmv);
+		}
+	}, [price, quantity]);
 
 	const allAccounts: Account[] = Object.values(accountsByClient).flat();
 
@@ -136,6 +177,8 @@ export default function StockSell() {
 
 	return (
 		<div className="flex flex-col gap-6 min-h-screen overflow-auto bg-gray-100 p-6">
+			<SimulationDateDisplay />
+			
 			<div className="flex justify-between items-center p-4 flex-shrink-0">
 				<h1 className="text-2xl font-semibold">Hisse Senedi Satış</h1>
 			</div>
@@ -255,11 +298,18 @@ export default function StockSell() {
 								<Input
 									value={price.toFixed(2)}
 									min={0}
-									placeholder="Limit Fiyat"
+									placeholder={executionType === "MARKET" ? "Piyasa Fiyatı" : "Limit Fiyat"}
 									onChange={(e) => setPrice(Number(e.target.value) || 0)}
 									type="number"
 									disabled={executionType === "MARKET"}
+									className={executionType === "MARKET" ? "bg-gray-100 cursor-not-allowed" : ""}
 								/>
+								{executionType === "MARKET" && (
+									<p className="text-xs text-gray-500 mt-1">Piyasa fiyatı otomatik olarak güncellenir</p>
+								)}
+								{executionType === "LIMIT" && (
+									<p className="text-xs text-gray-500 mt-1">Mevcut piyasa fiyatı: {selectedStock.currentPrice.toFixed(2)} TL</p>
+								)}
 							</div>
 							<div className="w-full">
 								<Label className="mb-1">Adet</Label>
@@ -309,6 +359,7 @@ export default function StockSell() {
 
 						<SellStockPreviewDialog
 							quantity={quantity}
+							price={price}
 							selectedStock={selectedStock}
 							totalCost={totalCost}
 							selectedAccount={selectedAccount}

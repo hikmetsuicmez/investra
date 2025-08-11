@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -351,7 +352,39 @@ public class TradeOrderServiceImpl implements TradeOrderService {
         return orders.stream().map(TradeOrderMapper::toDTO).toList();
     }
 
-    // Bekleyen bir emri iptal eder
+    // İptal edilebilir emirleri getirir - PENDING, T1, T2 settlement status'undaki
+    // emirler
+    @Transactional(readOnly = true)
+    public List<TradeOrderDTO> getCancellableOrdersByUser(String username) {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+
+        // PENDING status'undaki emirler
+        List<TradeOrder> pendingOrders = tradeOrderRepository.findByUserAndStatusOrderBySubmittedAtDesc(user,
+                OrderStatus.PENDING);
+
+        // EXECUTED status'unda PENDING, T1, T2 settlement status'undaki emirler
+        List<TradeOrder> executedOrders = tradeOrderRepository.findByUserAndStatusOrderBySubmittedAtDesc(user,
+                OrderStatus.EXECUTED);
+        List<TradeOrder> cancellableExecutedOrders = executedOrders.stream()
+                .filter(order -> order.getSettlementStatus() == SettlementStatus.PENDING ||
+                        order.getSettlementStatus() == SettlementStatus.T1 ||
+                        order.getSettlementStatus() == SettlementStatus.T2)
+                .toList();
+
+        // İki listeyi birleştir
+        List<TradeOrder> allCancellableOrders = new ArrayList<>();
+        allCancellableOrders.addAll(pendingOrders);
+        allCancellableOrders.addAll(cancellableExecutedOrders);
+
+        // Tarihe göre sırala (en yeni önce)
+        allCancellableOrders.sort((o1, o2) -> o2.getSubmittedAt().compareTo(o1.getSubmittedAt()));
+
+        return allCancellableOrders.stream().map(TradeOrderMapper::toDTO).toList();
+    }
+
+    // Emri iptal eder - PENDING, T1, T2 settlement status'undaki emirler iptal
+    // edilebilir
     @Transactional
     public Response<TradeOrderDTO> cancelOrder(Long orderId, String username) {
         User user = userRepository.findByEmail(username)
@@ -367,10 +400,23 @@ public class TradeOrderServiceImpl implements TradeOrderService {
                     .build();
         }
 
-        if (order.getStatus() != OrderStatus.PENDING) {
+        // PENDING, T1, T2 settlement status'undaki emirler iptal edilebilir
+        if (order.getStatus() != OrderStatus.PENDING &&
+                order.getStatus() != OrderStatus.EXECUTED) {
             return Response.<TradeOrderDTO>builder()
                     .statusCode(400)
-                    .message("Sadece bekleyen emirler iptal edilebilir")
+                    .message("Sadece bekleyen veya gerçekleşen emirler iptal edilebilir")
+                    .build();
+        }
+
+        // Settlement status kontrolü - PENDING, T1, T2 olanlar iptal edilebilir
+        if (order.getStatus() == OrderStatus.EXECUTED &&
+                order.getSettlementStatus() != SettlementStatus.PENDING &&
+                order.getSettlementStatus() != SettlementStatus.T1 &&
+                order.getSettlementStatus() != SettlementStatus.T2) {
+            return Response.<TradeOrderDTO>builder()
+                    .statusCode(400)
+                    .message("Bu emir artık iptal edilemez - settlement süreci tamamlanmış")
                     .build();
         }
 
@@ -396,7 +442,8 @@ public class TradeOrderServiceImpl implements TradeOrderService {
 
         notificationRepository.save(notification);
 
-        log.info("Emir başarıyla iptal edildi. Emir ID: {}, Kullanıcı: {}", orderId, username);
+        log.info("Emir başarıyla iptal edildi. Emir ID: {}, Kullanıcı: {}, Eski Status: {}, Eski Settlement: {}",
+                orderId, username, order.getStatus(), order.getSettlementStatus());
 
         return Response.<TradeOrderDTO>builder()
                 .statusCode(200)

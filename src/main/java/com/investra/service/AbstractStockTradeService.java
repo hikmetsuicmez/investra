@@ -25,6 +25,9 @@ public abstract class AbstractStockTradeService implements StockTradeService {
 
     @Override
     public Response<List<ClientSearchResponse>> searchClients(ClientSearchRequest request) {
+        log.info("Client arama işlemi başlatıldı. Arama kriteri: {}, Aktif filtre: {}",
+                request.getSearchTerm(), request.getIsActive());
+
         var strategy = getStringOptionalFunction(request);
         List<Client> clients = strategy != null
                 ? strategy.apply(request.getSearchTerm()).map(List::of).orElse(List.of())
@@ -39,6 +42,7 @@ public abstract class AbstractStockTradeService implements StockTradeService {
         List<ClientSearchResponse> responseClients = clients.stream()
                 .map(ClientMapper::mapToClientSearchResponse)
                 .toList();
+        log.info("Müşteri arama işlemi tamamlandı. Dönen müşteri {}", responseClients.get(0));
 
         return Response.<List<ClientSearchResponse>>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -49,13 +53,13 @@ public abstract class AbstractStockTradeService implements StockTradeService {
 
     protected Function<String, Optional<Client>> getStringOptionalFunction(ClientSearchRequest request) {
         Map<String, Function<String, Optional<Client>>> searchStrategy = Map.of(
+                "MUSTERI_NUMARASI",clientRepository::findByClientNumber,
                 "TCKN", clientRepository::findByNationalityNumber,
                 "VERGI_ID", clientRepository::findByTaxId,
                 "MAVI_KART_NO", clientRepository::findByBlueCardNo,
                 "PASSPORT_NO", clientRepository::findByPassportNo,
                 "VERGI_NO", clientRepository::findByTaxNumber,
-                "ISIM", this::findClientByName
-        );
+                "ISIM", term -> clientRepository.findByFullNameOrCompanyName(term, term)        );
 
         return searchStrategy.get(request.getSearchType());
     }

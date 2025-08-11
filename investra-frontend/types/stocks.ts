@@ -97,6 +97,10 @@ export type Stock = {
 	isActive: boolean;
 	source: string | null;
 	availableQuantity?: number;
+	closePrice?: number;
+	stockCode?: string;
+	companyName?: string;
+	sector?: string;
 };
 
 // Execution Types
@@ -104,6 +108,25 @@ export type ExecutionType = "MARKET" | "LIMIT";
 
 // Order Types
 export type BuyOrderResults = {
+	accountNumber: string;
+	operation: string;
+	stockName: string;
+	stockSymbol: string;
+	price: number;
+	quantity: number;
+	tradeDate: string;
+	valueDate: string;
+	totalAmount: number;
+	stockGroup: string;
+	commission: number;
+	bsmv: number;
+	totalTaxAndCommission: number;
+	netAmount: number;
+	executionType: string;
+	previewId?: string;
+};
+
+export type SellOrderResults = {
 	accountNumber: string;
 	operation: string;
 	stockName: string;
@@ -132,7 +155,35 @@ export type StockSelectorProps = {
 export type BuyStockPreviewDialogProps = {
 	selectedStock: Stock;
 	quantity: number;
+	price: number;
 	totalCost: number;
 	selectedAccount: Account;
 	executionType: ExecutionType;
+};
+
+export type SellStockPreviewDialogProps = {
+	selectedStock: Stock;
+	quantity: number;
+	price: number;
+	totalCost: number;
+	selectedAccount: Account;
+	executionType: ExecutionType;
+};
+
+export type SettlementStatus = "COMPLETED" | "T2" | "T1" | "CANCELLED" | "PENDING" | null;
+
+export type TradeOrder = {
+	id: number;
+	clientId: number;
+	clientFullName: string;
+	stockCode: string;
+	orderType: string;
+	quantity: number;
+	price: number;
+	status: string;
+	submittedAt: string;
+	settledAt: string | null;
+	settlementStatus: SettlementStatus;
+	tradeDate: string;
+	settlementDaysRemaining: number;
 };

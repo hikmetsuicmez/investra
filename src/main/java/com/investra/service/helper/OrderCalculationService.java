@@ -10,9 +10,11 @@ import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderType;
 import com.investra.exception.CalculationException;
 import com.investra.exception.ValidationException;
+import com.investra.service.SimulationDateService;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -29,6 +31,13 @@ public class OrderCalculationService {
     private static final BigDecimal CORPORATE_COMMISION_RATE = new BigDecimal("0.001"); // %0.1
     private static final BigDecimal BSMV_FEE_RATE = new BigDecimal("0.05"); // %5
     private static final int DECIMAL_SCALE = 2;
+
+    private final SimulationDateService simulationDateService;
+
+    @Autowired
+    public OrderCalculationService(SimulationDateService simulationDateService) {
+        this.simulationDateService = simulationDateService;
+    }
 
     public OrderCalculation calculateOrderAmounts(
             Client client, Stock stock, int quantity, ExecutionType executionType,
@@ -80,10 +89,13 @@ public class OrderCalculationService {
                         .setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
             }
 
+            // Simülasyon tarihini kullan
+            LocalDate tradeDate = simulationDateService.getCurrentSimulationDate();
+
             return new OrderCalculation(
                     orderPrice,
                     quantity,
-                    LocalDate.now(),
+                    tradeDate,
                     "T+2",
                     commission,
                     bsmv,

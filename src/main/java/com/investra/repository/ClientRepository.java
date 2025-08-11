@@ -20,6 +20,10 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByEmail(String email);
 
+    Optional<Client> findByClientNumber(String clientNumber);
+
+    Optional<Client> findByFullNameOrCompanyName(String fullName, String companyName);
+
     Optional<Client> findByPassportNo(String passportNo);
 
     Optional<Client> findByTaxNumber(String taxNumber);
@@ -41,4 +45,9 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     Optional<Client> findByName(@Param("name") String name);
 
     List<Client> findAllByIsActive(boolean b);
+
+    List<Client> findByStatus(com.investra.enums.ClientStatus status);
+
+    List<Client> findByClientTypeAndStatus(com.investra.enums.ClientType clientType,
+            com.investra.enums.ClientStatus status);
 }

@@ -17,6 +17,7 @@ import {
 	AlertDialogFooter,
 	AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function Deposit({ clientId, accountId }: { clientId: string; accountId: string }) {
 	const [description, setDescription] = useState("");
@@ -74,8 +75,12 @@ export default function Deposit({ clientId, accountId }: { clientId: string; acc
 
 			setDescription("");
 			setAmount("");
-		} catch (err: any) {
-			setError(err.message || "Bir hata oluştu.");
+		} catch (err: unknown) {
+			if (err instanceof Error) {
+				setError(err.message);
+			} else {
+				setError("Bir hata oluştu.");
+			}
 		} finally {
 			setIsLoading(false);
 		}
@@ -83,6 +88,8 @@ export default function Deposit({ clientId, accountId }: { clientId: string; acc
 
 	return (
 		<div className="min-h-screen flex items-center justify-center px-4">
+			<SimulationDateDisplay />
+			
 			<Card className="w-full max-w-2xl shadow-md border">
 				<CardHeader>
 					<CardTitle>Bakiye Yükleme İşlemi</CardTitle>
@@ -120,22 +127,11 @@ export default function Deposit({ clientId, accountId }: { clientId: string; acc
 							/>
 						</div>
 
-						<Alert className="border-l-4 border-yellow-500">
-							<AlertTitle>Önemli Bilgi:</AlertTitle>
-							<AlertDescription>
-								Bakiye yükleme işlemi, yatırım hesabındaki mevcut bakiye durumuna göre değerlendirilir. Eğer yeterli
-								bakiye yoksa provizyon alma seçeneği sunulacaktır.
-							</AlertDescription>
-						</Alert>
-
 						{error && <p className="text-sm text-red-500">{error}</p>}
 
 						<div className="flex justify-between">
-							<Button
-							type="button"
-							variant="outline"
-							onClick={() => router.back()}>
-							Geri Dön
+							<Button type="button" variant="outline" onClick={() => router.back()}>
+								Geri Dön
 							</Button>
 							<Button type="submit" disabled={isLoading}>
 								{isLoading ? "Yükleniyor..." : "✓ Onayla"}

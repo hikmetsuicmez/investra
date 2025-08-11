@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-export async function PATCH(req: NextRequest, { params }: { params: { employeeNumber: string } }) {
-	const { employeeNumber } = await params;
+export async function PATCH(req: NextRequest, context: { params: Promise<{ employeeNumber: string }> }) {
+	const params = await context.params
+    const { employeeNumber } = params;
 	const cookieStore = await cookies();
 	const token = cookieStore.get("token")?.value; // or whatever your cookie name is
 

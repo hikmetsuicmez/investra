@@ -1,6 +1,7 @@
 "use client";
 
 import AddEmployeeDialog from "@/components/dashboard/employee-management/AddEmployeeDialog";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 import EmployeeTable from "@/components/dashboard/employee-management/EmployeeTable";
 import { User } from "@/types/employees";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ export default function EmployeeManagement() {
 
 	return (
 		<div className="flex flex-col h-screen bg-gray-100 p-6">
+			<SimulationDateDisplay />
 			<div className="flex justify-between items-center p-4 mb-4 flex-shrink-0">
 				<h1 className="text-2xl font-semibold">Personel Yönetimi</h1>
 				<Button className="flex items-center gap-2 bg-blue-600" onClick={() => setOpenDialog(true)}>

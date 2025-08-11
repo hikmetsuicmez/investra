@@ -10,7 +10,7 @@ export default function WithdrawalPage() {
   const clientId = params.clientId as string
 
   return (
-    <div style={{ maxWidth: 600, margin: "auto", padding: 20 }}>
+    <div style={{ maxWidth: 1000, margin: "auto", padding: 20 }}>
       
       <Withdrawal accountId={accountId} clientId={clientId}  />
     </div>

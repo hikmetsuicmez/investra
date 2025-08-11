@@ -12,6 +12,7 @@ import com.investra.enums.OrderType;
 import com.investra.exception.ValidationException;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.PortfolioItemRepository;
+import com.investra.repository.PortfolioRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.service.helper.*;
 
@@ -33,13 +34,12 @@ public class StockSellServiceImplTest {
 
     @Mock private ClientRepository clientRepository;
     @Mock private PortfolioItemRepository portfolioItemRepository;
+    @Mock private PortfolioRepository portfolioRepository;
     @Mock private TradeOrderRepository tradeOrderRepository;
     @Mock private OrderValidatorService validatorService;
     @Mock private EntityFinderService entityFinderService;
     @Mock private OrderCalculationService calculationService;
-    @Mock private PortfolioUpdateService portfolioUpdateService;
     @Mock private OrderPreviewCacheService previewCacheService;
-    @Mock private TradeOrderService tradeOrderService;
     @Mock private SimulationDateService simulationDateService;
 
     @InjectMocks
@@ -51,13 +51,12 @@ public class StockSellServiceImplTest {
         stockSellService = new StockSellServiceImpl(
                 clientRepository,
                 portfolioItemRepository,
+                portfolioRepository,
                 tradeOrderRepository,
                 validatorService,
                 entityFinderService,
                 calculationService,
-                portfolioUpdateService,
                 previewCacheService,
-                tradeOrderService,
                 simulationDateService
         );
     }

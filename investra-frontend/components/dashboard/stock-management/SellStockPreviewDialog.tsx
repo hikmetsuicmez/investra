@@ -5,17 +5,19 @@ import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BuyStockPreviewDialogProps, BuyOrderResults } from "@/types/stocks";
+import { SellStockPreviewDialogProps, SellOrderResults } from "@/types/stocks";
 
 export default function SellStockPreviewDialog({
 	selectedStock,
 	quantity,
+	price,
 	totalCost,
 	selectedAccount,
 	executionType,
-}: BuyStockPreviewDialogProps) {
+}: SellStockPreviewDialogProps) {
 	const [previewFailed, setPreviewFailed] = useState(false);
-	const [previewResults, setPreviewResults] = useState<BuyOrderResults>({
+	const [isOpen, setIsOpen] = useState(false);
+	const [previewResults, setPreviewResults] = useState<SellOrderResults>({
 		accountNumber: "",
 		operation: "",
 		stockName: "",
@@ -41,7 +43,7 @@ export default function SellStockPreviewDialog({
 				stockId: selectedStock.id,
 				executionType: executionType,
 				quantity: quantity,
-				price: selectedStock.currentPrice,
+				price: price,
 			};
 
 			const res = await fetch("/api/stocks/sell/preview", {
@@ -57,8 +59,9 @@ export default function SellStockPreviewDialog({
 			toast(result.message);
 
 			if (res.ok) {
-				console.log(result);
+				setPreviewFailed(false);
 				setPreviewResults(result.data);
+				setIsOpen(true); // Open the dialog after successful preview
 			} else {
 				setPreviewFailed(true);
 			}
@@ -75,7 +78,7 @@ export default function SellStockPreviewDialog({
 				stockId: selectedStock.id,
 				executionType: executionType,
 				quantity: quantity,
-				price: selectedStock.currentPrice,
+				price: price,
 				previewId: previewResults.previewId,
 			};
 
@@ -91,6 +94,27 @@ export default function SellStockPreviewDialog({
 				const result = await res.json();
 				if (result.statusCode == 200) {
 					toast("Hisse satış işleminiz başarıyla gerçekleşti.");
+					// Close the dialog after successful execution
+					setIsOpen(false);
+					// Reset the form state
+					setPreviewFailed(false);
+					setPreviewResults({
+						accountNumber: "",
+						operation: "",
+						stockName: "",
+						stockSymbol: "",
+						price: 0,
+						quantity: 0,
+						tradeDate: "",
+						valueDate: "",
+						totalAmount: 0,
+						stockGroup: "",
+						commission: 0,
+						bsmv: 0,
+						totalTaxAndCommission: 0,
+						netAmount: 0,
+						executionType: "",
+					});
 				} else {
 					toast("Hisse satış sırasında bir hata oluştu.");
 				}
@@ -101,7 +125,7 @@ export default function SellStockPreviewDialog({
 	}
 
 	return (
-		<Dialog>
+		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>
 				<div className="flex justify-end">
 					<Button
@@ -126,7 +150,10 @@ export default function SellStockPreviewDialog({
 							<p className="font-semibold">{previewResults.stockName + " " + previewResults.stockSymbol}</p>
 
 							<p className="text-gray-500">İşlem Türü:</p>
-							<p className="font-semibold">{previewResults.operation}</p>
+							<p className="font-semibold">Satış</p>
+
+							<p className="text-gray-500">Emir Tipi:</p>
+							<p className="font-semibold">{executionType === "MARKET" ? "Piyasa Emri" : "Limit Emri"}</p>
 
 							<p className="text-gray-500">Fiyat:</p>
 							<p className="font-semibold">{previewResults.price} TL</p>

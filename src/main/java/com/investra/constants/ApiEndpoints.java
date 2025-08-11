@@ -86,6 +86,7 @@ public class ApiEndpoints {
         public static final String GET_EXECUTED = "/executed"; // Gerçekleşen emirleri getir
         public static final String GET_COMPLETED = "/completed"; // Tamamlanmış emirleri getir
         public static final String GET_CANCELLED = "/cancelled"; // İptal edilen emirleri getir
+        public static final String GET_CANCELLABLE = "/cancellable"; // İptal edilebilir emirleri getir
         public static final String ORDER_CANCELLED = "/{orderId}/cancel";
 
     }
@@ -99,6 +100,22 @@ public class ApiEndpoints {
         public static final String GET_ALL = ""; // Tüm portföyleri getir
         public static final String GET_BY_CLIENT_ID = "/{clientId}"; // Müşteri ID ile portföyü getir
         public static final String DELETE_BY_CLIENT_ID = "/{clientId}"; // Müşteri ID ile portföyü sil
+    }
+
+    public static final class PortfolioReport {
+        private PortfolioReport() {
+        }
+
+        public static final String BASE = "/api/v1/portfolio-reports";
+        public static final String GET_REPORT = "/{clientId}/report"; // Müşteri portföy raporu
+        public static final String EXPORT_EXCEL = "/{clientId}/export/excel"; // Excel export
+        public static final String EXPORT_PDF = "/{clientId}/export/pdf"; // PDF export
+        public static final String GET_ALL_REPORTS = "/all"; // Tüm raporları getir
+        public static final String GET_REPORTS_BY_DATE = "/by-date"; // Tarihe göre raporları getir
+        public static final String GET_REPORTS_BY_CLIENT_TYPE = "/by-client-type"; // Müşteri tipine göre raporları
+                                                                                   // getir
+        public static final String GET_SUMMARY_REPORT = "/summary"; // Özet rapor
+        public static final String GET_PERFORMANCE_REPORT = "/performance"; // Performans raporu
     }
 
     public static final class EndOfDay {

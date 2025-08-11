@@ -27,6 +27,7 @@ public class CreateClientResponse {
     private String notes;
     private ClientStatus status;
     private Boolean isActive;
+    private String clientNumber;
 
     //bireysel müşteri
     private String fullName;

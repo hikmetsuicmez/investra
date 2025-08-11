@@ -53,8 +53,8 @@ export async function POST() {
         }, { status: 200 });
 
 
-    } catch (error: any) {
-        console.error("API rotasında hata yakalandı:", error.message);
-        return NextResponse.json({ message: error.message || "Sunucu tarafında beklenmedik bir hata oluştu." }, { status: 500 });
+    } catch (error) {
+        console.error("API rotasında hata yakalandı:", error);
+        return NextResponse.json({ message: error || "Sunucu tarafında beklenmedik bir hata oluştu." }, { status: 500 });
     }
 }

@@ -1,6 +1,5 @@
 package com.investra.service.impl;
 
-
 import com.investra.dtos.request.CreateClientRequest;
 import com.investra.dtos.request.CreateCorporateClientRequest;
 import com.investra.dtos.request.CreateIndividualClientRequest;
@@ -16,7 +15,7 @@ import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.repository.UserRepository;
-import com.investra.utils.ExceptionUtil;
+import com.investra.service.helper.ExceptionUtil;
 import com.investra.service.AbstractStockTradeService;
 import com.investra.service.ClientService;
 import com.investra.service.EmailTemplateService;
@@ -29,12 +28,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.investra.mapper.ClientMapper.mapToEntity;
 import static com.investra.mapper.ClientMapper.mapToResponse;
-import static com.investra.utils.AdminOperationsValidator.duplicateResourceCheck;
+import static com.investra.service.helper.AdminOperationsValidator.duplicateResourceCheck;
 
 @Service
 @Slf4j
@@ -51,8 +51,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
             TradeOrderRepository tradeOrderRepository,
             AccountRepository accountRepository,
             EmailTemplateService emailTemplateService,
-            NotificationService notificationService
-    ) {
+            NotificationService notificationService) {
         super(clientRepository);
         this.userRepository = userRepository;
         this.tradeOrderRepository = tradeOrderRepository;
@@ -64,40 +63,36 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
     @Transactional
     public Response<CreateClientResponse> createClient(CreateClientRequest request, String userEmail) {
         try {
+            log.info("Müşteri oluşturma işlemi başlatıldı. Kullanıcı: {}, Müşteri Tipi: {}",
+                    userEmail, request.getClass().getSimpleName());
+
             if (request instanceof CreateIndividualClientRequest individualRequest) {
                 return createIndividualClient(individualRequest, userEmail);
             } else if (request instanceof CreateCorporateClientRequest corporateRequest) {
                 return createCorporateClient(corporateRequest, userEmail);
             } else {
+                log.warn("Geçersiz müşteri tipi ile oluşturma denemesi yapıldı. Tip: {}", request.getClass().getName());
+
                 return Response.<CreateClientResponse>builder()
                         .statusCode(400)
                         .message("Geçersiz müşteri tipi")
                         .build();
             }
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
+            log.error("Müşteri oluşturma hatası (geçersiz argüman): {}", e.getMessage(), e);
             return Response.<CreateClientResponse>builder()
                     .statusCode(400)
                     .message(e.getMessage())
+                    .errorCode(ExceptionUtil.getErrorCode(e))
                     .build();
         }
     }
 
-    private Response<CreateClientResponse> createIndividualClient(CreateIndividualClientRequest request, String userEmail) {
+    private Response<CreateClientResponse> createIndividualClient(CreateIndividualClientRequest request,
+            String userEmail) {
         // Zorunlu alanların kontrolü
         if (request.getFullName() == null || request.getFullName().isBlank()) {
             throw new BusinessException("Müşteri adı boş olamaz", ErrorCode.VALIDATION_ERROR);
-        }
-
-        if (request.getBirthDate() == null) {
-            throw new BusinessException("Doğum tarihi boş olamaz", ErrorCode.VALIDATION_ERROR);
-        }
-
-        if (request.getGender() == null) {
-            throw new BusinessException("Cinsiyet bilgisi boş olamaz", ErrorCode.VALIDATION_ERROR);
-        }
-
-        if (request.getAddress() == null || request.getAddress().isBlank()) {
-            throw new BusinessException("Adres bilgisi boş olamaz", ErrorCode.VALIDATION_ERROR);
         }
 
         // Mükerrer kayıt kontrolü
@@ -106,7 +101,8 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                     "Bu email ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
         }
         if (request.getNationalityNumber() != null && !request.getNationalityNumber().isBlank()) {
-            duplicateResourceCheck(() -> clientRepository.findByNationalityNumber(request.getNationalityNumber()).isPresent(),
+            duplicateResourceCheck(
+                    () -> clientRepository.findByNationalityNumber(request.getNationalityNumber()).isPresent(),
                     "Bu TCKN ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
         }
         if (request.getBlueCardNo() != null && !request.getBlueCardNo().isBlank()) {
@@ -123,12 +119,16 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
         }
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new BusinessException("Kullanıcı bulunamadı: " + userEmail, ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(
+                        () -> new BusinessException("Kullanıcı bulunamadı: " + userEmail, ErrorCode.USER_NOT_FOUND));
 
         Client client = mapToEntity(request, user);
+        String clientNumber = generateRandomClientNumber();
+        client.setClientNumber(clientNumber);
         client.setIsActive(true);
         client.setCreatedAt(LocalDateTime.now());
         clientRepository.save(client);
+        log.info("Bireysel müşteri oluşturuldu. ID: {}, Email: {}", client.getId(), client.getEmail());
 
         CreateClientResponse response = mapToResponse(request);
 
@@ -139,19 +139,27 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                 .build();
     }
 
-    private Response<CreateClientResponse> createCorporateClient(CreateCorporateClientRequest request, String userEmail) {
+    private Response<CreateClientResponse> createCorporateClient(CreateCorporateClientRequest request,
+            String userEmail) {
         if (request.getEmail() != null) {
-            duplicateResourceCheck(() -> clientRepository.findByEmail(request.getEmail()).isPresent(), "Bu email ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
+            duplicateResourceCheck(() -> clientRepository.findByEmail(request.getEmail()).isPresent(),
+                    "Bu email ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
         }
-        duplicateResourceCheck(() -> clientRepository.findByTaxNumber(request.getTaxNumber()).isPresent(), "Bu vergi numarası ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
+        duplicateResourceCheck(() -> clientRepository.findByTaxNumber(request.getTaxNumber()).isPresent(),
+                "Bu vergi numarası ile kayıtlı bir müşteri mevcut", ErrorCode.OPERATION_FAILED);
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("Kullanıcı bulunamadı: " + userEmail));
-
+                .orElseThrow(() -> {
+                    log.warn("Kullanıcı bulunamadı: id={} ", userEmail);
+                    return new UserNotFoundException("Kullanıcı bulunamadı: id= " + userEmail);
+                });
         Client client = mapToEntity(request, user);
+        String clientNumber = generateRandomClientNumber();
+        client.setClientNumber(clientNumber);
         client.setIsActive(true);
         client.setCreatedAt(LocalDateTime.now());
         clientRepository.save(client);
+        log.info("Kurumsal müşteri oluşturuldu. ID: {}, Vergi No: {}", client.getId(), request.getTaxNumber());
 
         CreateClientResponse response = mapToResponse(request);
 
@@ -165,9 +173,11 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
     @Override
     public Client findEntityById(Long id) {
         return clientRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Müşteri bulunamadı: id=" + id));
+                .orElseThrow(() -> {
+                    log.warn("Müşteri bulunamadı: id={}", id);
+                    return new EntityNotFoundException("Müşteri bulunamadı: id=" + id);
+                });
     }
-
 
     @Override
     // @Cacheable(value = "clients", key = "'active_clients'")
@@ -239,7 +249,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                         .build();
             }
 
-            //negatif bakiye kontrolü
+            // negatif bakiye kontrolü
             List<Account> accounts = accountRepository.findAllByClientId(client.getId());
             boolean hasNegativeBalance = accounts.stream()
                     .anyMatch(account -> account.getBalance().compareTo(BigDecimal.ZERO) < 0);
@@ -251,7 +261,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                         .build();
             }
 
-            //bekleyen emir kontrolü
+            // bekleyen emir kontrolü
             List<TradeOrder> orders = tradeOrderRepository.findAllByClientId(client.getId());
             boolean hasPendingOrders = orders.stream()
                     .anyMatch(order -> order.getStatus() == OrderStatus.PENDING);
@@ -267,8 +277,8 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
 
             Map<String, Object> templateVariables = new HashMap<>();
             templateVariables.put("userName", client.getFullName());
-            templateVariables.put("deactivationMessage", "Hesabınız talebiniz doğrultusunda inaktif hale getirilmiştir.");
-            log.debug("Email içeriği hazırlanıyor");
+            templateVariables.put("deactivationMessage",
+                    "Hesabınız talebiniz doğrultusunda inaktif hale getirilmiştir.");
             String emailContent = emailTemplateService.processTemplate("client-deactivation-info", templateVariables);
 
             NotificationDTO notificationDTO = NotificationDTO.builder()
@@ -303,5 +313,9 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                     .build();
         }
     }
-
+    private String generateRandomClientNumber() {
+        SecureRandom random = new SecureRandom();
+        int number = 100000 + random.nextInt(900000); // 100000 - 999999 arası 6 haneli sayı üretecek
+        return String.valueOf(number);
+    }
 }

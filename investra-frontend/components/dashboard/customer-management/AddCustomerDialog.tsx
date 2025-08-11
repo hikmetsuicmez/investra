@@ -19,12 +19,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { 
-	AddCustomerDialogProps, 
-	IndividualCustomerInfo, 
-	CorporateCustomerInfo, 
-	CitizenshipType, 
-	CompanyType 
+import {
+	AddCustomerDialogProps,
+	IndividualCustomerInfo,
+	CorporateCustomerInfo,
+	CitizenshipType,
+	CompanyType,
 } from "@/types/customers";
 
 export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDialogProps) {
@@ -65,7 +65,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 		const entries = Object.entries(obj as Record<string, unknown>);
 
 		return Object.fromEntries(
-			entries.filter(([_, value]) => {
+			entries.filter(([, value]) => {
 				if (value === "" || value === null || value === undefined) {
 					return false;
 				}
@@ -275,7 +275,6 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 									placeholder="Aylık Gelir"
 									value={individualInfo.monthlyRevenue}
 									onChange={(e) => setIndividualInfo((prev) => ({ ...prev, monthlyRevenue: e.target.value }))}
-									required
 								/>
 							</div>
 
@@ -418,7 +417,6 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 									placeholder="Ciro"
 									value={corporateInfo.monthlyRevenue}
 									onChange={(e) => setCorporateInfo((prev) => ({ ...prev, monthlyRevenue: e.target.value }))}
-									required
 								/>
 							</div>
 

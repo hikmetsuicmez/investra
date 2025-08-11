@@ -1,8 +1,20 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { Stock} from "@/types/stocks";
 
-export async function GET(req: NextRequest, { params }: { params: { clientId: string } }) {
-    const { clientId } = await params;
+type BackendStock = {
+	stockId: number;
+	stockCode: string | null;
+	stockName: string;
+	stockGroup: string;
+	availableQuantity: number;
+	currentPrice: number;
+	avgPrice: number;
+};
+
+export async function GET(req: NextRequest, context: { params: Promise<{ clientId: string }> }) {
+    const params = await context.params
+    const { clientId } = params;
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
 
@@ -21,8 +33,21 @@ export async function GET(req: NextRequest, { params }: { params: { clientId: st
 
         const result = await response.json();
 
+        const backendList: BackendStock[] = result.data;
+
+        const stocks: Stock[] = backendList.map(item => ({
+            id: item.stockId,
+            name: item.stockName,
+            symbol: item.stockCode,
+            currentPrice: item.currentPrice,
+            stockGroup: item.stockGroup,
+            isActive: true, // you decide your own logic
+            source: null,   // or set dynamically if applicable
+            availableQuantity: item.availableQuantity
+        }));
+
         if (result.statusCode === 200) {
-            return NextResponse.json(result.data, {status: 200})
+            return NextResponse.json(stocks, {status: 200})
         }
 
         return NextResponse.json(
