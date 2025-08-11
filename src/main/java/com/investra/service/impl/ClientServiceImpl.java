@@ -109,7 +109,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
 
         @Override
         @Transactional
-        @CacheEvict(value = "clients", allEntries = true)
+        //@CacheEvict(value = "clients", allEntries = true)
         public Response<UpdateClientResponse> updateClient(Long clientId, UpdateClientRequest request,
                         String userEmail) {
                 try {
@@ -337,7 +337,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
         }
 
         @Override
-        @CacheEvict(value = "clients", allEntries = true)
+        //@CacheEvict(value = "clients", allEntries = true)
         public Response<Void> deleteClient(Client client) {
                 LocalDateTime requestTimestamp = LocalDateTime.now();
                 log.info("Delete client isteği alındı. Zaman: {}, Müşteri:{}", requestTimestamp, client.getFullName());

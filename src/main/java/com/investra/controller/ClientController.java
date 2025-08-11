@@ -166,7 +166,10 @@ public class ClientController implements ClientApiDocs {
     @PreAuthorize("hasRole('ADMIN') or hasRole('TRADER')")
     public ResponseEntity<Response<Void>> deleteClient(@RequestBody ClientSearchRequest request) {
         Response<List<ClientSearchResponse>> searchResponse = clientService.searchClients(request);
+        log.info("Dönen response: {}", searchResponse);
+
         List<ClientSearchResponse> clients = searchResponse.getData();
+        log.info("Dönen müşteri listesi: {}", clients);
 
         if (clients == null || clients.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -177,6 +180,8 @@ public class ClientController implements ClientApiDocs {
         }
 
         ClientSearchResponse clientToDelete = clients.get(0);
+        log.info("silinecek müşteri: {}", clientToDelete);
+
         Client client = clientService.findEntityById(clientToDelete.getId());
         Response<Void> result = clientService.deleteClient(client);
 
@@ -228,9 +233,6 @@ public class ClientController implements ClientApiDocs {
             if (individualRequest.getFullName() == null || individualRequest.getFullName().trim().isEmpty()) {
                 throw new IllegalArgumentException("Müşteri adı zorunludur");
             }
-            if (individualRequest.getEstimatedTransactionVolume() == null) {
-                throw new IllegalArgumentException("Tahmin edilen işlem hacmi zorunludur");
-            }
             if (!individualRequest.isIdentificationProvided()) {
                 throw new IllegalArgumentException(
                         "TCKN, Pasaport No, Yabancı Kimlik No veya Mavi Kart No alanlarından en az biri girilmelidir");
@@ -244,10 +246,6 @@ public class ClientController implements ClientApiDocs {
             }
             if (corporateRequest.getTaxNumber() == null || corporateRequest.getTaxNumber().trim().isEmpty()) {
                 throw new IllegalArgumentException("Vergi numarası zorunludur");
-            }
-            if (corporateRequest.getRegistrationNumber() == null
-                    || corporateRequest.getRegistrationNumber().trim().isEmpty()) {
-                throw new IllegalArgumentException("Sicil numarası zorunludur");
             }
             if (corporateRequest.getCompanyType() == null || corporateRequest.getCompanyType().trim().isEmpty()) {
                 throw new IllegalArgumentException("Şirket türü zorunludur");
