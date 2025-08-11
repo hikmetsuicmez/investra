@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation"; 
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 
 interface DailyValuation {
@@ -116,6 +117,8 @@ export default function EndOfDayValution() {
     if (valuations && valuations.length > 0) {
       return (
         <div className="bg-white rounded-xl shadow overflow-auto border">
+          <SimulationDateDisplay />
+
           <h2 className="p-4 text-lg font-semibold border-b">
             Değerleme Sonuçları - {new Date(valuations[0].valuationDate).toLocaleDateString('tr-TR')}
           </h2>
@@ -147,9 +150,9 @@ export default function EndOfDayValution() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 p-6 space-y-6">
-      <div className="p-4 mb-4 bg-white rounded-xl shadow space-y-4">
+      <div className="p-4 mb-4 mt-4 bg-white rounded-xl shadow space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold">Gün Sonu Değerleme</h1>
+          <h1 className="text-2xl font-semibold ">Gün Sonu Değerleme</h1>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button disabled={isLoadingProcess || isLoadingInitial}>

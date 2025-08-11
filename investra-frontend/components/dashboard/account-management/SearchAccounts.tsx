@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Account } from "./Account";
 import { useRouter } from "next/navigation";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function SearchAccountByClientId() {
   const { clientId } = useParams();
@@ -26,7 +27,6 @@ export default function SearchAccountByClientId() {
           `/api/accounts/get-accounts?clientId=${clientId}`
         );
         const data = await res.json();
-        console.log("aaaaaaaaaaaaa",data)
         if (res.ok && data.accounts) {
           setAccounts(data.accounts);
         } else {
@@ -57,6 +57,8 @@ export default function SearchAccountByClientId() {
   };
     return (
     <div className="p-6 space-y-4">
+      <SimulationDateDisplay />
+      
       <h1 className="text-2xl font-semibold">Müşteri Hesapları</h1>
 
       {isLoading && <p>Yükleniyor...</p>}
@@ -92,7 +94,7 @@ export default function SearchAccountByClientId() {
                 </button>
 
                 {activeDropdown === account.id && (
-                  <div className="absolute right-0 mt-8 bg-white border rounded shadow-lg z-10 w-40">
+                  <div className="absolute  bg-white border rounded shadow-lg z-10 w-40">
                     <button
                       onClick={() => handleAction(account.id, "deposit")}
                       className="block w-full text-left px-4 py-2 hover:bg-gray-100"

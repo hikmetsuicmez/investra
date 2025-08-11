@@ -10,11 +10,11 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSub,
-	SidebarMenuSubButton,
-	SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import Link from "next/link";
+
 import {
 	ArrowDownCircle,
 	ArrowUpCircle,
@@ -31,9 +31,9 @@ import {
 	Users,
 	Wallet,
 } from "lucide-react";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
-// Example item config
 const items = [
 	{
 		label: "Ana Sayfa",
@@ -49,10 +49,22 @@ const items = [
 			{
 				label: "Gün Sonu Değerleme",
 				icon: <ChartLine />,
-				href: "/dashboard/portfolio-management"
-				
+				href: "/dashboard/portfolio-management",
+				subitems: [
+					{
+						label: "Müşteri Değerleme",
+						icon: <List />,
+						href: "/dashboard/portfolio-management",
+						subitems: [],
+					},
+					{
+						label: "Hisse Senedi Kapanışı",
+						icon: <List />,
+						href: "/dashboard/portfolio-management",
+						subitems: [],
+					},
+				],
 			},
-			
 		],
 	},
 	{
@@ -62,14 +74,16 @@ const items = [
 		subitems: [
 			{
 				label: "Müşteri İşlemleri",
-				icon: <	List />,
+				icon: <List />,
 				href: "/dashboard/customer-management",
+				subitems: [],
 			},
 			{
 				label: "Hesap İşlemleri",
-				icon: <	List />,
+				icon: <List />,
 				href: "/dashboard/customer-search",
-			}
+				subitems: [],
+			},
 		],
 	},
 	{
@@ -86,25 +100,71 @@ const items = [
 				label: "Hisse Senedi Listeleme",
 				icon: <List />,
 				href: "/dashboard/stock-management/list",
+				subitems: [],
 			},
 			{
 				label: "Hisse Senedi Alış",
 				icon: <ArrowDownCircle />,
 				href: "/dashboard/stock-management/buy",
+				subitems: [],
 			},
 			{
 				label: "Hisse Senedi Satış",
 				icon: <ArrowUpCircle />,
 				href: "/dashboard/stock-management/sell",
+				subitems: [],
 			},
 			{
 				label: "Emir Takibi",
 				icon: <ListChecks />,
 				href: "/dashboard/stock-management/order-tracking",
+				subitems: [],
 			},
 		],
 	},
 ];
+
+export function SidebarItem({ item }) {
+	const hasSubitems = item.subitems && item.subitems.length > 0;
+
+	if (!hasSubitems) {
+		return (
+			<SidebarMenuItem>
+				<SidebarMenuButton size="lg" asChild>
+					<Link href={item.href || "#"} className="flex gap-2 items-center">
+						{item.icon}
+						<p>{item.label}</p>
+					</Link>
+				</SidebarMenuButton>
+			</SidebarMenuItem>
+		);
+	}
+
+	return (
+		<Collapsible>
+			<SidebarMenuItem>
+				<CollapsibleTrigger asChild>
+					<SidebarMenuButton size="lg" asChild>
+						<button className="flex justify-between w-full items-center gap-2">
+							<div className="flex items-center gap-2">
+								{item.icon}
+								<p>{item.label}</p>
+							</div>
+							<ChevronDown className="transition-transform data-[state=open]:rotate-180" />
+						</button>
+					</SidebarMenuButton>
+				</CollapsibleTrigger>
+				<CollapsibleContent>
+					<SidebarMenuSub>
+						{item.subitems.map((subitem) => (
+							<SidebarItem key={subitem.label} item={subitem} />
+						))}
+					</SidebarMenuSub>
+				</CollapsibleContent>
+			</SidebarMenuItem>
+		</Collapsible>
+	);
+}
 
 export function AppSidebar() {
 	const handleLogout = async () => {
@@ -112,7 +172,6 @@ export function AppSidebar() {
 			const response = await fetch("/api/auth/logout", {
 				method: "POST",
 			});
-
 			if (response.ok) {
 				window.location.href = "/auth/login";
 			} else {
@@ -129,46 +188,9 @@ export function AppSidebar() {
 				<SidebarMenu>
 					<SidebarGroup>
 						<SidebarGroupContent>
-							{items.map((item, index) =>
-								item.subitems && item.subitems.length > 0 ? (
-									<Collapsible key={index} className="group/collapsible">
-										<SidebarMenuItem>
-											<CollapsibleTrigger asChild>
-												<SidebarMenuButton size={"lg"} asChild>
-													<div className="flex gap-2 select-none">
-														{item.icon}
-														<p className="grow">{item.label}</p>
-														<ChevronDown className="transition-transform group-data-[state=open]/collapsible:rotate-180" />
-													</div>
-												</SidebarMenuButton>
-											</CollapsibleTrigger>
-											<CollapsibleContent>
-												<SidebarMenuSub>
-													{item.subitems.map((subitem, subIndex) => (
-														<SidebarMenuSubItem key={subIndex}>
-															<SidebarMenuSubButton size="md" asChild>
-																<Link href={subitem.href} className="flex gap-2 select-none">
-																	{subitem.icon}
-																	<p className="line-clamp-1">{subitem.label}</p>
-																</Link>
-															</SidebarMenuSubButton>
-														</SidebarMenuSubItem>
-													))}
-												</SidebarMenuSub>
-											</CollapsibleContent>
-										</SidebarMenuItem>
-									</Collapsible>
-								) : (
-									<SidebarMenuItem key={index}>
-										<SidebarMenuButton size={"lg"} asChild>
-											<Link href={item.href || "#"} className="flex gap-2">
-												{item.icon}
-												<p>{item.label}</p>
-											</Link>
-										</SidebarMenuButton>
-									</SidebarMenuItem>
-								)
-							)}
+							{items.map((item) => (
+								<SidebarItem key={item.label} item={item} />
+							))}
 						</SidebarGroupContent>
 					</SidebarGroup>
 				</SidebarMenu>
@@ -179,7 +201,7 @@ export function AppSidebar() {
 						<DropdownMenu>
 							<DropdownMenuTrigger className="w-full">
 								<SidebarMenuButton size="lg" asChild>
-									<div className="flex gap-2 select-none ">
+									<div className="flex gap-2 select-none">
 										<Settings />
 										<p className="flex-grow">Seçenekler</p>
 										<ChevronsUpDown />
@@ -188,7 +210,10 @@ export function AppSidebar() {
 							</DropdownMenuTrigger>
 							<DropdownMenuContent>
 								<DropdownMenuItem>
-									<Link href={"/auth/change-password"} className="flex gap-2 select-none w-[200px] items-center">
+									<Link
+										href={"/auth/change-password"}
+										className="flex gap-2 select-none w-[200px] items-center"
+									>
 										<Key color="black" />
 										<p className="flex-grow">Şifreni değiştir</p>
 									</Link>

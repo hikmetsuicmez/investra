@@ -16,4 +16,5 @@ export type Account = {
   createdAt: string;
   updatedAt: string;
   clientId: number;
+  nickname: string;
 };

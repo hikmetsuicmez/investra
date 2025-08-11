@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 interface DailyValuation {
   clientId: number;
@@ -220,12 +221,8 @@ export default function Dashboard() {
   };
 
 return (
-  <div className="p-4 md:p-15 space-y-10 bg-gray-50 min-h-screen relative">
-    <div className="absolute top-7 right-15 text-sm text-gray-600 font-medium select-none">
-        Sistem Saati: {valuations && valuations.length > 0 ? valuations[0].valuationDate : "Yükleniyor..."}
-    </div>
-
-
+  <div className="p-1 md:p-15 space-y-10 bg-gray-50 min-h-screen relative">
+      <SimulationDateDisplay />
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {renderValuationTable()}
 

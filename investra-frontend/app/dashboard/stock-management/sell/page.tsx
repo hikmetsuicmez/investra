@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Customer, Account, ExecutionType, AccountType, Stock } from "@/types/stocks";
 import SellStockPreviewDialog from "@/components/dashboard/stock-management/SellStockPreviewDialog";
 import { SellStockSelector } from "@/components/dashboard/stock-management/SellStockSelector";
+import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function StockSell() {
 	const [customers, setCustomers] = useState<Customer[]>([]);
@@ -136,6 +137,8 @@ export default function StockSell() {
 
 	return (
 		<div className="flex flex-col gap-6 min-h-screen overflow-auto bg-gray-100 p-6">
+			<SimulationDateDisplay />
+			
 			<div className="flex justify-between items-center p-4 flex-shrink-0">
 				<h1 className="text-2xl font-semibold">Hisse Senedi Satış</h1>
 			</div>
