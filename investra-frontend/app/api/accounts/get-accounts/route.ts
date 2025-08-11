@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
     );
 
     const result = await res.json();
-
     if (result.statusCode !== 200) {
       return NextResponse.json(
         { success: false, message: result.message || "Hesaplar alınamadı" },
