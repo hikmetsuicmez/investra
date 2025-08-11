@@ -74,6 +74,14 @@ public class AuthServiceImpl implements AuthService {
                         return new UserNotFoundException(userDetails.getUsername());
                     });
 
+            if (!user.isActive()) {
+                log.warn("Kullanıcı aktif değil. email: {}", user.getEmail());
+                return Response.<LoginResponse>builder()
+                        .statusCode(HttpStatus.FORBIDDEN.value())
+                        .message("Kullanıcı hesabı aktif değil")
+                        .build();
+            }
+
             // Son giriş tarihini güncelle
             user.setLastLogin(LocalDateTime.now());
 

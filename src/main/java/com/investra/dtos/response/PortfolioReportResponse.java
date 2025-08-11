@@ -17,7 +17,7 @@ public class PortfolioReportResponse {
 
     // Müşteri Bilgileri
     private String customerName;
-    private String customerNumber;
+    private String clientNumber;
     private String customerType;
     private String accountNumber;
     private LocalDate reportDate;
