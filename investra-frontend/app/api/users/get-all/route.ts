@@ -15,6 +15,7 @@ export async function GET() {
 		});
 
 		const result = await res.json();
+		console.log(result)
 
 		if (result.statusCode !== 200) {
 			return NextResponse.json(

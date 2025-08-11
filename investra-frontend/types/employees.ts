@@ -9,6 +9,7 @@ export type User = {
 	phoneNumber: string | null;
 	email: string;
 	role: Role;
+	isActive: boolean
 };
 
 export type Role = "ADMIN" | "TRADER" | "VIEWER"
@@ -21,6 +22,8 @@ export interface Employee {
 	phone: string; // Tel no
 	email: string; // E-posta
 	role: Role;
+	isActive: boolean
+
 }
 
 // Props for AddEmployeeDialog component

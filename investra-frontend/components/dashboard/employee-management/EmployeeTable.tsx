@@ -12,6 +12,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
 					<TableHead>Telefon Numarası</TableHead>
 					<TableHead>E-posta</TableHead>
 					<TableHead>Rol</TableHead>
+					<TableHead>Durum</TableHead>
 					<TableHead className="text-center">İşlemler</TableHead>
 				</TableRow>
 			</TableHeader>
@@ -22,6 +23,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
 						<TableCell>{employee.phoneNumber}</TableCell>
 						<TableCell>{employee.email}</TableCell>
 						<TableCell>{employee.role}</TableCell>
+						<TableCell>{employee.isActive ? "Aktif" : "Pasif"}</TableCell>
 						<TableCell className="flex justify-center gap-2">
 							<EditUserDialog user={employee} />
 							<DeleteUserDialog user={employee} />
