@@ -16,13 +16,13 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import {
+	TradeExecutionTypeBadge,
 	TradeOrderSettlementStatusBadge,
 	TradeOrderStatusBadge,
 	TradeOrderTypeBadge,
 } from "@/components/dashboard/stock-management/order-tracking/Badges";
 import TradeOrderDetails from "@/components/dashboard/stock-management/order-tracking/TradeOrderDetails";
 import CancelOrderDialog from "@/components/dashboard/stock-management/order-tracking/CancelOrderDialog";
-import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function OrderTracking() {
 	const [allTradeOrders, setTradeAllOrders] = useState<TradeOrder[]>([]);
@@ -37,7 +37,6 @@ export default function OrderTracking() {
 				throw new Error("Failed to fetch trade orders");
 			}
 			const data = await response.json();
-			console.log(data);
 			setTradeAllOrders(data.data);
 		} catch (error) {
 			console.error("Error fetching trade orders:", error);
@@ -71,8 +70,6 @@ export default function OrderTracking() {
 
 	return (
 		<div className="flex flex-col h-screen bg-gray-100 p-6 gap-6">
-			<SimulationDateDisplay />
-
 			<div className="flex justify-between items-center p-4 flex-shrink-0">
 				<h1 className="text-2xl font-semibold">Emir Takibi</h1>
 			</div>
@@ -135,6 +132,7 @@ export default function OrderTracking() {
 							<TableRow className="text-[16px]">
 								<TableHead>Emir No</TableHead>
 								<TableHead>Müşteri</TableHead>
+								<TableHead>Emir Türü</TableHead>
 								<TableHead>Hisse</TableHead>
 								<TableHead>Tür</TableHead>
 								<TableHead>Adet</TableHead>
@@ -156,7 +154,9 @@ export default function OrderTracking() {
 											<p className="font-light">{tradeOrder.clientId}</p>
 										</div>
 									</TableCell>
-									{/* <TableCell><TradeExecutionTypeBadge executionType={tradeOrder.executionType} /></TableCell> */}
+									<TableCell>
+										<TradeExecutionTypeBadge executionType={tradeOrder.executionType} />
+									</TableCell>
 									<TableCell className="font-medium">{tradeOrder.stockCode}</TableCell>
 									<TableCell>
 										<TradeOrderTypeBadge orderType={tradeOrder.orderType} />

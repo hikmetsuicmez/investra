@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 import {
 	AlertDialog,
@@ -17,7 +16,6 @@ import {
 	AlertDialogFooter,
 	AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function Deposit({ clientId, accountId }: { clientId: string; accountId: string }) {
 	const [description, setDescription] = useState("");
@@ -88,8 +86,6 @@ export default function Deposit({ clientId, accountId }: { clientId: string; acc
 
 	return (
 		<div className="min-h-screen flex items-center justify-center px-4">
-			<SimulationDateDisplay />
-			
 			<Card className="w-full max-w-2xl shadow-md border">
 				<CardHeader>
 					<CardTitle>Bakiye Yükleme İşlemi</CardTitle>

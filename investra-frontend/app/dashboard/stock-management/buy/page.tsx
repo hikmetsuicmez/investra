@@ -9,7 +9,6 @@ import { ChartLineIcon, CreditCardIcon, SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Customer, Account, ExecutionType, AccountType, Stock } from "@/types/stocks";
 import { BuyStockSelector } from "@/components/dashboard/stock-management/BuyStockSelector";
-import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function StockBuy() {
 	const [customers, setCustomers] = useState<Customer[]>([]);
@@ -176,8 +175,6 @@ export default function StockBuy() {
 
 	return (
 		<div className="flex flex-col gap-6 min-h-screen overflow-auto bg-gray-100 p-6">
-			<SimulationDateDisplay />
-			
 			<div className="flex justify-between items-center p-4 flex-shrink-0">
 				<h1 className="text-2xl font-semibold">Hisse Senedi Alım</h1>
 			</div>
@@ -303,7 +300,9 @@ export default function StockBuy() {
 									<p className="text-xs text-gray-500 mt-1">Piyasa fiyatı otomatik olarak güncellenir</p>
 								)}
 								{executionType === "LIMIT" && (
-									<p className="text-xs text-gray-500 mt-1">Mevcut piyasa fiyatı: {selectedStock.currentPrice.toFixed(2)} TL</p>
+									<p className="text-xs text-gray-500 mt-1">
+										Mevcut piyasa fiyatı: {selectedStock.currentPrice.toFixed(2)} TL
+									</p>
 								)}
 							</div>
 							<div className="w-full">

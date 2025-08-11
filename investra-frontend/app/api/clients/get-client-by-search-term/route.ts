@@ -7,7 +7,6 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    console.log(body)
     const { searchTerm, searchType, isActive } = body;
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clients/client`, {
       method: "POST",

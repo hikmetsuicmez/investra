@@ -16,6 +16,7 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
+import Image from "next/image";
 
 export default function ResetPassword() {
 	const [newPassword, setNewPassword] = useState("");
@@ -91,12 +92,10 @@ export default function ResetPassword() {
 
 	return (
 		<div className="w-full h-screen flex items-center justify-center bg-gray-300">
-			<Card className="w-full max-w-sm">
+			<Card className="w-full max-w-sm bg-[#f6f5fa]">
 				<CardHeader className="text-center">
 					<div className="flex justify-center mb-2">
-						<div className="bg-blue-600 p-3 rounded-full">
-							<UserCheck size={32} color="white" />
-						</div>
+						<Image src={"/images/Investra-Logo.png"} alt="Investra logo" height={100} width={100} />
 					</div>
 					<CardTitle className="text-slate-800/90 text-2xl font-semibold">Yeni Şifre Belirle</CardTitle>
 					<CardDescription>Güçlü bir şifre belirleyerek hesabınızı güvene alın.</CardDescription>
