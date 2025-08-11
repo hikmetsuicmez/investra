@@ -87,8 +87,14 @@ public class EndOfDayController implements EndOfDayApiDocs {
     public Response<List<StockPriceResponse>> getStockPrices(
             @RequestParam(required = false) String date) {
 
-        LocalDate priceDate = date != null ? LocalDate.parse(date) : LocalDate.now();
-        log.info("Hisse fiyatları alınıyor: {}", priceDate);
+        LocalDate priceDate;
+        if (date != null) {
+            priceDate = LocalDate.parse(date);
+        } else {
+            priceDate = simulationDateService.getCurrentSimulationDate();
+        }
+        log.info("Hisse fiyatları alınıyor: {} (simülasyon tarihi: {})", priceDate,
+                simulationDateService.getCurrentSimulationDate());
 
         List<StockPriceResponse> prices = endOfDayService.getAllStockPrices(priceDate);
 

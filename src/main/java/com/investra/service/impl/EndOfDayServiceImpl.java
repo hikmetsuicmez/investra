@@ -107,6 +107,7 @@ public class EndOfDayServiceImpl implements EndOfDayService {
 
                 // Hisse tablosundaki fiyatı da güncelle
                 stock.setPrice(price.getPrice());
+                stock.setLastPriceUpdate(LocalDateTime.now());
                 stockRepository.save(stock);
             }
 
@@ -574,6 +575,25 @@ public class EndOfDayServiceImpl implements EndOfDayService {
     @Override
     public List<StockPriceResponse> getAllStockPrices(LocalDate date) {
         List<StockDailyPrice> prices = stockDailyPriceRepository.findAllByPriceDate(date);
+
+        // Eğer StockDailyPrice tablosunda veri yoksa, Stock tablosundan al
+        if (prices.isEmpty()) {
+            log.warn("StockDailyPrice tablosunda {} tarihi için veri bulunamadı, Stock tablosundan alınıyor", date);
+
+            List<Stock> stocks = stockRepository.findAll();
+            return stocks.stream()
+                    .map(stock -> StockPriceResponse.builder()
+                            .stockCode(stock.getCode())
+                            .closePrice(stock.getPrice())
+                            .companyName(stock.getName())
+                            .sector(stock.getSector())
+                            .highPrice(stock.getPrice()) // Stock tablosunda sadece close price var
+                            .lowPrice(stock.getPrice()) // Stock tablosunda sadece close price var
+                            .changePercentage(BigDecimal.ZERO) // Stock tablosunda yok
+                            .volume(null) // Stock tablosunda yok
+                            .build())
+                    .collect(Collectors.toList());
+        }
 
         return prices.stream()
                 .map(price -> {

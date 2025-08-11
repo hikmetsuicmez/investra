@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -91,9 +92,13 @@ public class StockServiceImpl implements StockService {
             if (priceOpt.isPresent()) {
                 StockPriceResponse.StockPrice price = priceOpt.get();
                 stock.setPrice(price.getPrice());
+                stock.setLastPriceUpdate(LocalDateTime.now());
 
                 // Cache'e ekle
                 stockPriceCache.put(stock.getCode(), price.getPrice());
+
+                // Veritabanına kaydet
+                stockRepository.save(stock);
 
                 log.debug("Hisse senedi fiyatı API'den güncellendi: {}", stock.getCode());
             }
@@ -169,6 +174,7 @@ public class StockServiceImpl implements StockService {
                         stock.setIsActive("ACTIVE".equals(def.getStatus()));
                         stock.setGroup(StockGroup.FINANCE);
                         stock.setPrice(price);
+                        stock.setLastPriceUpdate(LocalDateTime.now());
 
                         stocksToSave.add(stock);
                         log.debug("Hisse eklendi/güncellendi: {} -> {} TL", stockCode, price);
@@ -209,6 +215,25 @@ public class StockServiceImpl implements StockService {
 
             Map<String, BigDecimal> newPrices = new HashMap<>();
             prices.forEach(price -> newPrices.put(price.getStockCode(), price.getPrice()));
+
+            // Veritabanındaki hisse fiyatlarını da güncelle
+            List<Stock> allStocks = stockRepository.findAll();
+            List<Stock> stocksToUpdate = new ArrayList<>();
+
+            for (Stock stock : allStocks) {
+                BigDecimal newPrice = newPrices.get(stock.getCode());
+                if (newPrice != null && !newPrice.equals(stock.getPrice())) {
+                    stock.setPrice(newPrice);
+                    stock.setLastPriceUpdate(LocalDateTime.now());
+                    stocksToUpdate.add(stock);
+                    log.debug("Hisse fiyatı güncellendi: {} -> {} TL", stock.getCode(), newPrice);
+                }
+            }
+
+            if (!stocksToUpdate.isEmpty()) {
+                stockRepository.saveAll(stocksToUpdate);
+                log.info("Veritabanında {} hisse senedi fiyatı güncellendi", stocksToUpdate.size());
+            }
 
             // Yeni veriler başarıyla alındıysa, cache'i güncelle
             if (!newPrices.isEmpty()) {
