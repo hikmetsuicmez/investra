@@ -12,7 +12,7 @@ import {
 	SidebarMenuItem,
 	SidebarMenuSub,
 } from "@/components/ui/sidebar";
-import { useRouter } from "next/navigation";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import Link from "next/link";
 
@@ -40,9 +40,98 @@ type SidebarItemType = {
 	label: string;
 	icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 	href?: string;
-	onClick?: () => void;
 	subitems: SidebarItemType[];
 };
+
+const items: SidebarItemType[] = [
+	{
+		label: "Ana Sayfa",
+		icon: HomeIcon,
+		href: "/dashboard",
+		subitems: [],
+	},
+	{
+		label: "Portföyüm",
+		icon: Wallet,
+		href: "/dashboard/portfolio-management",
+		subitems: [
+			{
+				label: "Gün Sonu Değerleme",
+				icon: ChartLine,
+				href: "/dashboard/portfolio-management",
+				subitems: [
+					{
+						label: "Müşteri Değerleme",
+						icon: List,
+						href: "/dashboard/portfolio-management",
+						subitems: [],
+					},
+					{
+						label: "Hisse Senedi Kapanışı",
+						icon: List,
+						href: "/dashboard/stock-management/list-closing-price",
+						subitems: [],
+					},
+				],
+			},
+		],
+	},
+	{
+		label: "Müşteri Yönetimi",
+		icon: Users,
+		href: "/dashboard/customer-management",
+		subitems: [
+			{
+				label: "Müşteri İşlemleri",
+				icon: List,
+				href: "/dashboard/customer-management",
+				subitems: [],
+			},
+			{
+				label: "Hesap İşlemleri",
+				icon: List,
+				href: "/dashboard/customer-search",
+				subitems: [],
+			},
+		],
+	},
+	{
+		label: "Personel Yönetimi",
+		icon: Network,
+		href: "/dashboard/employee-management",
+		subitems: [],
+	},
+	{
+		label: "Hisse Senedi İşlemleri",
+		icon: ChartLine,
+		subitems: [
+			{
+				label: "Hisse Senedi Listeleme",
+				icon: List,
+				href: "/dashboard/stock-management/list",
+				subitems: [],
+			},
+			{
+				label: "Hisse Senedi Alış",
+				icon: ArrowDownCircle,
+				href: "/dashboard/stock-management/buy",
+				subitems: [],
+			},
+			{
+				label: "Hisse Senedi Satış",
+				icon: ArrowUpCircle,
+				href: "/dashboard/stock-management/sell",
+				subitems: [],
+			},
+			{
+				label: "Emir Takibi",
+				icon: ListChecks,
+				href: "/dashboard/stock-management/order-tracking",
+				subitems: [],
+			},
+		],
+	},
+];
 
 export function SidebarItem({ item }: { item: SidebarItemType }) {
 	const hasSubitems = item.subitems && item.subitems.length > 0;
@@ -50,22 +139,11 @@ export function SidebarItem({ item }: { item: SidebarItemType }) {
 	if (!hasSubitems) {
 		return (
 			<SidebarMenuItem>
-				<SidebarMenuButton
-					size="lg"
-					asChild={!item.onClick}
-					onClick={item.onClick}
-				>
-					{item.onClick ? (
-						<div className="flex gap-2 items-center cursor-pointer">
-							<item.icon className="size-4" />
-							<p>{item.label}</p>
-						</div>
-					) : (
-						<Link href={item.href || "#"} className="flex gap-2 items-center">
-							<item.icon className="size-4" />
-							<p>{item.label}</p>
-						</Link>
-					)}
+				<SidebarMenuButton size="lg" asChild>
+					<Link href={item.href || "#"} className="flex gap-2 items-center">
+						<item.icon className="size-4" />
+						<p>{item.label}</p>
+					</Link>
 				</SidebarMenuButton>
 			</SidebarMenuItem>
 		);
@@ -98,100 +176,11 @@ export function SidebarItem({ item }: { item: SidebarItemType }) {
 }
 
 export function AppSidebar() {
-	const router = useRouter();
-
-	const items: SidebarItemType[] = [
-		{
-			label: "Ana Sayfa",
-			icon: HomeIcon,
-			href: "/dashboard",
-			subitems: [],
-		},
-		{
-			label: "Portföyüm",
-			icon: Wallet,
-			href: "/dashboard/portfolio-management",
-			subitems: [
-				{
-					label: "Gün Sonu Değerleme",
-					icon: ChartLine,
-					href: "/dashboard/portfolio-management",
-					subitems: [
-						{
-							label: "Müşteri Değerleme",
-							icon: List,
-							href: "/dashboard/portfolio-management",
-							subitems: [],
-						},
-						{
-							label: "Hisse Senedi Kapanışı",
-							icon: List,
-							href: "/dashboard/stock-management/list-closing-price",
-							subitems: [],
-						},
-					],
-				},
-			],
-		},
-		{
-			label: "Müşteri Yönetimi",
-			icon: Users,
-			href: "/dashboard/customer-management",
-			subitems: [],
-		},
-		{
-			label: "Personel Yönetimi",
-			icon: Network,
-			href: "/dashboard/employee-management",
-			subitems: [],
-		},
-		{
-			label: "Hisse Senedi İşlemleri",
-			icon: ChartLine,
-			subitems: [
-				{
-					label: "Hisse Senedi Listeleme",
-					icon: List,
-					href: "/dashboard/stock-management/list",
-					subitems: [],
-				},
-				{
-					label: "Hisse Senedi Alış",
-					icon: ArrowDownCircle,
-					href: "/dashboard/stock-management/buy",
-					subitems: [],
-				},
-				{
-					label: "Hisse Senedi Satış",
-					icon: ArrowUpCircle,
-					href: "/dashboard/stock-management/sell",
-					subitems: [],
-				},
-				{
-					label: "Emir Takibi",
-					icon: ListChecks,
-					href: "/dashboard/stock-management/order-tracking",
-					subitems: [],
-				},
-			],
-		},
-		{
-			label: "Hesap İşlemleri",
-			icon: Users,
-			onClick: () => router.push("/dashboard/account-management/search-client?source=account"),
-			subitems: [],
-		},
-		{
-			label: "Bakiye İşlemleri",
-			icon: Wallet,
-			onClick: () => router.push("/dashboard/account-management/search-client?source=balance"),
-			subitems: [],
-		},
-	];
-
 	const handleLogout = async () => {
 		try {
-			const response = await fetch("/api/auth/logout", { method: "POST" });
+			const response = await fetch("/api/auth/logout", {
+				method: "POST",
+			});
 			if (response.ok) {
 				window.location.href = "/auth/login";
 			} else {
