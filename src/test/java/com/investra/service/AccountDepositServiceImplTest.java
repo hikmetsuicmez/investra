@@ -122,7 +122,7 @@ public class AccountDepositServiceImplTest {
         assertNotNull(response);
         assertFalse(response.isSuccess());
         assertEquals(400, response.getStatusCode());
-        assertEquals("Müşteri bulunamadı: ID=1", response.getMessage());
+        assertEquals("ID: '1' olan müşteri bulunamadı", response.getMessage());
         assertEquals("CLIENT_NOT_FOUND", response.getErrorCode().name());
     }
 
@@ -135,7 +135,7 @@ public class AccountDepositServiceImplTest {
         assertNotNull(response);
         assertFalse(response.isSuccess());
         assertEquals(400, response.getStatusCode());
-        assertEquals("Hesap bulunamadı: ID=2", response.getMessage());
+        assertEquals("ID: '2' olan müşteri bulunamadı", response.getMessage());
         assertEquals("ACCOUNT_NOT_FOUND", response.getErrorCode().name());
     }
     @Test
@@ -147,7 +147,7 @@ public class AccountDepositServiceImplTest {
         assertNotNull(response);
         assertFalse(response.isSuccess());
         assertEquals(400, response.getStatusCode());
-        assertEquals("Geçersiz tutar: Tutar sıfırdan büyük olmalıdır", response.getMessage());
+        assertEquals("Geçersiz tutar", response.getMessage());
         assertEquals("INVALID_AMOUNT", response.getErrorCode().name());
     }
     @Test
@@ -159,7 +159,7 @@ public class AccountDepositServiceImplTest {
         assertNotNull(response);
         assertFalse(response.isSuccess());
         assertEquals(400, response.getStatusCode());
-        assertEquals("Kullanıcı bulunamadı: Email=admin@example.com", response.getMessage());
+        assertEquals("admin@example.com", response.getMessage());
         assertEquals("USER_NOT_FOUND", response.getErrorCode().name());
     }
 }

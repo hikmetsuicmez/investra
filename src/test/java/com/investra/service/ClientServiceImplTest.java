@@ -2,9 +2,13 @@ package com.investra.service;
 
 import com.investra.dtos.request.CreateIndividualClientRequest;
 import com.investra.dtos.response.Response;
+import com.investra.entity.Account;
 import com.investra.entity.Client;
 import com.investra.entity.User;
+import com.investra.enums.Gender;
 import com.investra.enums.OrderStatus;
+import com.investra.exception.BusinessException;
+import com.investra.exception.ErrorCode;
 import com.investra.exception.UserNotFoundException;
 import com.investra.repository.AccountRepository;
 import com.investra.repository.ClientRepository;
@@ -16,6 +20,7 @@ import org.junit.Test;
 import org.mockito.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -54,6 +59,10 @@ public class ClientServiceImplTest {
         String userEmail = "user@example.com";
         CreateIndividualClientRequest request = new CreateIndividualClientRequest();
         request.setEmail("client@example.com");
+        request.setFullName("Ali Veli");
+        request.setBirthDate(LocalDate.of(1990, 1, 1));
+        request.setGender(Gender.Male);
+        request.setAddress("İstanbul, Türkiye");
 
         User user = new User();
         user.setEmail(userEmail);
@@ -67,25 +76,28 @@ public class ClientServiceImplTest {
         assertEquals(201, response.getStatusCode());
         assertEquals("Bireysel müşteri başarıyla eklendi", response.getMessage());
         verify(clientRepository, times(1)).save(any(Client.class));
-        System.out.println("Response status code: " + response.getStatusCode());
     }
 
     @Test
-    public void createIndividualClient_ShouldThrowUserNotFoundException_WhenUserNotFound() {
+    public void createIndividualClient_ShouldThrowBusinessException_WhenUserNotFound() {
+        String userEmail = "user@example.com";
         CreateIndividualClientRequest request = new CreateIndividualClientRequest();
         request.setEmail("client@example.com");
-        String userEmail = "notfound@example.com";
+        request.setFullName("Ali Veli");
+        request.setBirthDate(LocalDate.of(1990, 1, 1));
+        request.setGender(Gender.Male);
+        request.setAddress("İstanbul, Türkiye");
 
         when(clientRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
 
-        try {
-            clientService.createClient(request, userEmail);
-            fail("UserNotFoundException bekleniyordu ama fırlatılmadı!");
-        } catch (UserNotFoundException ex) {
-            System.out.println("Beklenen exception fırlatıldı: " + ex.getMessage());
-            assertTrue(ex.getMessage().contains(userEmail));
-        }
+        BusinessException ex = org.junit.Assert.assertThrows(
+                BusinessException.class,
+                () -> clientService.createClient(request, userEmail)
+        );
+
+        assertTrue(ex.getMessage().contains(userEmail));
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
@@ -105,11 +117,15 @@ public class ClientServiceImplTest {
         Client client = new Client();
         client.setIsActive(true);
         client.setId(1L);
+        client.setFullName("Ali Veli");
+        client.setEmail("ali@veli.com");
 
-        when(accountRepository.findAllByClientId(client.getId()))
-                .thenReturn(Collections.singletonList(new com.investra.entity.Account() {{
-                    setBalance(new BigDecimal("-10"));
-                }}));
+        Account account = new Account();
+        account.setBalance(BigDecimal.valueOf(-10));
+        account.setClient(client);
+
+        when(accountRepository.findAllByClientId(1L))
+                .thenReturn(Collections.singletonList(account));
 
         Response<Void> response = clientService.deleteClient(client);
 

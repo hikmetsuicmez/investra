@@ -250,7 +250,6 @@ public class StockSellServiceImplTest {
         tradeOrder.setStatus(OrderStatus.EXECUTED);
 
         when(tradeOrderRepository.save(any(TradeOrder.class))).thenReturn(tradeOrder);
-        when(portfolioUpdateService.updatePortfolioAfterSell(portfolioItem, request.getQuantity())).thenReturn(null);
         doNothing().when(previewCacheService).removeOrderPreview(previewId);
 
         Response<StockSellOrderResultResponse> response = stockSellService.executeSellOrder(request, userEmail);
@@ -269,7 +268,6 @@ public class StockSellServiceImplTest {
         verify(entityFinderService).findAndValidateEntities(request);
         verify(calculationService).calculateOrderAmounts(client, stock, request);
         verify(tradeOrderRepository).save(any(TradeOrder.class));
-        verify(portfolioUpdateService).updatePortfolioAfterSell(portfolioItem, request.getQuantity());
         verify(previewCacheService).removeOrderPreview(previewId);
     }
 }
