@@ -74,6 +74,9 @@ public class Stock {
     @Column(name = "issuer_name")
     private String issuerName;
 
+    @Column(name = "last_price_update")
+    private LocalDateTime lastPriceUpdate;
+
     public String getCreatedAt() {
         if (createdAt != null) {
             return createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
