@@ -37,7 +37,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Role } from "@/types/employees";
 import SimulationDateDisplay from "./dashboard/simulation-day/SimulationDayDisplay";
 
@@ -46,6 +46,7 @@ type SidebarItemType = {
 	icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 	href?: string;
 	subitems: SidebarItemType[];
+	rolesAllowed?: Role[];
 };
 
 const items: SidebarItemType[] = [
@@ -54,6 +55,7 @@ const items: SidebarItemType[] = [
 		icon: HomeIcon,
 		href: "/dashboard",
 		subitems: [],
+		rolesAllowed: ["ADMIN", "TRADER", "VIEWER"],
 	},
 	{
 		label: "Portföyüm",
@@ -70,28 +72,35 @@ const items: SidebarItemType[] = [
 						icon: List,
 						href: "/dashboard/portfolio-management",
 						subitems: [],
+						rolesAllowed: ["ADMIN", "TRADER", "VIEWER"],
 					},
 					{
 						label: "Hisse Senedi Kapanışı",
 						icon: List,
 						href: "/dashboard/stock-management/list-closing-price",
 						subitems: [],
+						rolesAllowed: ["ADMIN", "TRADER", "VIEWER"],
 					},
 				],
+				rolesAllowed: ["ADMIN", "TRADER", "VIEWER"],
 			},
+
 			{
 				label: "Müşteri Listesi",
 				icon: List,
 				href: "/dashboard/customer-management",
 				subitems: [],
+				rolesAllowed: ["ADMIN", "TRADER"],
 			},
 		],
+		rolesAllowed: ["ADMIN", "TRADER", "VIEWER"],
 	},
 	{
 		label: "Hesap İşlemleri",
 		icon: Users,
 		href: "/dashboard/customer-search",
 		subitems: [],
+		rolesAllowed: ["ADMIN", "TRADER"],
 	},
 	{
 		label: "Bakiye İşlemi",
@@ -103,14 +112,17 @@ const items: SidebarItemType[] = [
 				icon: List,
 				href: "/dashboard/customer-search",
 				subitems: [],
+				rolesAllowed: ["ADMIN", "TRADER"],
 			},
 		],
+		rolesAllowed: ["ADMIN", "TRADER"],
 	},
 	{
 		label: "Personel Yönetimi",
 		icon: Network,
 		href: "/dashboard/employee-management",
 		subitems: [],
+		rolesAllowed: ["ADMIN"],
 	},
 	{
 		label: "Hisse Senedi İşlemleri",
@@ -121,28 +133,30 @@ const items: SidebarItemType[] = [
 				icon: ArrowDownCircle,
 				href: "/dashboard/stock-management/buy",
 				subitems: [],
+				rolesAllowed: ["ADMIN", "TRADER"],
 			},
 			{
 				label: "Hisse Senedi Satış",
 				icon: ArrowUpCircle,
 				href: "/dashboard/stock-management/sell",
 				subitems: [],
+				rolesAllowed: ["ADMIN", "TRADER"],
 			},
 			{
 				label: "Emir Takibi",
 				icon: ListChecks,
 				href: "/dashboard/stock-management/order-tracking",
 				subitems: [],
+				rolesAllowed: ["ADMIN", "TRADER"],
 			},
 		],
+		rolesAllowed: ["ADMIN", "TRADER"],
 	},
 ];
 
 export function SidebarItem({ item, role }: { item: SidebarItemType; role: Role }) {
 	const hasSubitems = item.subitems && item.subitems.length > 0;
-
-	const isPersonnelManagement = item.label === "Personel Yönetimi";
-	const disabled = isPersonnelManagement && role != "ADMIN";
+	const disabled = item.rolesAllowed && !item.rolesAllowed.includes(role);
 
 	if (!hasSubitems) {
 		return (
@@ -167,9 +181,13 @@ export function SidebarItem({ item, role }: { item: SidebarItemType; role: Role 
 	return (
 		<Collapsible>
 			<SidebarMenuItem>
-				<CollapsibleTrigger asChild>
+				<CollapsibleTrigger asChild disabled={disabled}>
 					<SidebarMenuButton size="lg" asChild>
-						<div className="flex justify-between w-full items-center gap-2">
+						<div
+							className={`flex justify-between w-full items-center gap-2 ${
+								disabled ? "opacity-50 cursor-not-allowed" : ""
+							}`}
+						>
 							<div className="flex items-center gap-2 text-sm">
 								<item.icon className="size-4" />
 								<p>{item.label}</p>
@@ -192,8 +210,8 @@ export function SidebarItem({ item, role }: { item: SidebarItemType; role: Role 
 	);
 }
 
-export function AppSidebar() {
-	const [role, setRole] = useState<Role>("VIEWER");
+export function AppSidebar({ initialRole }: { initialRole: Role }) {
+	const [role, setRole] = useState<Role>(initialRole);
 
 	const handleLogout = async () => {
 		try {
@@ -209,20 +227,6 @@ export function AppSidebar() {
 			console.error("Logout error:", error);
 		}
 	};
-
-	const fetchRole = async () => {
-		const res = await fetch("/api/auth/get-role", {
-			method: "GET",
-		});
-		if (res.ok) {
-			const response = await res.json();
-			setRole(response.role);
-		}
-	};
-
-	useEffect(() => {
-		fetchRole();
-	}, []);
 
 	return (
 		<Sidebar variant="sidebar" className="h-screen font-medium">
