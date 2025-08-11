@@ -86,6 +86,7 @@ public class ApiEndpoints {
         public static final String GET_EXECUTED = "/executed"; // Gerçekleşen emirleri getir
         public static final String GET_COMPLETED = "/completed"; // Tamamlanmış emirleri getir
         public static final String GET_CANCELLED = "/cancelled"; // İptal edilen emirleri getir
+        public static final String GET_CANCELLABLE = "/cancellable"; // İptal edilebilir emirleri getir
         public static final String ORDER_CANCELLED = "/{orderId}/cancel";
 
     }
