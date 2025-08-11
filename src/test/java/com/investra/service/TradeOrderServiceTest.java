@@ -5,6 +5,7 @@ import com.investra.dtos.response.TradeOrderDTO;
 import com.investra.entity.*;
 import com.investra.enums.*;
 import com.investra.repository.*;
+import com.investra.service.helper.OrderValidatorService;
 import com.investra.service.impl.PortfolioServiceImpl;
 import com.investra.service.impl.SimulationDateServiceImpl;
 import com.investra.service.impl.TradeOrderServiceImpl;
@@ -34,6 +35,9 @@ public class TradeOrderServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private OrderValidatorService orderValidatorService;
+
 
     @Mock
     private StockRepository stockRepository;
@@ -58,7 +62,8 @@ public class TradeOrderServiceTest {
                 clientRepository,
                 stockRepository,
                 portfolioService,
-                simulationDateService
+                simulationDateService,
+                orderValidatorService
         );
     }
 
