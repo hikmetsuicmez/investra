@@ -45,7 +45,6 @@ public class CreateIndividualClientRequest extends CreateClientRequest {
     @Positive(message = "Aylık gelir pozitif bir değer olmalıdır")
     private BigDecimal monthlyIncome;
 
-    @NotNull(message = "Tahmin edilen işlem hacmi zorunludur")
     private EstimatedTransactionVolume estimatedTransactionVolume;
 
     @AssertTrue(message = "TCKN, Pasaport No, Yabancı Kimlik No veya Mavi Kart No alanlarından en az biri girilmelidir")

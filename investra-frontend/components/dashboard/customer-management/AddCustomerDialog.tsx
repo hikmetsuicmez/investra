@@ -288,7 +288,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 							</div>
 
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="monthlyIncome">Aylık Gelir</Label>
+								<Label htmlFor="monthlyIncome">Aylık Gelir </Label>
 								<Input
 									id="monthlyIncome"
 									placeholder="Aylık Gelir"
@@ -298,7 +298,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 							</div>
 
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="estimatedVolume">Tahmini İşlem Hacmi *</Label>
+								<Label htmlFor="estimatedVolume">Tahmini İşlem Hacmi </Label>
 								<Select
 									onValueChange={(value) =>
 										setIndividualInfo((prev) => ({ ...prev, estimatedTransactionVolume: value }))
@@ -448,7 +448,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 							</div>
 
 							<div className="flex flex-col gap-2">
-								<Label htmlFor="revenue">Ciro *</Label>
+								<Label htmlFor="revenue">Ciro </Label>
 								<Input
 									id="revenue"
 									placeholder="Ciro"

@@ -21,7 +21,6 @@ public class CreateCorporateClientRequest extends CreateClientRequest {
     @NotBlank(message = "Vergi numarası zorunludur (10 haneli)")
     private String taxNumber;
 
-    @NotBlank(message = "Sicil numarası zorunludur")
     private String registrationNumber;
 
     @NotBlank(message = "Şirket türü zorunludur (Anonim, Limited, vb.)")
