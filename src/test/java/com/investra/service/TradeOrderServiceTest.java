@@ -5,12 +5,17 @@ import com.investra.dtos.response.TradeOrderDTO;
 import com.investra.entity.*;
 import com.investra.enums.*;
 import com.investra.repository.*;
+import com.investra.service.impl.PortfolioServiceImpl;
+import com.investra.service.impl.SimulationDateServiceImpl;
+import com.investra.service.impl.TradeOrderServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.lang.reflect.Field;
 
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
@@ -32,19 +37,33 @@ public class TradeOrderServiceTest {
 
     @Mock
     private StockRepository stockRepository;
-
+    @Mock
+    private ClientRepository clientRepository;
+    @Mock
+    private PortfolioServiceImpl portfolioService;
+    @Mock
+    private SimulationDateServiceImpl simulationDateService;
 
     @InjectMocks
-    private TradeOrderService tradeOrderService;
+    private TradeOrderServiceImpl tradeOrderService;
 
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        tradeOrderService = new TradeOrderServiceImpl(
+                tradeOrderRepository,
+                accountRepository,
+                notificationRepository,
+                userRepository,
+                clientRepository,
+                stockRepository,
+                portfolioService,
+                simulationDateService
+        );
     }
 
     @Test
-    public void testProcessPendingLimitOrder_PriceConditionMet_BuyOrder() {
-        // Arrange
+    public void testProcessPendingLimitOrder_PriceConditionMet_BuyOrder() throws Exception {
         Stock stock = new Stock();
         stock.setId(1L);
         stock.setPrice(BigDecimal.valueOf(100));
@@ -55,9 +74,22 @@ public class TradeOrderServiceTest {
         order.setPrice(BigDecimal.valueOf(150));
         order.setStock(stock);
         order.setStatus(OrderStatus.PENDING);
+        order.setClient(new Client());
+        order.setAccount(new Account());
+        order.setQuantity(10);
+        order.setExecutionType(ExecutionType.LIMIT);
 
         when(stockRepository.findById(1L)).thenReturn(Optional.of(stock));
         when(tradeOrderRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
+
+        // Mock simulationDateService
+        SimulationDateService simulationDateServiceMock = mock(SimulationDateService.class);
+        when(simulationDateServiceMock.getCurrentSimulationDate()).thenReturn(LocalDate.now());
+
+        // Reflection ile tradeOrderService içindeki simulationDateService field'ını set et
+        Field simulationDateServiceField = tradeOrderService.getClass().getDeclaredField("simulationDateService");
+        simulationDateServiceField.setAccessible(true);
+        simulationDateServiceField.set(tradeOrderService, simulationDateServiceMock);
 
         // Act
         tradeOrderService.processPendingLimitOrder(order);
@@ -68,7 +100,6 @@ public class TradeOrderServiceTest {
     }
     @Test
     public void testProcessPendingLimitOrder_PriceConditionNotMet_SellOrder() {
-        // Arrange
         Stock stock = new Stock();
         stock.setId(1L);
         stock.setPrice(BigDecimal.valueOf(90)); // Piyasa fiyatı 90
@@ -82,10 +113,8 @@ public class TradeOrderServiceTest {
 
         when(stockRepository.findById(1L)).thenReturn(Optional.of(stock));
 
-        // Act
         tradeOrderService.processPendingLimitOrder(order);
 
-        // Assert
         // Emir işlenmemeli çünkü fiyat şartı sağlanmadı
         assertEquals(OrderStatus.PENDING, order.getStatus());
         verify(tradeOrderRepository, never()).save(order); // save çağrılmamalı
@@ -102,6 +131,7 @@ public class TradeOrderServiceTest {
         Account account = new Account();
         account.setId(1L);
         account.setAvailableBalance(BigDecimal.valueOf(1000));
+        account.setBalance(BigDecimal.valueOf(1000));
 
         TradeOrder order = new TradeOrder();
         order.setId(1L);
@@ -112,7 +142,7 @@ public class TradeOrderServiceTest {
         order.setNetAmount(BigDecimal.valueOf(100));
         order.setStock(new Stock());
 
-        when(userRepository.findByUsername("username")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("username")).thenReturn(Optional.of(user));
         when(tradeOrderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(tradeOrderRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
         when(accountRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
@@ -122,8 +152,9 @@ public class TradeOrderServiceTest {
         Response<TradeOrderDTO> cancelledOrder = tradeOrderService.cancelOrder(1L, "username");
 
         // Assert
-        assertEquals(OrderStatus.CANCELLED, cancelledOrder.getStatusCode());
-        verify(notificationRepository, times(1)).save(any(Notification.class));
+        assertEquals(200, cancelledOrder.getStatusCode());
+        assertEquals(OrderStatus.CANCELLED.name(), cancelledOrder.getData().getStatus());
+        verify(notificationRepository, times(1)).save(any());
         verify(accountRepository, times(1)).save(account);
     }
 
@@ -133,16 +164,19 @@ public class TradeOrderServiceTest {
         user.setUsername("username");
 
         TradeOrder order1 = new TradeOrder();
-        TradeOrder order2 = new TradeOrder();
+        order1.setStatus(OrderStatus.PENDING);
 
-        when(userRepository.findByUsername("username")).thenReturn(Optional.of(user));
+        TradeOrder order2 = new TradeOrder();
+        order2.setStatus(OrderStatus.PENDING);
+
+        when(userRepository.findByEmail("username")).thenReturn(Optional.of(user));
         when(tradeOrderRepository.findByUserOrderBySubmittedAtDesc(user))
                 .thenReturn(List.of(order1, order2));
 
         List<TradeOrderDTO> orders = tradeOrderService.getAllOrdersByUser("username");
 
         assertEquals(2, orders.size());
-        verify(userRepository).findByUsername("username");
+        verify(userRepository).findByEmail("username");
         verify(tradeOrderRepository).findByUserOrderBySubmittedAtDesc(user);
     }
     @Test
@@ -151,22 +185,27 @@ public class TradeOrderServiceTest {
         user.setUsername("username");
 
         TradeOrder order1 = new TradeOrder();
-        TradeOrder order2 = new TradeOrder();
+        order1.setStatus(OrderStatus.PENDING);
 
-        when(userRepository.findByUsername("username")).thenReturn(Optional.of(user));
+        TradeOrder order2 = new TradeOrder();
+        order2.setStatus(OrderStatus.PENDING);
+
+        when(userRepository.findByEmail("username")).thenReturn(Optional.of(user));
         when(tradeOrderRepository.findByUserAndStatusOrderBySubmittedAtDesc(user, OrderStatus.PENDING))
                 .thenReturn(List.of(order1, order2));
 
         List<TradeOrderDTO> orders = tradeOrderService.getOrdersByStatusAndUser("username", OrderStatus.PENDING);
 
         assertEquals(2, orders.size());
-        verify(userRepository).findByUsername("username");
+        verify(userRepository).findByEmail("username");
         verify(tradeOrderRepository).findByUserAndStatusOrderBySubmittedAtDesc(user, OrderStatus.PENDING);
     }
     @Test
     public void testUpdateAccountBalanceForBuyOrder() {
         Account account = new Account();
+        account.setId(1L);
         account.setAvailableBalance(BigDecimal.valueOf(1000));
+        account.setBalance(BigDecimal.valueOf(1000));  // burayı ekle
 
         BigDecimal amount = BigDecimal.valueOf(200);
 
@@ -180,7 +219,9 @@ public class TradeOrderServiceTest {
     @Test
     public void testRestoreAccountBalanceForCancelledBuyOrder() {
         Account account = new Account();
+        account.setId(1L);
         account.setAvailableBalance(BigDecimal.valueOf(800));
+        account.setBalance(BigDecimal.valueOf(1000));
 
         BigDecimal amount = BigDecimal.valueOf(200);
 
