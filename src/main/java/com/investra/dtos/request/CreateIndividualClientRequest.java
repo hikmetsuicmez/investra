@@ -44,7 +44,6 @@ public class CreateIndividualClientRequest extends CreateClientRequest {
     private String educationStatus;
 
     @Positive(message = "Aylık gelir pozitif bir değer olmalıdır")
-    @NotNull(message = "Aylık gelir zorunludur")
     private BigDecimal monthlyIncome;
 
     @NotNull(message = "Tahmin edilen işlem hacmi zorunludur")
