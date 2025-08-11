@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { BuyStockPreviewDialogProps, BuyOrderResults } from "@/types/stocks";
 
@@ -146,7 +146,7 @@ export default function BuyStockPreviewDialog({
 							<p className="font-semibold">{previewResults.accountNumber}</p>
 
 							<p className="text-gray-500">Hisse Adı + Kodu:</p>
-							<p className="font-semibold">{previewResults.stockName + " " + previewResults.stockSymbol}</p>
+							<p className="font-semibold">{previewResults.stockName + " | " + previewResults.stockSymbol}</p>
 
 							<p className="text-gray-500">İşlem Türü:</p>
 							<p className="font-semibold">{previewResults.operation}</p>
@@ -176,7 +176,7 @@ export default function BuyStockPreviewDialog({
 							<p className="font-semibold">{previewResults.valueDate}</p>
 
 							<p className="text-gray-500">Hisse Grubu:</p>
-							<p className="font-semibold">{previewResults.stockGroup}</p>
+							<p className="font-semibold">{selectedStock.category}</p>
 						</div>
 						<DialogFooter>
 							<Button className="bg-green-600" onClick={handleExecute}>

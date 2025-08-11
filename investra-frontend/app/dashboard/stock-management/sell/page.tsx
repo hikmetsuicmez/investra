@@ -23,6 +23,7 @@ export default function StockSell() {
 		stockGroup: "",
 		isActive: true,
 		source: "",
+		category: "",
 	});
 	const [executionType, setExecutionType] = useState<ExecutionType>("MARKET");
 	const [price, setPrice] = useState(0);
@@ -55,7 +56,7 @@ export default function StockSell() {
 		setCost(newCost);
 		setCommission(newCommission);
 		setBsmv(newBsmv);
-		setTotalCost(newCost + newCommission + newBsmv);
+		setTotalCost(newCost - newCommission - newBsmv);
 	};
 
 	const handleTotalCostChange = (tc: number) => {
@@ -67,7 +68,7 @@ export default function StockSell() {
 		const newCost = safeQuantity * price;
 		const newCommission = newCost * 0.002;
 		const newBsmv = newCommission * 0.05;
-		const newTotalCost = newCost + newCommission + newBsmv;
+		const newTotalCost = newCost - newCommission - newBsmv;
 
 		setQuantity(safeQuantity);
 		setCost(newCost);
@@ -150,7 +151,7 @@ export default function StockSell() {
 			setCost(newCost);
 			setCommission(newCommission);
 			setBsmv(newBsmv);
-			setTotalCost(newCost + newCommission + newBsmv);
+			setTotalCost(newCost - newCommission - newBsmv);
 		}
 	}, [price, quantity]);
 
@@ -159,18 +160,12 @@ export default function StockSell() {
 	const lowerSearch = searchTerm.toLowerCase();
 
 	const filteredAccounts = allAccounts.filter((acc) => {
-		const customer = customers.find((c) => c.id === acc.clientId);
-
-		const nationalId = customer?.clientType === "INDIVIDUAL" ? customer.nationalityNumber ?? "" : "";
-		const taxNumber = customer?.clientType === "CORPORATE" ? customer.taxNumber ?? "" : "";
 		const clientName = acc.clientName ?? "";
 
 		return (
 			clientName.toLowerCase().includes(lowerSearch) ||
 			acc.accountNumber.toLowerCase().includes(lowerSearch) ||
-			acc.iban.toLowerCase().includes(lowerSearch) ||
-			nationalId.toLowerCase().includes(lowerSearch) ||
-			taxNumber.toLowerCase().includes(lowerSearch)
+			acc.iban.toLowerCase().includes(lowerSearch)
 		);
 	});
 
@@ -187,7 +182,7 @@ export default function StockSell() {
 						<h1 className="text-lg font-semibold">Hesap Arama</h1>
 					</div>
 					<Input
-						placeholder="Müşteri Adı / Hesap No / IBAN / TCKN / Vergi No."
+						placeholder="Müşteri Adı / Hesap No / IBAN"
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
 						className="shrink-0"

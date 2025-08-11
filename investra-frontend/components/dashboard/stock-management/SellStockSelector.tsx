@@ -18,6 +18,8 @@ export const SellStockSelector: React.FC<StockSelectorProps> = ({ selectedStock,
 		const res = await fetch(`/api/stocks/sell/client/${clientId}/stocks`);
 		if (!res.ok) throw new Error("Failed to fetch stocks");
 		const data = await res.json();
+
+		console.log(data);
 		setStocks(data || []);
 		setSelectedStock(data[0]);
 	}

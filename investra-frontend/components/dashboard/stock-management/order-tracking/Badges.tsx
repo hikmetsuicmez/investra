@@ -70,7 +70,7 @@ export function TradeOrderSettlementStatusBadge({ settlementStatus }: { settleme
 		{ label: string; color: string; icon: React.ElementType }
 	> = {
 		PENDING: {
-			label: "Beklemede",
+			label: "T+0",
 			color: "bg-yellow-100 text-yellow-800",
 			icon: Clock,
 		},

@@ -36,7 +36,7 @@ function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustom
 
 export default function CustomerTable({ customers }: CustomerTableProps) {
 	const router = useRouter();
-	const handleRowClick = (customerId: number) => {
+	const handleRowClick = (customerId: number | undefined) => {
 		router.push(`/dashboard/customer-management/portfolio/${customerId}`);
 	};
 	return (

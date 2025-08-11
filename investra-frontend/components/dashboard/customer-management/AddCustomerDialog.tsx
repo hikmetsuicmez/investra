@@ -45,6 +45,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 		estimatedTransactionVolume: "",
 		notes: "",
 		isActive: true,
+		taxType: "",
 	});
 
 	const [corporateInfo, setCorporateInfo] = useState<CorporateCustomerInfo>({
@@ -59,6 +60,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 		monthlyRevenue: "",
 		companyNotes: "",
 		isActive: true,
+		taxType: "",
 	});
 
 	function removeEmptyFields<T>(obj: T): Partial<T> {
@@ -156,8 +158,8 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 								</Select>
 							</div>
 
-							<div className="flex flex-col gap-2 col-span-2">
-								<Label htmlFor="identityNumber">
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="identityNumber" className="line-clamp-1">
 									{individualInfo.citizenshipType === "tcVatandasi"
 										? "TC Kimlik No / Pasaport No / Mavi Kart No *"
 										: "Pasaport No / Yabancı Kimlik No *"}
@@ -173,6 +175,23 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 									onChange={(e) => setIndividualInfo((prev) => ({ ...prev, nationalityNumber: e.target.value }))}
 									required
 								/>
+							</div>
+
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="taxType">Vergi Tipi</Label>
+								<Select
+									onValueChange={(value) => setIndividualInfo((prev) => ({ ...prev, taxType: value }))}
+									value={individualInfo.taxType}
+								>
+									<SelectTrigger id="taxType" className="w-full">
+										<SelectValue placeholder="Vergi Tipi" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="EXEMPT">Muaf</SelectItem>
+										<SelectItem value="NARROW_TAXPAYER">Dar Mükellef</SelectItem>
+										<SelectItem value="FULL_TAXPAYER">Tam Mükellef</SelectItem>
+									</SelectContent>
+								</Select>
 							</div>
 
 							<div className="flex flex-col gap-2">
@@ -323,7 +342,7 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 
 					<TabsContent value="kurumsal">
 						<form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-							<div className="flex flex-col gap-2">
+							<div className="flex flex-col gap-2 col-span-2">
 								<Label htmlFor="companyName">Kurum Ticari Adı *</Label>
 								<Input
 									id="companyName"
@@ -344,6 +363,24 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 									required
 								/>
 							</div>
+
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="taxType">Vergi Tipi</Label>
+								<Select
+									onValueChange={(value) => setCorporateInfo((prev) => ({ ...prev, taxType: value }))}
+									value={individualInfo.taxType}
+								>
+									<SelectTrigger id="taxType" className="w-full">
+										<SelectValue placeholder="Vergi Tipi" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="EXEMPT">Muaf</SelectItem>
+										<SelectItem value="NARROW_TAXPAYER">Dar Mükellef</SelectItem>
+										<SelectItem value="FULL_TAXPAYER">Tam Mükellef</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+
 							<div className="flex flex-col gap-2">
 								<Label htmlFor="companyType">Şirket Türü *</Label>
 								<Select

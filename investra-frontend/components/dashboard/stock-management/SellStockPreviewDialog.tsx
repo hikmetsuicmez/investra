@@ -177,7 +177,7 @@ export default function SellStockPreviewDialog({
 							<p className="font-semibold">{previewResults.valueDate}</p>
 
 							<p className="text-gray-500">Hisse Grubu:</p>
-							<p className="font-semibold">{previewResults.stockGroup}</p>
+							<p className="font-semibold">{selectedStock.category}</p>
 						</div>
 						<DialogFooter>
 							<Button className="bg-green-600" onClick={handleExecute}>

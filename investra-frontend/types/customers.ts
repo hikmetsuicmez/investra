@@ -56,6 +56,7 @@ export interface IndividualCustomerInfo {
 	estimatedTransactionVolume: string;
 	notes: string;
 	isActive: boolean;
+	taxType?: string;
 }
 
 // Corporate customer information interface
@@ -72,6 +73,7 @@ export interface CorporateCustomerInfo {
 	monthlyRevenue: string;
 	companyNotes: string;
 	isActive: boolean;
+	taxType?: string;
 }
 
 // Props for AddCustomerDialog component

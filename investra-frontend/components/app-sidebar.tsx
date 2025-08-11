@@ -19,6 +19,7 @@ import Link from "next/link";
 import {
 	ArrowDownCircle,
 	ArrowUpCircle,
+	BriefcaseIcon,
 	ChartLine,
 	ChevronDown,
 	ChevronsUpDown,
@@ -56,7 +57,7 @@ const items: SidebarItemType[] = [
 	},
 	{
 		label: "Portföyüm",
-		icon: Wallet,
+		icon: BriefcaseIcon,
 		href: "/dashboard/portfolio-management",
 		subitems: [
 			{
@@ -94,7 +95,7 @@ const items: SidebarItemType[] = [
 	},
 	{
 		label: "Bakiye İşlemi",
-		icon: Users,
+		icon: Wallet,
 		href: "/",
 		subitems: [
 			{
@@ -115,12 +116,6 @@ const items: SidebarItemType[] = [
 		label: "Hisse Senedi İşlemleri",
 		icon: ChartLine,
 		subitems: [
-			{
-				label: "Hisse Senedi Listeleme",
-				icon: List,
-				href: "/dashboard/stock-management/list",
-				subitems: [],
-			},
 			{
 				label: "Hisse Senedi Alış",
 				icon: ArrowDownCircle,
