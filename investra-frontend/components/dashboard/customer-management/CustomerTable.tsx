@@ -34,7 +34,7 @@ function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustom
 
 export default function CustomerTable({ customers }: CustomerTableProps) {
 	const router = useRouter();
-	const handleRowClick = (customerId: number) => {
+	const handleRowClick = (customerId: number | undefined) => {
 		router.push(`/dashboard/customer-management/portfolio/${customerId}`);
 	};
 	return (
@@ -51,7 +51,14 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
 			</TableHeader>
 			<TableBody>
 				{customers.map((customer, index) => (
-					<TableRow key={customer.id} onClick={() => handleRowClick(customer.id)} className="cursor-pointer">
+					<TableRow
+						key={customer.id}
+						onClick={(e) => {
+							handleRowClick(customer.id);
+							e.stopPropagation();
+						}}
+						className="cursor-pointer"
+					>
 						<TableCell>{mapToCustomerDisplay(customer).name}</TableCell>
 						<TableCell>{mapToCustomerDisplay(customer).type}</TableCell>
 						<TableCell>{customer.phone}</TableCell>
