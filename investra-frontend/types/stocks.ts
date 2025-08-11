@@ -101,6 +101,9 @@ export type Stock = {
 	stockCode?: string;
 	companyName?: string;
 	sector?: string;
+	changePercentage?: number;
+	highPrice?: number;
+	lowPrice?: number;
 };
 
 // Execution Types
