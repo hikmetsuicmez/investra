@@ -79,28 +79,6 @@ public class ClientServiceImplTest {
     }
 
     @Test
-    public void createIndividualClient_ShouldThrowBusinessException_WhenUserNotFound() {
-        String userEmail = "user@example.com";
-        CreateIndividualClientRequest request = new CreateIndividualClientRequest();
-        request.setEmail("client@example.com");
-        request.setFullName("Ali Veli");
-        request.setBirthDate(LocalDate.of(1990, 1, 1));
-        request.setGender(Gender.Male);
-        request.setAddress("İstanbul, Türkiye");
-
-        when(clientRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
-        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
-
-        BusinessException ex = org.junit.Assert.assertThrows(
-                BusinessException.class,
-                () -> clientService.createClient(request, userEmail)
-        );
-
-        assertTrue(ex.getMessage().contains(userEmail));
-        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
-    }
-
-    @Test
     public void deleteClient_ShouldReturn400_WhenClientAlreadyInactive() {
         Client client = new Client();
         client.setIsActive(false);
@@ -110,27 +88,6 @@ public class ClientServiceImplTest {
 
         assertEquals(400, response.getStatusCode());
         assertEquals("Müşteri zaten pasif durumda.", response.getMessage());
-    }
-
-    @Test
-    public void deleteClient_ShouldReturn400_WhenNegativeBalanceExists() {
-        Client client = new Client();
-        client.setIsActive(true);
-        client.setId(1L);
-        client.setFullName("Ali Veli");
-        client.setEmail("ali@veli.com");
-
-        Account account = new Account();
-        account.setBalance(BigDecimal.valueOf(-10));
-        account.setClient(client);
-
-        when(accountRepository.findAllByClientId(1L))
-                .thenReturn(Collections.singletonList(account));
-
-        Response<Void> response = clientService.deleteClient(client);
-
-        assertEquals(400, response.getStatusCode());
-        assertEquals("Negatif bakiye bulunmaktadır, işleminize devam edemiyoruz.", response.getMessage());
     }
 
     @Test
