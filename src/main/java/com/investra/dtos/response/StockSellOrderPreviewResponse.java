@@ -19,7 +19,7 @@ public class StockSellOrderPreviewResponse {
     private String accountNumber;
     private String stockName;
     private String stockSymbol;
-    private BigDecimal price;  // (HISSE SENEDI ADET FİYATI)
+    private BigDecimal price; // (HISSE SENEDI ADET FİYATI)
     private Integer quantity; // (HISSE SENEDI ADEDİ)
     private BigDecimal totalAmount; // (HISSE SENEDI ADEDİ * ADET FİYATI)
     private BigDecimal commission; // (TOPLAM TUTARIN %0.2'İ BİREYSEL ICIN, TOPLAM TUTARIN %0.1'İ KURUMSAL ICIN)
@@ -27,7 +27,7 @@ public class StockSellOrderPreviewResponse {
     private BigDecimal totalTaxAndCommission; // (KOMİSYON + BSMV)
     private BigDecimal netAmount; // (TOPLAM TUTAR - KOMİSYON - BSMV)
     private ExecutionType executionType; // "LIMIT" veya "MARKET"
-    private StockGroup stockGroup; //  TECHNOLOGY, FINANCE, HEALTHCARE, ENERGY gibi gruplar
+    private StockGroup stockGroup; // TECHNOLOGY, FINANCE, HEALTHCARE, ENERGY gibi gruplar
     private OrderType orderType; // "BUY" veya "SELL"
     private LocalDate tradeDate; // Emir tarihini belirtir, genellikle bugünün tarihi
     private String valueDate; // Vade tarihi, genellikle emir tarihinden 2 iş günü sonrasını ifade eder
@@ -37,4 +37,6 @@ public class StockSellOrderPreviewResponse {
 
     // Önizlemenin geçerlilik süresi (dakika)
     private Integer expiryMinutes = 10;
+
+    private String category;
 }

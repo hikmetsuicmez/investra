@@ -1,6 +1,5 @@
 package com.investra.dtos.request;
 
-
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,19 +15,19 @@ import java.math.BigDecimal;
 @Data
 public class CreateCorporateClientRequest extends CreateClientRequest {
 
-    @NotBlank(message = "Şirket isim alanı zorunludur")
+    @NotBlank(message = "Şirket adı zorunludur")
     private String companyName;
 
-    @NotBlank(message = "Vergi numarası zorunludur")
+    @NotBlank(message = "Vergi numarası zorunludur (10 haneli)")
     private String taxNumber;
 
     @NotBlank(message = "Sicil numarası zorunludur")
     private String registrationNumber;
 
-    @NotBlank(message = "Şirket türü zorunludur")
+    @NotBlank(message = "Şirket türü zorunludur (Anonim, Limited, vb.)")
     private String companyType;
 
-    @NotBlank(message = "Faaliyet alanı zorunludur")
+    @NotBlank(message = "Faaliyet alanı zorunludur (Finans, Teknoloji, vb.)")
     private String sector;
 
     @Positive(message = "Ciro pozitif bir değer olmalıdır")

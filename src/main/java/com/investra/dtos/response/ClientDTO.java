@@ -1,10 +1,7 @@
 package com.investra.dtos.response;
 
 
-import com.investra.enums.ClientType;
-import com.investra.enums.ClientStatus;
-import com.investra.enums.Gender;
-import com.investra.enums.EstimatedTransactionVolume;
+import com.investra.enums.*;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -36,6 +33,8 @@ public class ClientDTO {
     private LocalDateTime createdAt;
 
     private String clientNumber;
+
+    private TaxType taxType;
 
 
     // Bireysel müşteri alanları

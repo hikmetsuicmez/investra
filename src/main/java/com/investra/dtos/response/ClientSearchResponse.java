@@ -2,6 +2,7 @@ package com.investra.dtos.response;
 
 import com.investra.enums.ClientStatus;
 import com.investra.enums.ClientType;
+import com.investra.enums.TaxType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class ClientSearchResponse {
     private String taxId;
     private String email;
     private String phoneNumber;
+    private TaxType taxType;
     private ClientStatus clientStatus;
     private ClientType clientType; // BIREYSEL , KURUMSAL
     private LocalDateTime createdAt;

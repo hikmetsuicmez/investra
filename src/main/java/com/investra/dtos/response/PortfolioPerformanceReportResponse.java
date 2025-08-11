@@ -72,6 +72,7 @@ public class PortfolioPerformanceReportResponse {
     public static class StockPerformance {
         private String stockCode;
         private String stockName;
+        private String category;
         private BigDecimal startPrice;
         private BigDecimal endPrice;
         private BigDecimal changePrice;

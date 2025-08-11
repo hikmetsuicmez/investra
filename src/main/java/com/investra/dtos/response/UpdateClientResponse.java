@@ -2,6 +2,7 @@ package com.investra.dtos.response;
 
 import com.investra.enums.ClientStatus;
 import com.investra.enums.ClientType;
+import com.investra.enums.TaxType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class UpdateClientResponse {
     private String notes;
     private ClientStatus status;
     private Boolean isActive;
+    private TaxType taxType;
     private LocalDateTime updatedAt;
 
     // Bireysel müşteri alanları

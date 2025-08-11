@@ -21,4 +21,5 @@ public class ClientStockHoldingResponse {
     private Integer availableQuantity;
     private BigDecimal currentPrice;
     private BigDecimal avgPrice;
+    private String category;
 }

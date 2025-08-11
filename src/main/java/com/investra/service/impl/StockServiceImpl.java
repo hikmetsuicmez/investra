@@ -34,7 +34,8 @@ public class StockServiceImpl implements StockService {
     // Kod-fiyat eşleşmesi için in-memory cache
     private final Map<String, BigDecimal> stockPriceCache = new ConcurrentHashMap<>();
 
-    // üm hisse senetlerini getirir, önce veritabanından yoksa API'den çeker ve veritabanına kaydeder
+    // üm hisse senetlerini getirir, önce veritabanından yoksa API'den çeker ve
+    // veritabanına kaydeder
     @Cacheable(value = "stocks", key = "'all_stocks'")
     @Override
     public List<Stock> getAllStocks() {
@@ -144,7 +145,8 @@ public class StockServiceImpl implements StockService {
             // Her bir tanım için işlem yap
             if (definitions != null) {
                 for (StockDefinitionResponse.StockDefinition def : definitions) {
-                    if (def.getCode() == null) continue;
+                    if (def.getCode() == null)
+                        continue;
 
                     String stockCode = def.getCode();
                     BigDecimal price = priceMap.get(stockCode);

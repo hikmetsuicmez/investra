@@ -22,6 +22,7 @@ public class StockMapper {
                 .availableQuantity(portfolioItem.getQuantity())
                 .avgPrice(portfolioItem.getAvgPrice())
                 .currentPrice(portfolioItem.getStock().getPrice())
+                .category(portfolioItem.getStock().getCategory())
                 .build();
     }
 
@@ -69,6 +70,7 @@ public class StockMapper {
                 .currentPrice(stock.getPrice())
                 .stockGroup(stock.getGroup().name())
                 .isActive(stock.getIsActive())
+                .category(stock.getCategory())
                 .build();
     }
 }
