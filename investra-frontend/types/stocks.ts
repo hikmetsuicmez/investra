@@ -126,6 +126,25 @@ export type BuyOrderResults = {
 	previewId?: string;
 };
 
+export type SellOrderResults = {
+	accountNumber: string;
+	operation: string;
+	stockName: string;
+	stockSymbol: string;
+	price: number;
+	quantity: number;
+	tradeDate: string;
+	valueDate: string;
+	totalAmount: number;
+	stockGroup: string;
+	commission: number;
+	bsmv: number;
+	totalTaxAndCommission: number;
+	netAmount: number;
+	executionType: string;
+	previewId?: string;
+};
+
 // Component Props Types
 export type StockSelectorProps = {
 	selectedStock: Stock;
@@ -136,10 +155,22 @@ export type StockSelectorProps = {
 export type BuyStockPreviewDialogProps = {
 	selectedStock: Stock;
 	quantity: number;
+	price: number;
 	totalCost: number;
 	selectedAccount: Account;
 	executionType: ExecutionType;
 };
+
+export type SellStockPreviewDialogProps = {
+	selectedStock: Stock;
+	quantity: number;
+	price: number;
+	totalCost: number;
+	selectedAccount: Account;
+	executionType: ExecutionType;
+};
+
+export type SettlementStatus = "COMPLETED" | "T2" | "T1" | "CANCELLED" | "PENDING" | null;
 
 export type TradeOrder = {
 	id: number;
@@ -152,7 +183,7 @@ export type TradeOrder = {
 	status: string;
 	submittedAt: string;
 	settledAt: string | null;
-	settlementStatus: string;
+	settlementStatus: SettlementStatus;
 	tradeDate: string;
 	settlementDaysRemaining: number;
 };
