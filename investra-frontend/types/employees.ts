@@ -16,7 +16,6 @@ export interface Employee {
 	name: string;
 	surname: string;
 	nationalId: string; // Tc kimlik
-	registrationNumber: string; // Sicil no
 	phone: string; // Tel no
 	email: string; // E-posta
 	role: "ADMIN" | "TRADER" | "VIEWER";
