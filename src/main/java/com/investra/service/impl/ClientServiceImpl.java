@@ -64,7 +64,7 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
         }
 
         @Transactional
-        @CacheEvict(value = "clients", allEntries = true)
+        // @CacheEvict(value = "clients", allEntries = true)
         public Response<CreateClientResponse> createClient(CreateClientRequest request, String userEmail) {
                 try {
                         log.info("Müşteri oluşturma işlemi başlatıldı. Kullanıcı: {}, Müşteri Tipi: {}",
@@ -80,14 +80,28 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
 
                                 return Response.<CreateClientResponse>builder()
                                                 .statusCode(400)
-                                                .message("Geçersiz müşteri tipi")
+                                                .message("Geçersiz müşteri tipi. INDIVIDUAL veya CORPORATE olmalıdır")
                                                 .build();
                         }
-                } catch (Exception e) {
-                        log.error("Müşteri oluşturma hatası (geçersiz argüman): {}", e.getMessage(), e);
+                } catch (BusinessException e) {
+                        log.warn("Müşteri oluşturma iş kuralı hatası: {}", e.getMessage());
                         return Response.<CreateClientResponse>builder()
                                         .statusCode(400)
                                         .message(e.getMessage())
+                                        .errorCode(e.getErrorCode())
+                                        .build();
+                } catch (IllegalArgumentException e) {
+                        log.warn("Müşteri oluşturma validasyon hatası: {}", e.getMessage());
+                        return Response.<CreateClientResponse>builder()
+                                        .statusCode(400)
+                                        .message(e.getMessage())
+                                        .errorCode(ErrorCode.VALIDATION_ERROR)
+                                        .build();
+                } catch (Exception e) {
+                        log.error("Müşteri oluşturma beklenmeyen hatası: {}", e.getMessage(), e);
+                        return Response.<CreateClientResponse>builder()
+                                        .statusCode(500)
+                                        .message("Müşteri oluşturulurken beklenmeyen bir hata oluştu")
                                         .errorCode(ExceptionUtil.getErrorCode(e))
                                         .build();
                 }
@@ -124,11 +138,25 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                                                 .message("Geçersiz müşteri tipi")
                                                 .build();
                         }
+                } catch (BusinessException e) {
+                        log.warn("Müşteri güncelleme iş kuralı hatası: {}", e.getMessage());
+                        return Response.<UpdateClientResponse>builder()
+                                        .statusCode(400)
+                                        .message(e.getMessage())
+                                        .errorCode(e.getErrorCode())
+                                        .build();
+                } catch (IllegalArgumentException e) {
+                        log.warn("Müşteri güncelleme validasyon hatası: {}", e.getMessage());
+                        return Response.<UpdateClientResponse>builder()
+                                        .statusCode(400)
+                                        .message(e.getMessage())
+                                        .errorCode(ErrorCode.VALIDATION_ERROR)
+                                        .build();
                 } catch (Exception e) {
-                        log.error("Müşteri güncelleme hatası: {}", e.getMessage(), e);
+                        log.error("Müşteri güncelleme beklenmeyen hatası: {}", e.getMessage(), e);
                         return Response.<UpdateClientResponse>builder()
                                         .statusCode(500)
-                                        .message(e.getMessage())
+                                        .message("Müşteri güncellenirken beklenmeyen bir hata oluştu")
                                         .errorCode(ExceptionUtil.getErrorCode(e))
                                         .build();
                 }

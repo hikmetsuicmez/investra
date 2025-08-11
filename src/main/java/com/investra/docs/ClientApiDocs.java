@@ -22,17 +22,25 @@ import java.util.Map;
 @Tag(name = "Müşteri API'ları", description = "Müşteri ile ilgili işlemler için uç noktalar")
 public interface ClientApiDocs {
 
-        @Operation(summary = "Müşteri Oluşturma", description = "Yeni bir müşteri oluşturur. Müşteri tipi 'INDIVIDUAL' veya 'CORPORATE' olabilir.", requestBody = @RequestBody(description = "Müşteri oluşturma isteği, JSON formatında gönderilir. clientType alanı zorunludur.", required = true, content = @Content(schema = @Schema(implementation = CreateClientRequest.class))))
+        @Operation(summary = "Müşteri Oluşturma", description = "Yeni bir müşteri oluşturur. Müşteri tipi 'INDIVIDUAL' veya 'CORPORATE' olabilir. "
+                        +
+                        "Bireysel müşteriler için: fullName, email, phone, taxType, estimatedTransactionVolume zorunludur. "
+                        +
+                        "Kurumsal müşteriler için: companyName, taxNumber, registrationNumber, companyType, sector zorunludur. "
+                        +
+                        "TCKN, Pasaport No, Yabancı Kimlik No veya Mavi Kart No alanlarından en az biri girilmelidir.", requestBody = @RequestBody(description = "Müşteri oluşturma isteği, JSON formatında gönderilir. clientType alanı zorunludur.", required = true, content = @Content(schema = @Schema(implementation = CreateClientRequest.class))))
         @ApiResponse(responseCode = "201", description = "Müşteri başarıyla oluşturuldu", content = @Content(schema = @Schema(implementation = Response.class)))
-        @ApiResponse(responseCode = "400", description = "Geçersiz istek veya müşteri tipi", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "400", description = "Validasyon hatası, eksik alan veya geçersiz müşteri tipi", content = @Content(schema = @Schema(implementation = Response.class)))
         @ApiResponse(responseCode = "401", description = "Yetkilendirme hatası", content = @Content(schema = @Schema(implementation = Response.class)))
         @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
         ResponseEntity<Response<CreateClientResponse>> createClient(
                         @Parameter(description = "Müşteri oluşturma verileri (JSON)", required = true) Map<String, Object> payload);
 
-        @Operation(summary = "Müşteri Güncelleme", description = "Mevcut bir müşterinin bilgilerini günceller. Müşteri tipi 'INDIVIDUAL' veya 'CORPORATE' olabilir.", requestBody = @RequestBody(description = "Müşteri güncelleme isteği, JSON formatında gönderilir. clientType alanı zorunludur.", required = true, content = @Content(schema = @Schema(implementation = Object.class))))
+        @Operation(summary = "Müşteri Güncelleme", description = "Mevcut bir müşterinin bilgilerini günceller. Müşteri tipi 'INDIVIDUAL' veya 'CORPORATE' olabilir. "
+                        +
+                        "Sadece güncellenmek istenen alanlar gönderilmelidir. clientType alanı zorunludur.", requestBody = @RequestBody(description = "Müşteri güncelleme isteği, JSON formatında gönderilir. clientType alanı zorunludur.", required = true, content = @Content(schema = @Schema(implementation = Object.class))))
         @ApiResponse(responseCode = "200", description = "Müşteri başarıyla güncellendi", content = @Content(schema = @Schema(implementation = Response.class)))
-        @ApiResponse(responseCode = "400", description = "Geçersiz istek veya müşteri tipi", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "400", description = "Validasyon hatası, eksik alan veya geçersiz müşteri tipi", content = @Content(schema = @Schema(implementation = Response.class)))
         @ApiResponse(responseCode = "401", description = "Yetkilendirme hatası", content = @Content(schema = @Schema(implementation = Response.class)))
         @ApiResponse(responseCode = "404", description = "Müşteri bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
         @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))

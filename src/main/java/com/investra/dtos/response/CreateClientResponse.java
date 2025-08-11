@@ -1,9 +1,6 @@
 package com.investra.dtos.response;
 
-import com.investra.enums.ClientStatus;
-import com.investra.enums.ClientType;
-import com.investra.enums.EstimatedTransactionVolume;
-import com.investra.enums.Gender;
+import com.investra.enums.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +25,7 @@ public class CreateClientResponse {
     private ClientStatus status;
     private Boolean isActive;
     private String clientNumber;
+    private TaxType taxType;
 
     //bireysel müşteri
     private String fullName;

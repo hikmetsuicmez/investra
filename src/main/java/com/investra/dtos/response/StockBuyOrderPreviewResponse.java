@@ -30,9 +30,10 @@ public class StockBuyOrderPreviewResponse {
     private BigDecimal netAmount; // Toplam tutar + komisyon + vergi
     private ExecutionType executionType;
     private String previewId; // Önizleme ID'si (execute ederken kontrol için)
+    private String category;
 
     // İlişkili nesneler hakkında bilgi
-//    private ClientInfoResponse clientInfo;
-//    private AccountInfoResponse accountInfo;
-//    private StockInfoResponse stockInfo;
+    // private ClientInfoResponse clientInfo;
+    // private AccountInfoResponse accountInfo;
+    // private StockInfoResponse stockInfo;
 }

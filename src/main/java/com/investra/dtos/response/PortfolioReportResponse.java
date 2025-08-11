@@ -41,6 +41,7 @@ public class PortfolioReportResponse {
     public static class StockPositionDetail {
         private String stockCode;
         private String stockName;
+        private String category;
 
         // T+0, T+1, T+2 pozisyonları (BUY orders)
         private Integer t0Quantity;

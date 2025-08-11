@@ -65,6 +65,9 @@ public class Stock {
     @Column(name = "currency")
     private String currency;
 
+    @Column(name = "category")
+    private String category;
+
     @Column(name = "security_desc")
     private String securityDesc;
 
@@ -100,6 +103,10 @@ public class Stock {
 
         if (isActive == null) {
             isActive = true;
+        }
+
+        if (category == null) {
+            category = "A";
         }
     }
 

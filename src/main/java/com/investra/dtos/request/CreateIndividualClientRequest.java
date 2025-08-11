@@ -1,6 +1,5 @@
 package com.investra.dtos.request;
 
-
 import com.investra.enums.EstimatedTransactionVolume;
 import com.investra.enums.Gender;
 import jakarta.validation.constraints.*;
@@ -19,7 +18,7 @@ import java.time.LocalDate;
 @Data
 public class CreateIndividualClientRequest extends CreateClientRequest {
 
-    @NotBlank(message = "İsim alanı zorunludur")
+    @NotBlank(message = "Müşteri adı zorunludur")
     private String fullName;
 
     private Boolean nationalityType;
@@ -30,14 +29,14 @@ public class CreateIndividualClientRequest extends CreateClientRequest {
 
     private String taxId;
 
-    @Size(min = 5, max = 20, message = "Pasaport numarası 5 ile 20 karakter arasında olmalıdır")
+    @Size(min = 5, max = 20, message = "Pasaport numarası 5-20 karakter arasında olmalıdır")
     @Pattern(regexp = "^[a-zA-Z0-9]*$", message = "Pasaport numarası yalnızca harf ve rakamlardan oluşabilir")
     private String passportNo;
 
-    @Pattern(regexp = "^[0-9]{11}$", message = "Mavi Kart numarası 11 haneli bir sayı olmalıdır")
+    @Pattern(regexp = "^[0-9]{11}$", message = "Mavi Kart numarası 11 haneli rakam olmalıdır")
     private String blueCardNo;
 
-    @Pattern(regexp = "^[0-9]{11}$", message = "Kimlik numarası 11 haneli bir sayı olmalıdır")
+    @Pattern(regexp = "^[0-9]{11}$", message = "TC Kimlik numarası 11 haneli rakam olmalıdır")
     private String nationalityNumber;
 
     private String profession;

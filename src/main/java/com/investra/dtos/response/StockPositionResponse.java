@@ -20,4 +20,5 @@ public class StockPositionResponse {
     private BigDecimal positionValue;
     private BigDecimal unrealizedProfitLoss;
     private BigDecimal changePercentage;
+    private String category;
 }

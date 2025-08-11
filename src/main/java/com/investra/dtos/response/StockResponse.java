@@ -19,4 +19,5 @@ public class StockResponse {
     private String stockGroup;
     private Boolean isActive;
     private String source;
+    private String category;
 }

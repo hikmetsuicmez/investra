@@ -35,4 +35,5 @@ public class StockBuyOrderResultResponse {
     private OrderStatus status;
     private LocalDateTime executionTime;
     private String message;
+    private String category;
 }

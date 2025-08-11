@@ -1,9 +1,6 @@
 package com.investra.entity;
 
-import com.investra.enums.ClientStatus;
-import com.investra.enums.ClientType;
-import com.investra.enums.EstimatedTransactionVolume;
-import com.investra.enums.Gender;
+import com.investra.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -59,6 +56,9 @@ public class Client {
     @Column(name = "client_number")
     private String clientNumber;
 
+    @Column(name = "tax_type")
+    @Enumerated(EnumType.STRING)
+    private TaxType taxType;
 
     // bireysel müşteri
     @Column(name = "full_name")

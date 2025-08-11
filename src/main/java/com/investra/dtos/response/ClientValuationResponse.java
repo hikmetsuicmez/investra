@@ -16,6 +16,7 @@ import java.util.List;
 public class ClientValuationResponse {
     private Long clientId;
     private String clientName;
+    private String clientNumber;
     private BigDecimal totalPortfolioValue;
     private BigDecimal unrealizedProfitLoss;
     private BigDecimal dailyChangePercentage;
