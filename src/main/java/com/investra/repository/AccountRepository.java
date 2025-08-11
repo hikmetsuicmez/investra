@@ -39,4 +39,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     boolean existsByIban(String iban);
 
     boolean existsByAccountNumberAtBroker(String accountNumberAtBroker);
+
+    Optional<Account> findAccountByClientId(Long id);
 }
