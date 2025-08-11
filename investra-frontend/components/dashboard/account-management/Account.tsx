@@ -12,7 +12,7 @@ export type Account = {
   balance: number;
   availableBalance: number;
   accountType: 'INVESTMENT' | 'SETTLEMENT'; // Enum değerlerine göre uyarlayabilirsin
-  isPrimarySettlement: boolean;
+  primarySettlement: boolean;
   createdAt: string;
   updatedAt: string;
   clientId: number;

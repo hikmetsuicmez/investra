@@ -41,7 +41,7 @@ export type CompanyType = "as" | "ltd" | "kooperatif" | "kollektif" | "komandit"
 
 // Individual customer information interface
 export interface IndividualCustomerInfo {
-	id: number; 
+	id?: number; 
 	clientType: "INDIVIDUAL";
 	fullName: string;
 	citizenshipType: CitizenshipType;
@@ -60,7 +60,7 @@ export interface IndividualCustomerInfo {
 
 // Corporate customer information interface
 export interface CorporateCustomerInfo {
-	id: number; 
+	id?: number; 
 	clientType: "CORPORATE";
 	companyName: string;
 	taxNumber: string;

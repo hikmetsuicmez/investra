@@ -21,7 +21,6 @@ export async function GET(request: Request) {
 
   try {
     const fetchUrl = `${END_OF_DAY_BASE}/client-valuation/${clientId}`;
-    console.log(`Tek müşteri aranıyor (Alternatif Metot): GET ${fetchUrl}`);
 
     const response = await fetch(fetchUrl, {
       method: 'GET',
