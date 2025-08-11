@@ -221,7 +221,7 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
             PortfolioReportResponse report = PortfolioReportResponse.builder()
                     .customerName(client.getFullName())
                     .clientNumber(client.getClientNumber())
-                    .customerType(client.getClientType().name())
+                    .customerType(client.getClientType())
                     .accountNumber(account.getAccountNumber())
                     .reportDate(reportDate)
                     .portfolioCurrentValue(portfolioCurrentValue)
@@ -557,7 +557,7 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                 Row dataRow = sheet.createRow(1);
                 dataRow.createCell(0).setCellValue(report.getCustomerName());
                 dataRow.createCell(1).setCellValue(report.getClientNumber());
-                dataRow.createCell(2).setCellValue(report.getCustomerType());
+                dataRow.createCell(2).setCellValue(report.getCustomerType().getDisplayName());
                 dataRow.createCell(3).setCellValue(report.getAccountNumber());
                 dataRow.createCell(4)
                         .setCellValue(report.getReportDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
@@ -693,7 +693,7 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
             document.add(
                     new com.itextpdf.text.Paragraph("Müsteri Numarasi: " + report.getClientNumber(), normalFont));
             document.add(new com.itextpdf.text.Paragraph("Müsteri Adi: " + report.getCustomerName(), normalFont));
-            document.add(new com.itextpdf.text.Paragraph("Müsteri Tipi: " + report.getCustomerType(), normalFont));
+            document.add(new com.itextpdf.text.Paragraph("Müsteri Tipi: " + report.getCustomerType().getDisplayName(), normalFont));
             document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
 
             // Hesap bilgileri
@@ -758,7 +758,7 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                 mainTable.setWidths(mainColumnWidths);
 
                 // Ana tablo başlıkları
-                String[] mainHeaders = { "Hisse Kodu", "Hisse Adı", "Net Pozisyon", "Ort. Alış", "Kapanış",
+                String[] mainHeaders = { "Hisse Kodu", "Hisse Adı", "Net Pozisyon", "Alış", "Kapanış",
                         "Potansiyel Kar/Zarar" };
 
                 for (String header : mainHeaders) {
