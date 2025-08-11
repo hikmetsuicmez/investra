@@ -104,6 +104,7 @@ export type Stock = {
 	changePercentage?: number;
 	highPrice?: number;
 	lowPrice?: number;
+	category?: string;
 };
 
 // Execution Types
