@@ -4,6 +4,9 @@ import com.investra.dtos.request.CreateClientRequest;
 import com.investra.dtos.request.CreateCorporateClientRequest;
 import com.investra.dtos.request.CreateIndividualClientRequest;
 import com.investra.dtos.request.CreateUserRequest;
+import com.investra.dtos.request.UpdateClientRequest;
+import com.investra.dtos.request.UpdateCorporateClientRequest;
+import com.investra.dtos.request.UpdateIndividualClientRequest;
 import com.investra.dtos.response.ClientDTO;
 import com.investra.dtos.response.ClientSearchResponse;
 import java.time.LocalDateTime;
@@ -11,13 +14,14 @@ import java.util.List;
 import java.util.Optional;
 
 import com.investra.dtos.response.CreateClientResponse;
+import com.investra.dtos.response.UpdateClientResponse;
 import com.investra.entity.Client;
 import com.investra.entity.User;
 import com.investra.enums.ClientType;
 
 public class ClientMapper {
 
-    public static Client mapToEntity(CreateClientRequest request, User user){
+    public static Client mapToEntity(CreateClientRequest request, User user) {
         Client.ClientBuilder builder = Client.builder()
                 .clientType(request.getClientType())
                 .email(request.getEmail())
@@ -57,8 +61,6 @@ public class ClientMapper {
         return builder.build();
     }
 
-
-
     public static CreateClientResponse mapToResponse(CreateClientRequest request) {
         CreateClientResponse.CreateClientResponseBuilder builder = CreateClientResponse.builder()
                 .clientType(request.getClientType())
@@ -94,8 +96,32 @@ public class ClientMapper {
                     .monthlyRevenue(corporate.getMonthlyRevenue());
         }
 
-
         return builder.build();
+    }
+
+    public static UpdateClientResponse mapToUpdateResponse(Client client) {
+        return UpdateClientResponse.builder()
+                .id(client.getId())
+                .clientNumber(client.getClientNumber())
+                .clientType(client.getClientType())
+                .email(client.getEmail())
+                .phone(client.getPhone())
+                .address(client.getAddress())
+                .notes(client.getNotes())
+                .status(client.getStatus())
+                .isActive(client.getIsActive())
+                .updatedAt(LocalDateTime.now())
+                .fullName(client.getFullName())
+                .nationalityNumber(client.getNationalityNumber())
+                .passportNo(client.getPassportNo())
+                .blueCardNo(client.getBlueCardNo())
+                .taxId(client.getTaxId())
+                .companyName(client.getCompanyName())
+                .taxNumber(client.getTaxNumber())
+                .registrationNumber(client.getRegistrationNumber())
+                .companyType(client.getCompanyType())
+                .sector(client.getSector())
+                .build();
     }
 
     public static ClientSearchResponse mapToClientSearchResponse(Client request) {
@@ -116,7 +142,7 @@ public class ClientMapper {
 
     }
 
-    public static ClientDTO toClientDTO (Client client){
+    public static ClientDTO toClientDTO(Client client) {
         return ClientDTO.builder()
                 .id(client.getId())
                 .clientType(client.getClientType())
@@ -149,7 +175,5 @@ public class ClientMapper {
                 .monthlyRevenue(client.getMonthlyRevenue())
                 .build();
     }
-
-
 
 }

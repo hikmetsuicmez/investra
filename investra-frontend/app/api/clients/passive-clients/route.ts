@@ -2,11 +2,11 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const cookieStore = await cookies();    
-  const token = cookieStore.get("token")?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
 
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clients/clients/passive-clients`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clients/passive-clients`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -25,7 +25,7 @@ export async function GET() {
                 },
                 { status: 200 }
             );
-        }       
+        }
 
         if (result.statusCode !== 200) {
             return NextResponse.json(

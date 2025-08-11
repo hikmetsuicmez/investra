@@ -20,6 +20,7 @@ public class TradeOrderMapper {
                 .status(order.getStatus().name())
                 .submittedAt(order.getSubmittedAt())
                 .settledAt(order.getSettledAt())
+                .executionType(order.getExecutionType())
                 .tradeDate(order.getTradeDate())
                 .settlementDaysRemaining(order.getSettlementDaysRemaining())
                 .build();
