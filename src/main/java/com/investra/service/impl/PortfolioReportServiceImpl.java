@@ -220,7 +220,7 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
             // Response'u oluştur
             PortfolioReportResponse report = PortfolioReportResponse.builder()
                     .customerName(client.getFullName())
-                    .customerNumber(client.getTaxId())
+                    .clientNumber(client.getClientNumber())
                     .customerType(client.getClientType().name())
                     .accountNumber(account.getAccountNumber())
                     .reportDate(reportDate)
@@ -556,7 +556,7 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                 // Veri satırı
                 Row dataRow = sheet.createRow(1);
                 dataRow.createCell(0).setCellValue(report.getCustomerName());
-                dataRow.createCell(1).setCellValue(report.getCustomerNumber());
+                dataRow.createCell(1).setCellValue(report.getClientNumber());
                 dataRow.createCell(2).setCellValue(report.getCustomerType());
                 dataRow.createCell(3).setCellValue(report.getAccountNumber());
                 dataRow.createCell(4)
@@ -640,102 +640,217 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
 
             PortfolioReportResponse report = reportResponse.getData();
 
-            // PDF oluştur
+            // PDF oluştur - UTF-8 encoding ile
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             com.itextpdf.text.Document document = new com.itextpdf.text.Document();
             com.itextpdf.text.pdf.PdfWriter writer = com.itextpdf.text.pdf.PdfWriter.getInstance(document, baos);
 
+            // Türkçe karakter desteği için metadata ayarları
+            document.addTitle("Müşteri Portföy Raporu");
+            document.addAuthor("Investra Sistem");
+            document.addCreator("Investra Portfolio Report Service");
+            document.addLanguage("tr");
+
             document.open();
 
-            // Türkçe karakter desteği için font ayarları
-            com.itextpdf.text.Font titleFont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA,
-                    18, com.itextpdf.text.Font.BOLD);
-            com.itextpdf.text.Font headerFont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA,
-                    12, com.itextpdf.text.Font.BOLD);
-            com.itextpdf.text.Font normalFont = new com.itextpdf.text.Font(com.itextpdf.text.Font.FontFamily.HELVETICA,
-                    10, com.itextpdf.text.Font.NORMAL);
+            // Türkçe karakter desteği için BaseFont ile embedded font ayarları
+            com.itextpdf.text.pdf.BaseFont baseFont = com.itextpdf.text.pdf.BaseFont.createFont(
+                    com.itextpdf.text.pdf.BaseFont.HELVETICA,
+                    "CP1254", // Windows-1254 encoding (Türkçe)
+                    com.itextpdf.text.pdf.BaseFont.EMBEDDED);
 
-            document.add(new com.itextpdf.text.Paragraph("MÜSTERI PORTFÖY RAPORU", titleFont));
-            document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+            com.itextpdf.text.Font titleFont = new com.itextpdf.text.Font(baseFont, 20, com.itextpdf.text.Font.BOLD);
+            com.itextpdf.text.Font headerFont = new com.itextpdf.text.Font(baseFont, 12, com.itextpdf.text.Font.BOLD);
+            com.itextpdf.text.Font normalFont = new com.itextpdf.text.Font(baseFont, 10, com.itextpdf.text.Font.NORMAL);
+            com.itextpdf.text.Font subtitleFont = new com.itextpdf.text.Font(baseFont, 14, com.itextpdf.text.Font.BOLD);
 
-            // Rapor tarihi - Sistem simülasyon tarihi
-            document.add(new com.itextpdf.text.Paragraph("Rapor Tarihi: " +
-                    report.getReportDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), headerFont));
+            // Başlık ve tarih tablosu
+            com.itextpdf.text.pdf.PdfPTable headerTable = new com.itextpdf.text.pdf.PdfPTable(2);
+            headerTable.setWidthPercentage(100);
+
+            // Sol sütun - Başlık
+            com.itextpdf.text.Phrase titlePhrase = new com.itextpdf.text.Phrase("MÜSTERI PORTFÖY RAPORU", titleFont);
+            com.itextpdf.text.pdf.PdfPCell titleCell = new com.itextpdf.text.pdf.PdfPCell(titlePhrase);
+            titleCell.setBorder(com.itextpdf.text.Rectangle.NO_BORDER);
+            titleCell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
+            titleCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_LEFT);
+            headerTable.addCell(titleCell);
+
+            // Sağ sütun - Tarih
+            com.itextpdf.text.Phrase datePhrase = new com.itextpdf.text.Phrase("Rapor Tarihi: " +
+                    report.getReportDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), subtitleFont);
+            com.itextpdf.text.pdf.PdfPCell dateCell = new com.itextpdf.text.pdf.PdfPCell(datePhrase);
+            dateCell.setBorder(com.itextpdf.text.Rectangle.NO_BORDER);
+            dateCell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
+            dateCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_RIGHT);
+            headerTable.addCell(dateCell);
+
+            document.add(headerTable);
             document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
 
             // Müşteri bilgileri
             document.add(new com.itextpdf.text.Paragraph("Müsteri Bilgileri:", headerFont));
             document.add(
-                    new com.itextpdf.text.Paragraph("Müsteri Numarasi: " + report.getCustomerNumber(), normalFont));
+                    new com.itextpdf.text.Paragraph("Müsteri Numarasi: " + report.getClientNumber(), normalFont));
             document.add(new com.itextpdf.text.Paragraph("Müsteri Adi: " + report.getCustomerName(), normalFont));
             document.add(new com.itextpdf.text.Paragraph("Müsteri Tipi: " + report.getCustomerType(), normalFont));
             document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
 
             // Hesap bilgileri
-            document.add(new com.itextpdf.text.Paragraph("Hesap Bilgileri:", headerFont));
             document.add(new com.itextpdf.text.Paragraph("Hesap Numarasi: " + report.getAccountNumber(), normalFont));
             document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
 
-            // Portföy özeti - Hesap bakiyesi göster
-            document.add(new com.itextpdf.text.Paragraph("Portföy Özeti:", headerFont));
-            document.add(new com.itextpdf.text.Paragraph("Hesap Bakiyesi: " + report.getTlBalance() + " TL",
-                    normalFont));
-            document.add(new com.itextpdf.text.Paragraph(
-                    "Portföy Güncel Degeri: " + report.getPortfolioCurrentValue() + " TL",
-                    normalFont));
-            document.add(new com.itextpdf.text.Paragraph(
+            // Portföy özeti - Sağ üstte konumlandırılmış
+            com.itextpdf.text.pdf.PdfPTable summaryTable = new com.itextpdf.text.pdf.PdfPTable(2);
+            summaryTable.setWidthPercentage(100);
+
+            // Sol sütun - Müşteri bilgileri
+            summaryTable.addCell(new com.itextpdf.text.Phrase("Müsteri Bilgileri:", headerFont));
+            summaryTable.addCell(new com.itextpdf.text.Phrase("Portföy Özeti:", headerFont));
+
+            summaryTable
+                    .addCell(new com.itextpdf.text.Phrase("Müsteri Numarasi: " + report.getClientNumber(), normalFont));
+            summaryTable.addCell(
+                    new com.itextpdf.text.Phrase("Hesap Bakiyesi: " + report.getTlBalance() + " TL", normalFont));
+
+            summaryTable.addCell(new com.itextpdf.text.Phrase("Müsteri Adi: " + report.getCustomerName(), normalFont));
+            summaryTable.addCell(new com.itextpdf.text.Phrase(
+                    "Portföy Güncel Degeri: " + report.getPortfolioCurrentValue() + " TL", normalFont));
+
+            summaryTable.addCell(new com.itextpdf.text.Phrase("Müsteri Tipi: " + report.getCustomerType(), normalFont));
+            summaryTable.addCell(new com.itextpdf.text.Phrase(
                     "Toplam Potansiyel Kar/Zarar: " + report.getTotalPotentialProfitLoss() + " TL", normalFont));
+
+            summaryTable
+                    .addCell(new com.itextpdf.text.Phrase("Hesap Numarasi: " + report.getAccountNumber(), normalFont));
+            summaryTable.addCell(new com.itextpdf.text.Phrase(
+                    "Toplam Nominal Deger: " + report.getTotalNominalValue() + " TL", normalFont));
+
+            document.add(summaryTable);
             document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
 
-            // Hisse pozisyonları tablosu
+            // Hisse pozisyonları tabloları - İki ayrı tablo yaklaşımı
             if (report.getStockPositions() != null && !report.getStockPositions().isEmpty()) {
                 document.add(new com.itextpdf.text.Paragraph("Hisse Pozisyonları:", headerFont));
                 document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
 
-                // Tablo oluştur - 14 sütun (SELL kolonları eklendi)
-                com.itextpdf.text.pdf.PdfPTable table = new com.itextpdf.text.pdf.PdfPTable(14);
-                table.setWidthPercentage(100);
-
-                // Tablo başlıkları - SELL kolonları eklendi
-                String[] headers = { "Hisse Kodu", "Hisse Adı", "T+0 (ALIM)", "T+1 (ALIM)", "T+2 (ALIM)",
-                        "T+0 (SATIM)", "T+1 (SATIM)", "T+2 (SATIM)", "Net Pozisyon", "Ort. Alış", "Kapanış", "Nominal",
-                        "Potansiyel Kar/Zarar", "Kar/Zarar Oranı (%)" };
-                for (String header : headers) {
-                    table.addCell(new com.itextpdf.text.Phrase(header, headerFont));
-                }
-
-                // Tablo verileri
-                for (PortfolioReportResponse.StockPositionDetail position : report.getStockPositions()) {
-                    table.addCell(new com.itextpdf.text.Phrase(position.getStockCode(), normalFont));
-                    table.addCell(new com.itextpdf.text.Phrase(position.getStockName(), normalFont));
-                    table.addCell(new com.itextpdf.text.Phrase(String.valueOf(position.getT0Quantity()), normalFont));
-                    table.addCell(new com.itextpdf.text.Phrase(String.valueOf(position.getT1Quantity()), normalFont));
-                    table.addCell(new com.itextpdf.text.Phrase(String.valueOf(position.getT2Quantity()), normalFont));
-                    table.addCell(
-                            new com.itextpdf.text.Phrase(String.valueOf(position.getT0SellQuantity()), normalFont));
-                    table.addCell(
-                            new com.itextpdf.text.Phrase(String.valueOf(position.getT1SellQuantity()), normalFont));
-                    table.addCell(
-                            new com.itextpdf.text.Phrase(String.valueOf(position.getT2SellQuantity()), normalFont));
-                    table.addCell(
-                            new com.itextpdf.text.Phrase(String.valueOf(position.getTotalQuantity()), normalFont));
-                    table.addCell(new com.itextpdf.text.Phrase(position.getBuyPrice().toString(), normalFont));
-                    table.addCell(new com.itextpdf.text.Phrase(position.getClosingPrice().toString(), normalFont));
-                    table.addCell(new com.itextpdf.text.Phrase(position.getNominalValue().toString(), normalFont));
-                    table.addCell(
-                            new com.itextpdf.text.Phrase(position.getPotentialProfitLoss().toString(), normalFont));
-                    table.addCell(
-                            new com.itextpdf.text.Phrase(position.getProfitLossRatio().toString() + "%", normalFont));
-                }
-
-                document.add(table);
-
-                // Toplam satırı
+                // Tablo açıklaması
+                com.itextpdf.text.Paragraph tableDescription = new com.itextpdf.text.Paragraph(
+                        "Aşağıdaki tablolarda müşterinin portföyündeki hisse pozisyonları iki ayrı tabloda gösterilmektedir. "
+                                +
+                                "İlk tablo temel pozisyon bilgilerini, ikinci tablo detaylı işlem bilgilerini içerir.",
+                        new com.itextpdf.text.Font(baseFont, 9, com.itextpdf.text.Font.ITALIC));
+                tableDescription.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                document.add(tableDescription);
                 document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
-                document.add(new com.itextpdf.text.Paragraph(
-                        "TOPLAM NOMINAL DEGER: " + report.getTotalNominalValue() + " TL", headerFont));
-                document.add(new com.itextpdf.text.Paragraph(
-                        "TOPLAM POTANSIYEL KAR/ZARAR: " + report.getTotalPotentialProfitLoss() + " TL", headerFont));
+
+                // TABLO 1: Temel Pozisyon Bilgileri (6 sütun)
+                document.add(new com.itextpdf.text.Paragraph("1. Temel Pozisyon Bilgileri:", headerFont));
+                document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+                com.itextpdf.text.pdf.PdfPTable mainTable = new com.itextpdf.text.pdf.PdfPTable(6);
+                mainTable.setWidthPercentage(100);
+                mainTable.setSpacingBefore(10f);
+                mainTable.setSpacingAfter(15f);
+
+                // Sütun genişlikleri - Toplam 100%
+                float[] mainColumnWidths = { 15f, 25f, 15f, 15f, 15f, 15f };
+                mainTable.setWidths(mainColumnWidths);
+
+                // Ana tablo başlıkları
+                String[] mainHeaders = { "Hisse Kodu", "Hisse Adı", "Net Pozisyon", "Ort. Alış", "Kapanış",
+                        "Potansiyel Kar/Zarar" };
+
+                for (String header : mainHeaders) {
+                    com.itextpdf.text.pdf.PdfPCell headerCell = new com.itextpdf.text.pdf.PdfPCell(
+                            new com.itextpdf.text.Phrase(header, headerFont));
+                    headerCell.setBackgroundColor(new com.itextpdf.text.BaseColor(70, 130, 180)); // Steel Blue
+                    headerCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                    headerCell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
+                    headerCell.setPadding(8f);
+                    mainTable.addCell(headerCell);
+                }
+
+                // Ana tablo verileri
+                int mainRowIndex = 0;
+                for (PortfolioReportResponse.StockPositionDetail position : report.getStockPositions()) {
+                    addMainTableRow(mainTable, position, normalFont, mainRowIndex);
+                    mainRowIndex++;
+                }
+
+                document.add(mainTable);
+                document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+                // TABLO 2: Detaylı İşlem Bilgileri (8 sütun)
+                document.add(new com.itextpdf.text.Paragraph("2. Detaylı İşlem Bilgileri:", headerFont));
+                document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+                com.itextpdf.text.pdf.PdfPTable detailTable = new com.itextpdf.text.pdf.PdfPTable(8);
+                detailTable.setWidthPercentage(100);
+                detailTable.setSpacingBefore(10f);
+                detailTable.setSpacingAfter(15f);
+
+                // Detay tablo sütun genişlikleri - Toplam 100%
+                float[] detailColumnWidths = { 15f, 12f, 12f, 12f, 12f, 12f, 12f, 13f };
+                detailTable.setWidths(detailColumnWidths);
+
+                // Detay tablo başlıkları
+                String[] detailHeaders = { "Hisse Kodu", "T+0 (ALIM)", "T+1 (ALIM)", "T+2 (ALIM)",
+                        "T+0 (SATIM)", "T+1 (SATIM)", "T+2 (SATIM)", "Nominal Değer" };
+
+                for (String header : detailHeaders) {
+                    com.itextpdf.text.pdf.PdfPCell headerCell = new com.itextpdf.text.pdf.PdfPCell(
+                            new com.itextpdf.text.Phrase(header, headerFont));
+                    headerCell.setBackgroundColor(new com.itextpdf.text.BaseColor(46, 139, 87)); // Sea Green
+                    headerCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                    headerCell.setVerticalAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
+                    headerCell.setPadding(8f);
+                    detailTable.addCell(headerCell);
+                }
+
+                // Detay tablo verileri
+                int detailRowIndex = 0;
+                for (PortfolioReportResponse.StockPositionDetail position : report.getStockPositions()) {
+                    addDetailTableRow(detailTable, position, normalFont, detailRowIndex);
+                    detailRowIndex++;
+                }
+
+                document.add(detailTable);
+
+                // Tablo sonrası özet bilgi
+                document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+                com.itextpdf.text.Paragraph tableSummary = new com.itextpdf.text.Paragraph(
+                        "Not: T+0 işlemler aynı gün, T+1 işlemler bir sonraki gün, T+2 işlemler iki gün sonra gerçekleşir.",
+                        new com.itextpdf.text.Font(baseFont, 8, com.itextpdf.text.Font.NORMAL));
+                tableSummary.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+                document.add(tableSummary);
+                document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+                // Toplam satırı - Görsel olarak ayrılmış
+                document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
+
+                com.itextpdf.text.pdf.PdfPTable totalTable = new com.itextpdf.text.pdf.PdfPTable(2);
+                totalTable.setWidthPercentage(100);
+                totalTable.setSpacingBefore(10f);
+
+                // Toplam nominal değer
+                com.itextpdf.text.pdf.PdfPCell totalNominalCell = new com.itextpdf.text.pdf.PdfPCell(
+                        new com.itextpdf.text.Phrase("TOPLAM NOMINAL DEGER: " + report.getTotalNominalValue() + " TL",
+                                headerFont));
+                totalNominalCell.setBorder(com.itextpdf.text.Rectangle.NO_BORDER);
+                totalNominalCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_LEFT);
+                totalTable.addCell(totalNominalCell);
+
+                // Toplam potansiyel kar/zarar
+                com.itextpdf.text.pdf.PdfPCell totalProfitLossCell = new com.itextpdf.text.pdf.PdfPCell(
+                        new com.itextpdf.text.Phrase(
+                                "TOPLAM POTANSIYEL KAR/ZARAR: " + report.getTotalPotentialProfitLoss() + " TL",
+                                headerFont));
+                totalProfitLossCell.setBorder(com.itextpdf.text.Rectangle.NO_BORDER);
+                totalProfitLossCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_RIGHT);
+                totalTable.addCell(totalProfitLossCell);
+
+                document.add(totalTable);
             } else {
                 document.add(new com.itextpdf.text.Paragraph("Hisse pozisyonu bulunamadı.", normalFont));
             }
@@ -1224,5 +1339,153 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
                     .message("Portföy performans raporu oluşturulamadı: " + e.getMessage())
                     .build();
         }
+    }
+
+    /**
+     * Ana tablo satırı ekler (Temel Pozisyon Bilgileri)
+     */
+    private void addMainTableRow(com.itextpdf.text.pdf.PdfPTable table,
+            PortfolioReportResponse.StockPositionDetail position, com.itextpdf.text.Font font, int rowIndex) {
+        // Alternatif satır renklendirmesi
+        com.itextpdf.text.BaseColor rowColor = (rowIndex % 2 == 0) ? com.itextpdf.text.BaseColor.WHITE
+                : new com.itextpdf.text.BaseColor(245, 245, 245); // Açık gri
+
+        // Hisse kodu
+        com.itextpdf.text.pdf.PdfPCell codeCell = new com.itextpdf.text.pdf.PdfPCell(
+                new com.itextpdf.text.Phrase(position.getStockCode(), font));
+        codeCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        codeCell.setPadding(5f);
+        codeCell.setBackgroundColor(rowColor);
+        table.addCell(codeCell);
+
+        // Hisse adı
+        com.itextpdf.text.pdf.PdfPCell nameCell = new com.itextpdf.text.pdf.PdfPCell(
+                new com.itextpdf.text.Phrase(position.getStockName(), font));
+        nameCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_LEFT);
+        nameCell.setPadding(5f);
+        nameCell.setBackgroundColor(rowColor);
+        table.addCell(nameCell);
+
+        // Net pozisyon
+        addQuantityCell(table, position.getTotalQuantity(), font, rowColor);
+
+        // Ortalama alış fiyatı
+        addPriceCell(table, position.getBuyPrice(), font, rowColor);
+
+        // Kapanış fiyatı
+        addPriceCell(table, position.getClosingPrice(), font, rowColor);
+
+        // Potansiyel kar/zarar
+        addPriceCell(table, position.getPotentialProfitLoss(), font, rowColor);
+    }
+
+    /**
+     * Detay tablo satırı ekler (İşlem Bilgileri)
+     */
+    private void addDetailTableRow(com.itextpdf.text.pdf.PdfPTable table,
+            PortfolioReportResponse.StockPositionDetail position, com.itextpdf.text.Font font, int rowIndex) {
+        // Alternatif satır renklendirmesi
+        com.itextpdf.text.BaseColor rowColor = (rowIndex % 2 == 0) ? com.itextpdf.text.BaseColor.WHITE
+                : new com.itextpdf.text.BaseColor(245, 245, 245); // Açık gri
+
+        // Hisse kodu
+        com.itextpdf.text.pdf.PdfPCell codeCell = new com.itextpdf.text.pdf.PdfPCell(
+                new com.itextpdf.text.Phrase(position.getStockCode(), font));
+        codeCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        codeCell.setPadding(5f);
+        codeCell.setBackgroundColor(rowColor);
+        table.addCell(codeCell);
+
+        // T+0, T+1, T+2 alım miktarları
+        addQuantityCell(table, position.getT0Quantity(), font, rowColor);
+        addQuantityCell(table, position.getT1Quantity(), font, rowColor);
+        addQuantityCell(table, position.getT2Quantity(), font, rowColor);
+
+        // T+0, T+1, T+2 satım miktarları
+        addQuantityCell(table, position.getT0SellQuantity(), font, rowColor);
+        addQuantityCell(table, position.getT1SellQuantity(), font, rowColor);
+        addQuantityCell(table, position.getT2SellQuantity(), font, rowColor);
+
+        // Nominal değer
+        addPriceCell(table, position.getNominalValue(), font, rowColor);
+    }
+
+    /**
+     * Tablo satırı ekler (Eski metod - geriye uyumluluk için)
+     */
+    private void addTableRow(com.itextpdf.text.pdf.PdfPTable table,
+            PortfolioReportResponse.StockPositionDetail position, com.itextpdf.text.Font font, int rowIndex) {
+        // Alternatif satır renklendirmesi
+        com.itextpdf.text.BaseColor rowColor = (rowIndex % 2 == 0) ? com.itextpdf.text.BaseColor.WHITE
+                : new com.itextpdf.text.BaseColor(245, 245, 245); // Açık gri
+
+        // Hisse kodu
+        com.itextpdf.text.pdf.PdfPCell codeCell = new com.itextpdf.text.pdf.PdfPCell(
+                new com.itextpdf.text.Phrase(position.getStockCode(), font));
+        codeCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        codeCell.setPadding(3f);
+        codeCell.setBackgroundColor(rowColor);
+        table.addCell(codeCell);
+
+        // Hisse adı
+        com.itextpdf.text.pdf.PdfPCell nameCell = new com.itextpdf.text.pdf.PdfPCell(
+                new com.itextpdf.text.Phrase(position.getStockName(), font));
+        nameCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_LEFT);
+        nameCell.setPadding(3f);
+        nameCell.setBackgroundColor(rowColor);
+        table.addCell(nameCell);
+
+        // T+0, T+1, T+2 alım miktarları
+        addQuantityCell(table, position.getT0Quantity(), font, rowColor);
+        addQuantityCell(table, position.getT1Quantity(), font, rowColor);
+        addQuantityCell(table, position.getT2Quantity(), font, rowColor);
+
+        // T+0, T+1, T+2 satım miktarları
+        addQuantityCell(table, position.getT0SellQuantity(), font, rowColor);
+        addQuantityCell(table, position.getT1SellQuantity(), font, rowColor);
+        addQuantityCell(table, position.getT2SellQuantity(), font, rowColor);
+
+        // Net pozisyon
+        addQuantityCell(table, position.getTotalQuantity(), font, rowColor);
+
+        // Fiyat bilgileri
+        addPriceCell(table, position.getBuyPrice(), font, rowColor);
+        addPriceCell(table, position.getClosingPrice(), font, rowColor);
+        addPriceCell(table, position.getNominalValue(), font, rowColor);
+        addPriceCell(table, position.getPotentialProfitLoss(), font, rowColor);
+
+        // Kar/zarar oranı
+        com.itextpdf.text.pdf.PdfPCell ratioCell = new com.itextpdf.text.pdf.PdfPCell(
+                new com.itextpdf.text.Phrase(position.getProfitLossRatio().toString() + "%", font));
+        ratioCell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        ratioCell.setPadding(3f);
+        ratioCell.setBackgroundColor(rowColor);
+        table.addCell(ratioCell);
+    }
+
+    /**
+     * Miktar hücresi ekler
+     */
+    private void addQuantityCell(com.itextpdf.text.pdf.PdfPTable table, Integer quantity, com.itextpdf.text.Font font,
+            com.itextpdf.text.BaseColor backgroundColor) {
+        com.itextpdf.text.pdf.PdfPCell cell = new com.itextpdf.text.pdf.PdfPCell(
+                new com.itextpdf.text.Phrase(String.valueOf(quantity), font));
+        cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        cell.setPadding(3f);
+        cell.setBackgroundColor(backgroundColor);
+        table.addCell(cell);
+    }
+
+    /**
+     * Fiyat hücresi ekler
+     */
+    private void addPriceCell(com.itextpdf.text.pdf.PdfPTable table, BigDecimal price, com.itextpdf.text.Font font,
+            com.itextpdf.text.BaseColor backgroundColor) {
+        com.itextpdf.text.pdf.PdfPCell cell = new com.itextpdf.text.pdf.PdfPCell(
+                new com.itextpdf.text.Phrase(price.toString(), font));
+        cell.setHorizontalAlignment(com.itextpdf.text.Element.ALIGN_RIGHT);
+        cell.setPadding(3f);
+        cell.setBackgroundColor(backgroundColor);
+        table.addCell(cell);
     }
 }

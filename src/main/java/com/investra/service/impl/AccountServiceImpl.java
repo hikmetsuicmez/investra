@@ -19,8 +19,6 @@ import com.investra.service.AccountService;
 import com.sun.jdi.request.InvalidRequestStateException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +50,18 @@ public class AccountServiceImpl implements AccountService {
                     log.error("Müşteri bulunamadı. ID: {}", request.getClientId());
                     return new ClientNotFoundException("Müşteri bulunamadı. ID: " + request.getClientId());
                 });
+
+        accountRepository.findAccountByClientId(client.getId())
+                .ifPresent(existingAccount -> {
+                    if (existingAccount.getAccountType() == AccountType.SETTLEMENT) {
+                        // Eğer müşteri zaten bir takas hesabına sahipse, hata fırlat
+                        log.error("Müşterinin zaten bir takas hesabı var. Müşteri ID: {}", client.getId());
+                        throw new AccountAlreadyExistsException("Müşteri", client.getId().toString());
+                    }
+                    log.error("Müşterinin zaten bir hesabı var. Müşteri ID: {}", client.getId());
+                    throw new AccountAlreadyExistsException("Müşteri", client.getId().toString());
+                });
+
 
         // IBAN kontrolü
         if (accountRepository.existsByIban(request.getIban())) {
