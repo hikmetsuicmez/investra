@@ -9,6 +9,8 @@ import {
 } from "@/types/customers";
 import DeleteCustomerDialog from "./DeleteCustomerDialog";
 import { useRouter } from "next/navigation";
+import EditCustomerDialog from "./EditCustomerDialog";
+import { Client } from "@/types/customers";
 
 function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustomerInfo): CustomerDisplayInfo {
 	if (customer.clientType == "INDIVIDUAL") {
@@ -46,30 +48,39 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
 					<TableHead>Telefon Numarası</TableHead>
 					<TableHead>E-posta</TableHead>
 					<TableHead className="text-center">Durum</TableHead>
-					<TableHead></TableHead>
+					<TableHead className="text-center">İşlemler</TableHead>
 				</TableRow>
 			</TableHeader>
 			<TableBody>
-				{customers.map((customer, index) => (
+				{customers.map((customer) => (
 					<TableRow
 						key={customer.id}
-						onClick={(e) => {
-							handleRowClick(customer.id);
-							e.stopPropagation();
-						}}
+						onClick={() => customer.id && handleRowClick(customer.id)}
 						className="cursor-pointer"
-					>
+						>
 						<TableCell>{mapToCustomerDisplay(customer).name}</TableCell>
 						<TableCell>{mapToCustomerDisplay(customer).type}</TableCell>
 						<TableCell>{customer.phone}</TableCell>
 						<TableCell>{customer.email}</TableCell>
-						<TableCell className="text-center">{customer.isActive ? "Aktif" : "Pasif"}</TableCell>
-						<TableCell>
-							<DeleteCustomerDialog customer={customer} disabled={!customer.isActive} />
+						<TableCell className="text-center">
+							{customer.isActive ? "Aktif" : "Pasif"}
 						</TableCell>
-					</TableRow>
+						<TableCell className="flex justify-center gap-2">
+							<div
+							onClick={(e) => e.stopPropagation()} // Butonların tıklanmasında satır tıklamasını engelle
+							>
+							<EditCustomerDialog customer={customer as unknown as Client} />
+							<DeleteCustomerDialog
+								customer={customer}
+								disabled={!customer.isActive}
+							/>
+							</div>
+						</TableCell>
+						</TableRow>
+
 				))}
 			</TableBody>
 		</Table>
 	);
+
 }

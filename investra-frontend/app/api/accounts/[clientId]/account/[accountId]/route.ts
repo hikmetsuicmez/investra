@@ -25,7 +25,6 @@ export async function GET(req: Request, context: { params: Promise<{ clientId: s
     }
 
     const accountData = await res.json();
-
     return new Response(JSON.stringify(accountData), { status: 200 });
   } catch (error) {
     console.error("API error:", error);

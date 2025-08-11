@@ -69,16 +69,16 @@ export default function AccountInformation() {
 								<InfoRow
 									label="Hesap Türü"
 									value={
-										<Badge variant={account.accountType === "INVESTMENT" ? "default" : "secondary"}>
-											{account.accountType === "INVESTMENT" ? "Yatırım" : "Vadesiz"}
+										<Badge variant={account.accountType === "SETTLEMENT" ? "default" : "secondary"}>
+											{account.accountType === "SETTLEMENT" ? "Takas" : "Vadesiz"}
 										</Badge>
 									}
 								/>
 								<InfoRow
 									label="Ana Takas Hesabı"
 									value={
-										<span className={`font-bold ${account.isPrimarySettlement ? "text-green-600" : "text-red-600"}`}>
-											{account.isPrimarySettlement ? "Evet" : "Hayır"}
+										<span className={`font-bold ${account.primarySettlement ? "text-green-600" : "text-red-600"}`}>
+											{account.primarySettlement ? "Evet" : "Hayır"}
 										</span>
 									}
 								/>
