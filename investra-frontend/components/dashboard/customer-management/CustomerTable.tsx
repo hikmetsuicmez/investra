@@ -3,6 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CorporateCustomerInfo, IndividualCustomerInfo, CustomerDisplayInfo, CustomerTableProps } from "@/types/customers";
 import DeleteCustomerDialog from "./DeleteCustomerDialog";
+import { useRouter } from "next/navigation";
 
 function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustomerInfo): CustomerDisplayInfo {
 	if (customer.clientType == "INDIVIDUAL") {
@@ -27,6 +28,10 @@ function mapToCustomerDisplay(customer: IndividualCustomerInfo | CorporateCustom
 }
 
 export default function CustomerTable({ customers }: CustomerTableProps) {
+	const router = useRouter();
+	const handleRowClick = (customerId: number) => {
+		router.push(`/dashboard/customer-management/portfolio/${customerId}`);
+	};
 	return (
 		<Table className="text-lg">
 			<TableHeader>
@@ -41,7 +46,7 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
 			</TableHeader>
 			<TableBody>
 				{customers.map((customer, index) => (
-					<TableRow key={index}>
+					<TableRow key={customer.id} onClick={() => handleRowClick(customer.id)}>
 						<TableCell>{mapToCustomerDisplay(customer).name}</TableCell>
 						<TableCell>{mapToCustomerDisplay(customer).type}</TableCell>
 						<TableCell>{customer.phone}</TableCell>

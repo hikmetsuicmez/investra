@@ -74,21 +74,28 @@ const items: SidebarItemType[] = [
 					},
 				],
 			},
-		],
-	},
-	{
-		label: "Müşteri Yönetimi",
-		icon: Users,
-		href: "/dashboard/customer-management",
-		subitems: [
-			{
-				label: "Müşteri İşlemleri",
+						{
+				label: "Müşteri Listesi",
 				icon: List,
 				href: "/dashboard/customer-management",
 				subitems: [],
 			},
+		],
+	},
+	{
+		label: "Hesap İşlemleri",
+		icon: Users,
+		href: "/dashboard/customer-management",
+		subitems: [
+		],
+	},
+	{
+		label: "Bakiye İşlemi",
+		icon: Users,
+		href: "/dashboard/customer-management",
+		subitems: [
 			{
-				label: "Hesap İşlemleri",
+				label: "Bakiye işlemleri İşlemleri",
 				icon: List,
 				href: "/dashboard/customer-search",
 				subitems: [],
