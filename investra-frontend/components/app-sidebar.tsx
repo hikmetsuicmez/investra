@@ -98,22 +98,15 @@ const items: SidebarItemType[] = [
 	{
 		label: "Hesap İşlemleri",
 		icon: Users,
-		href: "/dashboard/customer-search",
+		href: "/dashboard/account-management",
 		subitems: [],
 		rolesAllowed: ["ADMIN", "TRADER"],
 	},
 	{
-		label: "Bakiye İşlemi",
+		label: "Bakiye İşlemleri",
 		icon: Wallet,
-		href: "/",
+		href: "/dashboard/balance-management",
 		subitems: [
-			{
-				label: "Bakiye İşlemleri",
-				icon: List,
-				href: "/dashboard/customer-search",
-				subitems: [],
-				rolesAllowed: ["ADMIN", "TRADER"],
-			},
 		],
 		rolesAllowed: ["ADMIN", "TRADER"],
 	},

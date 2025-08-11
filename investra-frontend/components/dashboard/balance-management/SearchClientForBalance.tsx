@@ -3,18 +3,18 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Client, SearchType } from "@/types/customers";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default function SearchClientBySearchTerm() {
+import SearchAccountByClientId from "./SearchAccountsForBalance";
+
+export default function SearchClientForBalance() {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [client, setClient] = useState<Client | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [notFound, setNotFound] = useState(false);
 	const [searchType, setSearchType] = useState<SearchType>("TCKN");
-
-	const router = useRouter();
+	const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
 
 	async function handleSearch() {
 		if (!searchTerm.trim()) return;
@@ -41,14 +41,17 @@ export default function SearchClientBySearchTerm() {
 			if (res.ok && data.client) {
 				setClient(data.client);
 				setNotFound(false);
+				setSelectedClientId(null); // Önceki seçim temizlenebilir
 			} else {
 				setClient(null);
 				setNotFound(true);
+				setSelectedClientId(null);
 			}
 		} catch (err) {
 			console.error("Arama hatası:", err);
 			setClient(null);
 			setNotFound(true);
+			setSelectedClientId(null);
 		} finally {
 			setIsLoading(false);
 		}
@@ -56,7 +59,7 @@ export default function SearchClientBySearchTerm() {
 
 	function handleSelectCustomer() {
 		if (client?.id) {
-			router.push(`/dashboard/account-management/account-selection/${client.id}`);
+			setSelectedClientId(client.id);
 		}
 	}
 
@@ -70,7 +73,7 @@ export default function SearchClientBySearchTerm() {
 			</div>
 
 			<div className="bg-white rounded-xl shadow p-6 space-y-4">
-				<p className="text-xs text-muted-foreground">Müşteri Ad - Soyad • Müşteri Numarası</p>
+				<p className="text-xs text-muted-foreground">Müşteri İsim• Müşteri Numarası</p>
 
 				<div className="flex items-center gap-4">
 					<Input
@@ -97,7 +100,10 @@ export default function SearchClientBySearchTerm() {
 			</div>
 
 			{client && (
-				<div className="bg-white rounded-xl shadow overflow-auto border">
+				<div
+					className="bg-white rounded-xl shadow overflow-auto border cursor-pointer"
+					onClick={handleSelectCustomer}
+				>
 					<div className="grid grid-cols-8 font-semibold bg-gray-100 p-4 text-sm md:text-base">
 						<div>Ad Soyad</div>
 						<div>Müşteri No</div>
@@ -109,10 +115,7 @@ export default function SearchClientBySearchTerm() {
 						<div></div>
 					</div>
 
-					<div
-						className="grid grid-cols-8 items-center p-4 hover:bg-gray-100 transition cursor-pointer"
-						onClick={handleSelectCustomer}
-					>
+					<div className="grid grid-cols-8 items-center p-4 hover:bg-gray-100 transition">
 						<div>{client.fullName}</div>
 						<div>{client.id}</div>
 						<div>{client.nationalityNumber}</div>
@@ -122,18 +125,13 @@ export default function SearchClientBySearchTerm() {
 						<div className={client.isActive ? "text-green-600 pl-10" : "text-red-600 pl-10"}>
 							{client.isActive ? "Aktif" : "Pasif"}
 						</div>
-						<div>
-							<Button
-								className="text-xs px-4 py-1"
-								onClick={(e) => {
-									e.stopPropagation(); // Satır tıklamasını engelle
-									router.push(`/dashboard/account-management/accounts/${client.id}/create-account`);
-								}}
-							>
-								Hesap Aç
-							</Button>
-						</div>
 					</div>
+				</div>
+			)}
+
+			{selectedClientId && (
+				<div className="mt-8">
+					<SearchAccountByClientId clientId={selectedClientId} />
 				</div>
 			)}
 
