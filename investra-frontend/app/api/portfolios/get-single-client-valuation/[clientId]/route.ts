@@ -2,14 +2,12 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 const BACKEND_API_URL = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL;
-// DİKKAT: Java backend'inize bağlanırken /api/v1 yolunu eklemeyi unutmayın!
 const END_OF_DAY_BASE = `${BACKEND_API_URL}/end-of-day`; 
 
 export async function GET(request: Request) {
-  // URL'den clientId'yi manuel olarak alıyoruz
   const url = new URL(request.url);
   const pathSegments = url.pathname.split('/');
-  const clientId = pathSegments[pathSegments.length - 1]; // URL'in son parçası clientId'dir
+  const clientId = pathSegments[pathSegments.length - 1]; 
 
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
@@ -32,7 +30,7 @@ export async function GET(request: Request) {
     });
 
     const backendResponseData = await response.json();
-
+    console.log(backendResponseData)
     if (!response.ok) {
       throw new Error(backendResponseData.message || `Müşteri ${clientId} için değerleme alınamadı.`);
     }

@@ -139,14 +139,14 @@ export default function CreateCustomerAccount({ clientId }: CreateCustomerAccoun
 									Hesap Tipi <span className="text-red-500">*</span>
 									</Label>
 									<Select
-									defaultValue="INVESTMENT"
+									defaultValue="SETTLEMENT"
 									onValueChange={(val) => handleChange("accountType", val)}
 									>
 									<SelectTrigger>
 										<SelectValue placeholder="Seçiniz" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="INVESTMENT">Yatırım</SelectItem>
+										<SelectItem value="SETTLEMENT">Takas</SelectItem>
 										<SelectItem value="DEPOSIT" disabled>Mevduat</SelectItem>
 										<SelectItem value="BLOKED" disabled>Bloke</SelectItem>
 									</SelectContent>
