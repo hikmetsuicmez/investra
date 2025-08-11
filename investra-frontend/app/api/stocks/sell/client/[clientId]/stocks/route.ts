@@ -10,6 +10,7 @@ type BackendStock = {
 	availableQuantity: number;
 	currentPrice: number;
 	avgPrice: number;
+    category: string;
 };
 
 export async function GET(req: NextRequest, context: { params: Promise<{ clientId: string }> }) {
@@ -33,6 +34,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ clientI
 
         const result = await response.json();
 
+
         const backendList: BackendStock[] = result.data;
 
         const stocks: Stock[] = backendList.map(item => ({
@@ -43,7 +45,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ clientI
             stockGroup: item.stockGroup,
             isActive: true, // you decide your own logic
             source: null,   // or set dynamically if applicable
-            availableQuantity: item.availableQuantity
+            availableQuantity: item.availableQuantity,
+            category: item.category
         }));
 
         if (result.statusCode === 200) {

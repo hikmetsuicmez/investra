@@ -11,13 +11,13 @@ export async function GET(req: NextRequest, context: { params: Promise<{ clientI
 
   // Get token from cookies
   const cookieStore = await cookies();
-  const token = cookieStore.get('authToken')?.value; // Replace 'authToken' with your actual cookie name
+  const token = cookieStore.get('token')?.value;
 
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const fileRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio-reports/${clientId}/export/pdf`, {
+  const fileRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio-reports/${clientId}/export/excel`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
