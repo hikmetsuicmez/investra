@@ -27,7 +27,6 @@ public abstract class CreateClientRequest {
     @Pattern(regexp = "^[0-9]{10,15}$", message = "Telefon numarası yalnızca rakamlardan oluşmalı.")
     protected String phone;
 
-    @NotBlank(message = "Adres alanı zorunludur")
     protected String address;
     protected String notes;
     protected ClientStatus status;
