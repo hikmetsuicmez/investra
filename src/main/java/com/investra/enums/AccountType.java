@@ -5,7 +5,8 @@ public enum AccountType {
     INVESTMENT("Yatırım Hesabı"),
     CURRENT("Cari Hesap"),
     SAVINGS("Tasarruf Hesabı"),
-    DEPOSIT("Mevduat Hesabı");
+    DEPOSIT("Mevduat Hesabı"),
+    BLOKED("Bloke Hesabı");
 
     private final String description;
 

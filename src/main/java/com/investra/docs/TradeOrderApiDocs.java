@@ -18,59 +18,51 @@ import java.util.List;
 @Tag(name = "Emir API'ları", description = "Emir işlemleri ile ilgili API'ler")
 public interface TradeOrderApiDocs {
 
-    @Operation(
-            summary = "Tüm Emirleri Getir",
-            description = "Kullanıcının tüm emirlerini getirir."
-    )
-    @ApiResponse(responseCode = "200", description = "Emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "404", description = "Emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
-    ResponseEntity<Response<List<TradeOrderDTO>>> getAllOrders(@Parameter UserDetails userDetails);
+        @Operation(summary = "Tüm Emirleri Getir", description = "Kullanıcının tüm emirlerini getirir.")
+        @ApiResponse(responseCode = "200", description = "Emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "404", description = "Emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
+        ResponseEntity<Response<List<TradeOrderDTO>>> getAllOrders(@Parameter UserDetails userDetails);
 
-    @Operation(
-            summary = "Bekleyen Emirleri Getir",
-            description = "Kullanıcının bekleyen emirlerini getirir."
-    )
-    @ApiResponse(responseCode = "200", description = "Bekleyen emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "404", description = "Bekleyen emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
-    ResponseEntity<Response<List<TradeOrderDTO>>> getPendingOrders(@Parameter UserDetails userDetails);
+        @Operation(summary = "Bekleyen Emirleri Getir", description = "Kullanıcının bekleyen emirlerini getirir.")
+        @ApiResponse(responseCode = "200", description = "Bekleyen emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "404", description = "Bekleyen emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
+        ResponseEntity<Response<List<TradeOrderDTO>>> getPendingOrders(@Parameter UserDetails userDetails);
 
-    @Operation(
-            summary = "Gerçekleştirilen Emirleri Getir",
-            description = "Kullanıcının gerçekleştirilen emirlerini getirir."
-    )
-    @ApiResponse(responseCode = "200", description = "Gerçekleştirilen emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "404", description = "Gerçekleştirilen emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
-    ResponseEntity<Response<List<TradeOrderDTO>>> getExecutedOrders(@AuthenticationPrincipal UserDetails userDetails);
+        @Operation(summary = "Gerçekleştirilen Emirleri Getir", description = "Kullanıcının gerçekleştirilen emirlerini getirir.")
+        @ApiResponse(responseCode = "200", description = "Gerçekleştirilen emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "404", description = "Gerçekleştirilen emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
+        ResponseEntity<Response<List<TradeOrderDTO>>> getExecutedOrders(
+                        @AuthenticationPrincipal UserDetails userDetails);
 
-    @Operation(
-            summary = "Tamamlanmış Emirleri Getir",
-            description = "Kullanıcının tamamlanmış emirlerini getirir."
-    )
-    @ApiResponse(responseCode = "200", description = "Tamamlanmış emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "404", description = "Tamamlanmış emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
-    ResponseEntity<Response<List<TradeOrderDTO>>> getSettledOrders(@AuthenticationPrincipal UserDetails userDetails);
+        @Operation(summary = "Tamamlanmış Emirleri Getir", description = "Kullanıcının tamamlanmış emirlerini getirir.")
+        @ApiResponse(responseCode = "200", description = "Tamamlanmış emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "404", description = "Tamamlanmış emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
+        ResponseEntity<Response<List<TradeOrderDTO>>> getSettledOrders(
+                        @AuthenticationPrincipal UserDetails userDetails);
 
-    @Operation(
-            summary = "İptal Edilmiş Emirleri Getir",
-            description = "Kullanıcının iptal edilmiş emirlerini getirir."
-    )
-    @ApiResponse(responseCode = "200", description = "İptal edilmiş emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "404", description = "İptal edilmiş emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
-    ResponseEntity<Response<List<TradeOrderDTO>>> getCancelledOrders(@AuthenticationPrincipal UserDetails userDetails);
+        @Operation(summary = "İptal Edilmiş Emirleri Getir", description = "Kullanıcının iptal edilmiş emirlerini getirir.")
+        @ApiResponse(responseCode = "200", description = "İptal edilmiş emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "404", description = "İptal edilmiş emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
+        ResponseEntity<Response<List<TradeOrderDTO>>> getCancelledOrders(
+                        @AuthenticationPrincipal UserDetails userDetails);
 
-    @Operation(
-            summary = "Emri İptal Et",
-            description = "Belirtilen emir ID'sine sahip emri iptal eder."
-    )
-    @ApiResponse(responseCode = "200", description = "Emir başarıyla iptal edildi", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "404", description = "Emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
-    @Parameter(name = "orderId", description = "İptal edilecek emir ID'si", required = true)
-    ResponseEntity<Response<TradeOrderDTO>> cancelOrder(@Parameter Long orderId, @Parameter UserDetails userDetails);
+        @Operation(summary = "İptal Edilebilir Emirleri Getir", description = "Kullanıcının iptal edilebilir emirlerini getirir (PENDING, T1, T2 settlement status'undaki emirler).")
+        @ApiResponse(responseCode = "200", description = "İptal edilebilir emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "404", description = "İptal edilebilir emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
+        ResponseEntity<Response<List<TradeOrderDTO>>> getCancellableOrders(@Parameter UserDetails userDetails);
 
-    }
+        @Operation(summary = "Emri İptal Et", description = "Belirtilen emir ID'sine sahip emri iptal eder.")
+        @ApiResponse(responseCode = "200", description = "Emir başarıyla iptal edildi", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "404", description = "Emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
+        @Parameter(name = "orderId", description = "İptal edilecek emir ID'si", required = true)
+        ResponseEntity<Response<TradeOrderDTO>> cancelOrder(@Parameter Long orderId,
+                        @Parameter UserDetails userDetails);
+
+}

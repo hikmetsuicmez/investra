@@ -19,8 +19,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -60,6 +62,19 @@ public class AdminServiceImpl implements AdminService {
             duplicateResourceCheck(() -> userRepository.findByEmail(request.getEmail()).isPresent(),
                     "Bu email ile kayıtlı bir kullanıcı mevcut", ErrorCode.OPERATION_FAILED);
 
+            // Employee number çakışma kontrolü (artık gerekli değil ama güvenlik için)
+            if (userRepository.findByEmployeeNumber(generatedEmployeeNumber).isPresent()) {
+                log.error("Employee number çakışması tespit edildi: {}. Bu durum beklenmiyordu.",
+                        generatedEmployeeNumber);
+                return Response.<CreateUserResponse>builder()
+                        .statusCode(500)
+                        .message("Employee number üretilemedi. Lütfen tekrar deneyin.")
+                        .errorCode(ErrorCode.OPERATION_FAILED)
+                        .build();
+            }
+
+            log.info("Employee number başarıyla üretildi ve doğrulandı: {}", generatedEmployeeNumber);
+
             log.debug("Şifre oluşturuluyor");
             String rawPassword = PasswordGenerator.generatePassword(10);
             String encodedPassword = passwordEncoder.encode(rawPassword);
@@ -67,8 +82,26 @@ public class AdminServiceImpl implements AdminService {
             User user = toEntity(request, encodedPassword, generatedEmployeeNumber);
             user.setActive(true);
             user.setCreatedAt(LocalDateTime.now());
-            userRepository.save(user);
-            log.info("Yeni kullanıcı veritabanına kaydedildi. employeeNumber: {}", generatedEmployeeNumber);
+
+            try {
+                userRepository.save(user);
+                log.info("Yeni kullanıcı veritabanına kaydedildi. employeeNumber: {}", generatedEmployeeNumber);
+            } catch (DataIntegrityViolationException e) {
+                log.error("Veritabanında zorunlu alanlar boş bırakılmış veya benzersizlik kuralı ihlal edilmiş: {}",
+                        e.getMessage());
+                return Response.<CreateUserResponse>builder()
+                        .statusCode(400)
+                        .message("Veritabanında zorunlu alanlar boş bırakılmış veya benzersizlik kuralı ihlal edilmiş.")
+                        .errorCode(ErrorCode.OPERATION_FAILED)
+                        .build();
+            } catch (Exception e) {
+                log.error("Kullanıcı kaydedilirken hata oluştu: {}", e.getMessage(), e);
+                return Response.<CreateUserResponse>builder()
+                        .statusCode(500)
+                        .message("Kullanıcı kaydedilirken hata oluştu. Lütfen tekrar deneyin.")
+                        .errorCode(ErrorCode.OPERATION_FAILED)
+                        .build();
+            }
 
             Map<String, Object> templateVariables = new HashMap<>();
             templateVariables.put("title", "Investra'ya Hoş Geldiniz!");

@@ -25,6 +25,8 @@ public interface TradeOrderService {
 
     List<TradeOrderDTO> getOrdersByStatusAndUser(String username, OrderStatus status);
 
+    List<TradeOrderDTO> getCancellableOrdersByUser(String username);
+
     Response<TradeOrderDTO> cancelOrder(Long orderId, String username);
 
     void updateAccountBalanceForBuyOrder(Account account, BigDecimal amount);
