@@ -18,6 +18,7 @@ import {
 import { useRouter } from "next/navigation";
 import { DownloadButton } from "../customer-management/DownloadButton";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Role } from "@/types/employees";
 
 interface DailyValuation {
 	clientId: number;
@@ -40,7 +41,8 @@ type Positions = {
 	changePercentage: number;
 };
 
-export default function EndOfDayValution() {
+export default function EndOfDayValution({ initialRole }: { initialRole: Role }) {
+	const [role, setRole] = useState<Role>(initialRole);
 	const [isLoadingInitial, setIsLoadingInitial] = useState(true);
 	const [isLoadingProcess, setIsLoadingProcess] = useState(false);
 	const [isSearching, setIsSearching] = useState(false);
@@ -208,7 +210,7 @@ export default function EndOfDayValution() {
 					<h1 className="text-2xl font-semibold ">Gün Sonu Değerleme</h1>
 					<AlertDialog>
 						<AlertDialogTrigger asChild>
-							<Button disabled={isLoadingProcess || isLoadingInitial}>
+							<Button disabled={isLoadingProcess || isLoadingInitial || role === "VIEWER"}>
 								{isLoadingProcess ? (
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 								) : (

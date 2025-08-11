@@ -6,6 +6,7 @@ export function middleware(req: NextRequest) {
 
     const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
     const isEmployeeManagement = req.nextUrl.pathname.startsWith("/dashboard/employee-management");
+    const isViewerAllowed = req.nextUrl.pathname.startsWith("/dashboard/portfolio-management") || req.nextUrl.pathname.startsWith("/dashboard/stock-management/list-closing-price") || req.nextUrl.pathname.startsWith("/dashboard");
 
     if (!hasToken && !isAuthPage) {
         return NextResponse.redirect(new URL("/auth/login", req.url));
@@ -16,6 +17,9 @@ export function middleware(req: NextRequest) {
             // Redirect non-admin users away from employee management page
             return NextResponse.redirect(new URL("/dashboard", req.url));
         }
+        if (!isViewerAllowed && role === "VIEWER") {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
     }
 
     if (hasToken && !req.nextUrl.pathname.startsWith("/auth/change-password") && isAuthPage) {
