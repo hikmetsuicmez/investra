@@ -97,6 +97,10 @@ export type Stock = {
 	isActive: boolean;
 	source: string | null;
 	availableQuantity?: number;
+	closePrice:number;
+	stockCode:string;
+	companyName :string;
+	sector:string;
 };
 
 // Execution Types

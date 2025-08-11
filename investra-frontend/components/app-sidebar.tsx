@@ -60,7 +60,7 @@ const items = [
 					{
 						label: "Hisse Senedi Kapanışı",
 						icon: <List />,
-						href: "/dashboard/portfolio-management",
+						href: "/dashboard/stock-management/list-closing-price",
 						subitems: [],
 					},
 				],

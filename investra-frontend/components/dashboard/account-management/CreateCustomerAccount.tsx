@@ -7,6 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
+import {
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { useRouter } from "next/navigation";
 
 interface CreateCustomerAccountProps {
   clientId: string;
@@ -28,12 +38,17 @@ export default function CreateCustomerAccount({ clientId }: CreateCustomerAccoun
   });
 
   useEffect(() => {
-    // clientId prop geldiğinde form state'e set et
     setForm((prev) => ({ ...prev, clientId }));
   }, [clientId]);
-
+  const router = useRouter();
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [confirmationData, setConfirmationData] = useState<{
+    nickname: string;
+    accountType: string;
+    currency: string;
+  } | null>(null);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -79,7 +94,12 @@ export default function CreateCustomerAccount({ clientId }: CreateCustomerAccoun
         throw new Error(data?.message || "Hesap oluşturulamadı.");
       }
 
-      alert("Hesap başarıyla oluşturuldu.");
+      setConfirmationData({
+        nickname: form.nickname || "—",
+        accountType: form.accountType,
+        currency: form.currency,
+      });
+      setShowSuccess(true);
     } catch (err: any) {
       setError(err.message || "Bir hata oluştu.");
     } finally {
@@ -204,6 +224,37 @@ export default function CreateCustomerAccount({ clientId }: CreateCustomerAccoun
           </form>
         </CardContent>
       </Card>
+      {showSuccess && confirmationData && (
+        <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
+          <AlertDialogContent className="bg-green-50 text-green-800">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-green-700 text-lg font-bold">✔ Hesap Başarıyla Oluşturuldu</AlertDialogTitle>
+              <AlertDialogDescription className="mt-2 text-sm text-green-800 space-y-1">
+                <p>
+                  <strong>Hesap Adı:</strong> {confirmationData.nickname}
+                </p>
+                <p>
+                  <strong>Hesap Tipi:</strong> {confirmationData.accountType}
+                </p>
+                <p>
+                  <strong>Para Birimi:</strong> {confirmationData.currency}
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+              <AlertDialogAction
+                onClick={() => {
+                  setShowSuccess(false);
+                  router.push("/dashboard"); 
+                }}
+              >
+                Tamam
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
