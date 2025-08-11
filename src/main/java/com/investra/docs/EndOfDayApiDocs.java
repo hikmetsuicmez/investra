@@ -89,8 +89,8 @@ public interface EndOfDayApiDocs {
         @ApiResponse(responseCode = "500", description = "Simülasyon tarihi sıfırlanırken hata oluştu", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
         Response<Boolean> resetSimulationDate(@Parameter UserDetails userDetails);
 
-        @Operation(summary = "Müşteri Portföyünü Getir", description = "Belirli bir müşterinin portföyünü getirir. " +
-                        "Portföy, müşteri hesaplarındaki tüm varlıkların günlük değerlemesini içerir.")
+        @Operation(summary = "Müşteri İşlemlerini Getir", description = "Belirli bir müşterinin tüm işlemlerini getirir. " +
+                        "Bu endpoint, müşteri hesaplarındaki tüm işlemleri içerir.")
         @ApiResponse(responseCode = "200", description = "Müşteri portföyü başarıyla alındı", content = @Content(schema = @Schema(implementation = Response.class)))
         @ApiResponse(responseCode = "404", description = "Müşteri bulunamadı", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
         @ApiResponse(responseCode = "403", description = "Erişim reddedildi", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))

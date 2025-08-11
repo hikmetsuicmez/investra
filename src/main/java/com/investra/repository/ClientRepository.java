@@ -28,6 +28,8 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByTaxNumber(String taxNumber);
 
+    Optional<Client> findByRegistrationNumber(String registrationNumber);
+
     Optional<Client> findByNationalityNumberContaining(String nationalityNumber);
 
     Optional<Client> findByTaxIdContaining(String taxId);

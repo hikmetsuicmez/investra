@@ -94,6 +94,7 @@ public class AuthServiceImpl implements AuthService {
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setToken(token);
             loginResponse.setFirstLogin(isFirstLogin); // Orijinal firstLogin değerini döndür
+            loginResponse.setRole(user.getRole());
             log.info("Giriş başarılı. email: {}", user.getEmail());
 
             return Response.<LoginResponse>builder()

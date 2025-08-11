@@ -7,14 +7,17 @@ import com.investra.dtos.request.ClientSearchRequest;
 import com.investra.dtos.request.CreateClientRequest;
 import com.investra.dtos.request.CreateCorporateClientRequest;
 import com.investra.dtos.request.CreateIndividualClientRequest;
+import com.investra.dtos.request.UpdateClientRequest;
+import com.investra.dtos.request.UpdateCorporateClientRequest;
+import com.investra.dtos.request.UpdateIndividualClientRequest;
 import com.investra.dtos.response.ClientDTO;
 import com.investra.dtos.response.ClientSearchResponse;
 import com.investra.dtos.response.CreateClientResponse;
 import com.investra.dtos.response.Response;
+import com.investra.dtos.response.UpdateClientResponse;
 import com.investra.entity.Client;
 import com.investra.service.ClientService;
 import com.investra.service.StockBuyService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -56,11 +59,38 @@ public class ClientController implements ClientApiDocs {
                     Response.<CreateClientResponse>builder()
                             .statusCode(400)
                             .message("Geçersiz müşteri tipi")
-                            .build()
-            );
+                            .build());
         }
 
         Response<CreateClientResponse> response = clientService.createClient(request, userEmail);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @Override
+    @PutMapping(ApiEndpoints.Client.UPDATE)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TRADER')")
+    public ResponseEntity<Response<UpdateClientResponse>> updateClient(
+            @PathVariable Long clientId,
+            @RequestBody Map<String, Object> payload) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+        String clientTypeValue = String.valueOf(payload.get("clientType"));
+
+        UpdateClientRequest request;
+
+        if ("INDIVIDUAL".equalsIgnoreCase(clientTypeValue)) {
+            request = objectMapper.convertValue(payload, UpdateIndividualClientRequest.class);
+        } else if ("CORPORATE".equalsIgnoreCase(clientTypeValue)) {
+            request = objectMapper.convertValue(payload, UpdateCorporateClientRequest.class);
+        } else {
+            return ResponseEntity.badRequest().body(
+                    Response.<UpdateClientResponse>builder()
+                            .statusCode(400)
+                            .message("Geçersiz müşteri tipi")
+                            .build());
+        }
+
+        Response<UpdateClientResponse> response = clientService.updateClient(clientId, request, userEmail);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
@@ -69,7 +99,7 @@ public class ClientController implements ClientApiDocs {
     public ResponseEntity<Response<ClientSearchResponse>> findClient(@RequestBody ClientSearchRequest request) {
         Response<List<ClientSearchResponse>> searchResponse = clientService.searchClients(request);
         List<ClientSearchResponse> clients = searchResponse.getData();
-    
+
         if (clients == null || clients.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Response.<ClientSearchResponse>builder()
@@ -84,8 +114,7 @@ public class ClientController implements ClientApiDocs {
                         .statusCode(200)
                         .message("Müşteri bulundu.")
                         .data(client)
-                        .build()
-        );
+                        .build());
     }
 
     @Override

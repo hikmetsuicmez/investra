@@ -1,5 +1,6 @@
 package com.investra.dtos.response;
 
+import com.investra.enums.ExecutionType;
 import com.investra.enums.OrderType;
 import com.investra.enums.SettlementStatus;
 import lombok.AllArgsConstructor;
@@ -28,5 +29,6 @@ public class TradeOrderDTO {
     private SettlementStatus settlementStatus;
     private java.time.LocalDate tradeDate;
     private Integer settlementDaysRemaining;
+    private ExecutionType executionType;
 
 }
