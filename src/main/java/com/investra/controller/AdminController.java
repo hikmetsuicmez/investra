@@ -9,6 +9,7 @@ import com.investra.dtos.response.Response;
 import com.investra.dtos.response.UpdateUserResponse;
 import com.investra.dtos.response.UserDTO;
 import com.investra.service.AdminService;
+import com.investra.service.TradeOrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import java.util.List;
 public class AdminController implements AdminApiDocs {
 
     private final AdminService adminService;
+    private final TradeOrderService tradeOrderService;
 
     @PostMapping(ApiEndpoints.User.CREATE)
     @PreAuthorize("hasRole('ADMIN')")
@@ -33,7 +35,8 @@ public class AdminController implements AdminApiDocs {
 
     @PatchMapping(ApiEndpoints.User.UPDATE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Response<UpdateUserResponse>> updateUser(@PathVariable String employeeNumber, @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<Response<UpdateUserResponse>> updateUser(@PathVariable String employeeNumber,
+            @RequestBody UpdateUserRequest request) {
         Response<UpdateUserResponse> response = adminService.updateUser(employeeNumber, request);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
@@ -57,5 +60,26 @@ public class AdminController implements AdminApiDocs {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Borsa kapanış zamanında açık LIMIT emirleri manuel olarak iptal eder (test
+     * amaçlı)
+     */
+    @PostMapping("/market-close/cancel-limit-orders")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Response<String>> manuallyCancelLimitOrdersAtMarketClose() {
+        try {
+            tradeOrderService.cancelOpenLimitOrdersAtMarketClose();
+            return ResponseEntity.ok(Response.<String>builder()
+                    .statusCode(200)
+                    .message("LIMIT emirlerin otomatik iptali başarıyla çalıştırıldı")
+                    .data("İşlem tamamlandı")
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Response.<String>builder()
+                    .statusCode(500)
+                    .message("LIMIT emirlerin otomatik iptali sırasında hata oluştu: " + e.getMessage())
+                    .build());
+        }
+    }
 
 }
