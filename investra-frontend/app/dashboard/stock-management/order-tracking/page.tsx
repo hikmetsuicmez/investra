@@ -16,6 +16,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import {
+	TradeOrderSettlementStatusBadge,
 	TradeOrderStatusBadge,
 	TradeOrderTypeBadge,
 } from "@/components/dashboard/stock-management/order-tracking/Badges";
@@ -36,6 +37,7 @@ export default function OrderTracking() {
 				throw new Error("Failed to fetch trade orders");
 			}
 			const data = await response.json();
+			console.log(data);
 			setTradeAllOrders(data.data);
 		} catch (error) {
 			console.error("Error fetching trade orders:", error);
@@ -70,7 +72,7 @@ export default function OrderTracking() {
 	return (
 		<div className="flex flex-col h-screen bg-gray-100 p-6 gap-6">
 			<SimulationDateDisplay />
-			
+
 			<div className="flex justify-between items-center p-4 flex-shrink-0">
 				<h1 className="text-2xl font-semibold">Emir Takibi</h1>
 			</div>
@@ -139,6 +141,7 @@ export default function OrderTracking() {
 								<TableHead>Fiyat</TableHead>
 								<TableHead>Tutar</TableHead>
 								<TableHead>Durum</TableHead>
+								<TableHead>Valör Durumu</TableHead>
 								<TableHead>Tarih/Saat</TableHead>
 								<TableHead>İşlemler</TableHead>
 							</TableRow>
@@ -153,6 +156,7 @@ export default function OrderTracking() {
 											<p className="font-light">{tradeOrder.clientId}</p>
 										</div>
 									</TableCell>
+									{/* <TableCell><TradeExecutionTypeBadge executionType={tradeOrder.executionType} /></TableCell> */}
 									<TableCell className="font-medium">{tradeOrder.stockCode}</TableCell>
 									<TableCell>
 										<TradeOrderTypeBadge orderType={tradeOrder.orderType} />
@@ -171,6 +175,9 @@ export default function OrderTracking() {
 										<TradeOrderStatusBadge orderStatus={tradeOrder.status} />
 									</TableCell>
 									<TableCell>
+										<TradeOrderSettlementStatusBadge settlementStatus={tradeOrder.settlementStatus} />
+									</TableCell>
+									<TableCell>
 										<div>
 											<p className="font-light">{new Date(tradeOrder.submittedAt).toLocaleDateString("tr-TR")}</p>
 											<p className="font-light text-gray-700">
@@ -182,9 +189,12 @@ export default function OrderTracking() {
 										<div className="flex gap-2">
 											<TradeOrderDetails selectedOrder={tradeOrder} />
 
-											{tradeOrder.status === "PENDING" && (
-												<CancelOrderDialog order={tradeOrder} onCancelSuccess={onCancelSuccess} />
-											)}
+											{tradeOrder.status !== "CANCELLED" &&
+												tradeOrder.status !== "REJECTED" &&
+												tradeOrder.settlementStatus !== "COMPLETED" &&
+												tradeOrder.settlementStatus !== "CANCELLED" && (
+													<CancelOrderDialog order={tradeOrder} onCancelSuccess={onCancelSuccess} />
+												)}
 										</div>
 									</TableCell>
 								</TableRow>

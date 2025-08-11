@@ -126,9 +126,34 @@ export default function StockSell() {
 		});
 	}, [customers]);
 
+	// Handle initial stock selection - set price to current stock price
 	useEffect(() => {
-		setPrice(selectedStock.currentPrice);
-	}, [selectedStock, executionType]);
+		if (selectedStock.id > 0) {
+			setPrice(selectedStock.currentPrice);
+		}
+	}, [selectedStock.id]);
+
+	// Handle execution type changes
+	useEffect(() => {
+		// Only set price to stock's current price when execution type changes to MARKET
+		// This preserves user's manual input for LIMIT orders
+		if (executionType === "MARKET") {
+			setPrice(selectedStock.currentPrice);
+		}
+	}, [executionType, selectedStock.currentPrice]);
+
+	// Recalculate costs when price changes
+	useEffect(() => {
+		if (price > 0 && quantity > 0) {
+			const newCost = price * quantity;
+			const newCommission = newCost * 0.002;
+			const newBsmv = newCommission * 0.05;
+			setCost(newCost);
+			setCommission(newCommission);
+			setBsmv(newBsmv);
+			setTotalCost(newCost + newCommission + newBsmv);
+		}
+	}, [price, quantity]);
 
 	const allAccounts: Account[] = Object.values(accountsByClient).flat();
 
@@ -273,11 +298,18 @@ export default function StockSell() {
 								<Input
 									value={price.toFixed(2)}
 									min={0}
-									placeholder="Limit Fiyat"
+									placeholder={executionType === "MARKET" ? "Piyasa Fiyatı" : "Limit Fiyat"}
 									onChange={(e) => setPrice(Number(e.target.value) || 0)}
 									type="number"
 									disabled={executionType === "MARKET"}
+									className={executionType === "MARKET" ? "bg-gray-100 cursor-not-allowed" : ""}
 								/>
+								{executionType === "MARKET" && (
+									<p className="text-xs text-gray-500 mt-1">Piyasa fiyatı otomatik olarak güncellenir</p>
+								)}
+								{executionType === "LIMIT" && (
+									<p className="text-xs text-gray-500 mt-1">Mevcut piyasa fiyatı: {selectedStock.currentPrice.toFixed(2)} TL</p>
+								)}
 							</div>
 							<div className="w-full">
 								<Label className="mb-1">Adet</Label>
@@ -327,6 +359,7 @@ export default function StockSell() {
 
 						<SellStockPreviewDialog
 							quantity={quantity}
+							price={price}
 							selectedStock={selectedStock}
 							totalCost={totalCost}
 							selectedAccount={selectedAccount}
