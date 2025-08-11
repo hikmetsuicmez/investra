@@ -133,21 +133,26 @@ export default function CreateCustomerAccount({ clientId }: CreateCustomerAccoun
 						</div>
 
 						<div className="grid grid-cols-2 gap-4">
-							<div>
-								<Label>
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<Label>
 									Hesap Tipi <span className="text-red-500">*</span>
-								</Label>
-								<Select onValueChange={(val) => handleChange("accountType", val)}>
+									</Label>
+									<Select
+									defaultValue="INVESTMENT"
+									onValueChange={(val) => handleChange("accountType", val)}
+									>
 									<SelectTrigger>
 										<SelectValue placeholder="Seçiniz" />
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value="INVESTMENT">Yatırım</SelectItem>
-										<SelectItem value="SETTLEMENT">Takas</SelectItem>
+										<SelectItem value="DEPOSIT" disabled>Mevduat</SelectItem>
+										<SelectItem value="BLOKED" disabled>Bloke</SelectItem>
 									</SelectContent>
-								</Select>
+									</Select>
+								</div>
 							</div>
-
 							<div>
 								<Label>
 									Para Birimi <span className="text-red-500">*</span>

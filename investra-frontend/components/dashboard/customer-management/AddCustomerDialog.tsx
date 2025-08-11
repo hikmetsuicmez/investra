@@ -275,7 +275,6 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 									placeholder="Aylık Gelir"
 									value={individualInfo.monthlyRevenue}
 									onChange={(e) => setIndividualInfo((prev) => ({ ...prev, monthlyRevenue: e.target.value }))}
-									required
 								/>
 							</div>
 
@@ -418,7 +417,6 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 									placeholder="Ciro"
 									value={corporateInfo.monthlyRevenue}
 									onChange={(e) => setCorporateInfo((prev) => ({ ...prev, monthlyRevenue: e.target.value }))}
-									required
 								/>
 							</div>
 
