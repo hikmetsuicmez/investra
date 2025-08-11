@@ -18,6 +18,7 @@ export async function POST(req: Request) {
 
   const token = body.data.token;
   const firstLogin = body.data.firstLogin;
+  const role = body.data.role
 
   // Set JWT as HTTP-only cookie
   cookieStore.set('token', token, {
@@ -26,6 +27,13 @@ export async function POST(req: Request) {
     path: '/',
     maxAge: 8 * 60 * 60,
   });
+
+  cookieStore.set("role", role, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 8 * 60 * 60,
+  })
 
   // Return redirect info in JSON
   return Response.json({

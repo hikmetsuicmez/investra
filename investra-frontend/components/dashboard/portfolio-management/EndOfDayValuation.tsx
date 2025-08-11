@@ -16,7 +16,8 @@ import {
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
-import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
+import { DownloadButton } from "../customer-management/DownloadButton";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface DailyValuation {
 	clientId: number;
@@ -144,20 +145,19 @@ export default function EndOfDayValution() {
 		if (valuations && valuations.length > 0) {
 			return (
 				<div className="bg-white rounded-xl shadow overflow-auto border">
-					<SimulationDateDisplay />
-
 					<h2 className="p-4 text-lg font-semibold border-b">
 						Değerleme Sonuçları - {new Date(valuations[0].valuationDate).toLocaleDateString("tr-TR")}
 					</h2>
-					<div className="grid grid-cols-5 font-semibold bg-gray-100 p-4 text-sm">
+					<div className="grid grid-cols-6 font-semibold bg-gray-100 p-4 text-sm">
 						<div>Müşteri ID</div>
 						<div>Müşteri Adı</div>
 						<div>Toplam Portföy Değeri</div>
 						<div>Gerçekleşmemiş K/Z</div>
 						<div>Günlük Değişim (%)</div>
+						<div>Rapor</div>
 					</div>
 					{valuations.map((v) => (
-						<div key={v.clientId} className="grid grid-cols-5 items-center p-4 hover:bg-gray-50 transition border-t">
+						<div key={v.clientId} className="grid grid-cols-6 items-center p-4 hover:bg-gray-50 transition border-t">
 							<div>{v.clientId}</div>
 							<div>{v.clientName || "-"}</div>
 							<div>{v.totalPortfolioValue.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}</div>
@@ -166,6 +166,28 @@ export default function EndOfDayValution() {
 							</div>
 							<div className={v.dailyChangePercentage >= 0 ? "text-green-600" : "text-red-600"}>
 								%{v.dailyChangePercentage.toFixed(2)}
+							</div>
+							<div className="">
+								<Dialog>
+									<DialogTrigger className="p-2 rounded-sm border bg-white hover:bg-gray-100">
+										Müşteri Raporu
+									</DialogTrigger>
+									<DialogContent>
+										<DialogTitle>Müşteri Raporu İndir</DialogTitle>
+										<div className="flex w-full gap-4 py-8">
+											<DownloadButton
+												label="PDF İndir"
+												endpoint={`/api/portfolio-reports/${v.clientId}/export/pdf`}
+												filename={`report-${v.clientId}.pdf`}
+											/>
+											<DownloadButton
+												label="Excel İndir"
+												endpoint={`/api/portfolio-reports/${v.clientId}/export/excel`}
+												filename={`report-${v.clientId}.xlsx`}
+											/>
+										</div>
+									</DialogContent>
+								</Dialog>
 							</div>
 						</div>
 					))}

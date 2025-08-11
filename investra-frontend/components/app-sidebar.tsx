@@ -35,6 +35,10 @@ import {
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { Role } from "@/types/employees";
+import SimulationDateDisplay from "./dashboard/simulation-day/SimulationDayDisplay";
 
 type SidebarItemType = {
 	label: string;
@@ -74,7 +78,7 @@ const items: SidebarItemType[] = [
 					},
 				],
 			},
-						{
+			{
 				label: "Müşteri Listesi",
 				icon: List,
 				href: "/dashboard/customer-management",
@@ -85,17 +89,16 @@ const items: SidebarItemType[] = [
 	{
 		label: "Hesap İşlemleri",
 		icon: Users,
-		href: "/dashboard/customer-management",
-		subitems: [
-		],
+		href: "/dashboard/customer-search",
+		subitems: [],
 	},
 	{
 		label: "Bakiye İşlemi",
 		icon: Users,
-		href: "/dashboard/customer-management",
+		href: "/",
 		subitems: [
 			{
-				label: "Bakiye işlemleri İşlemleri",
+				label: "Bakiye İşlemleri",
 				icon: List,
 				href: "/dashboard/customer-search",
 				subitems: [],
@@ -140,17 +143,27 @@ const items: SidebarItemType[] = [
 	},
 ];
 
-export function SidebarItem({ item }: { item: SidebarItemType }) {
+export function SidebarItem({ item, role }: { item: SidebarItemType; role: Role }) {
 	const hasSubitems = item.subitems && item.subitems.length > 0;
+
+	const isPersonnelManagement = item.label === "Personel Yönetimi";
+	const disabled = isPersonnelManagement && role != "ADMIN";
 
 	if (!hasSubitems) {
 		return (
 			<SidebarMenuItem>
 				<SidebarMenuButton size="lg" asChild>
-					<Link href={item.href || "#"} className="flex gap-2 items-center">
-						<item.icon className="size-4" />
-						<p>{item.label}</p>
-					</Link>
+					{disabled ? (
+						<div className="flex gap-2 items-center opacity-50 cursor-not-allowed">
+							<item.icon className="size-4" />
+							<p>{item.label}</p>
+						</div>
+					) : (
+						<Link href={item.href || "#"} className="flex gap-2 items-center">
+							<item.icon className="size-4" />
+							<p>{item.label}</p>
+						</Link>
+					)}
 				</SidebarMenuButton>
 			</SidebarMenuItem>
 		);
@@ -170,19 +183,23 @@ export function SidebarItem({ item }: { item: SidebarItemType }) {
 						</div>
 					</SidebarMenuButton>
 				</CollapsibleTrigger>
-				<CollapsibleContent>
-					<SidebarMenuSub className="mr-0 pr-0">
-						{item.subitems.map((subitem) => (
-							<SidebarItem key={subitem.label} item={subitem} />
-						))}
-					</SidebarMenuSub>
-				</CollapsibleContent>
+				{!disabled && (
+					<CollapsibleContent>
+						<SidebarMenuSub className="mr-0 pr-0">
+							{item.subitems.map((subitem) => (
+								<SidebarItem key={subitem.label} item={subitem} role={role} />
+							))}
+						</SidebarMenuSub>
+					</CollapsibleContent>
+				)}
 			</SidebarMenuItem>
 		</Collapsible>
 	);
 }
 
 export function AppSidebar() {
+	const [role, setRole] = useState<Role>("VIEWER");
+
 	const handleLogout = async () => {
 		try {
 			const response = await fetch("/api/auth/logout", {
@@ -198,25 +215,44 @@ export function AppSidebar() {
 		}
 	};
 
+	const fetchRole = async () => {
+		const res = await fetch("/api/auth/get-role", {
+			method: "GET",
+		});
+		if (res.ok) {
+			const response = await res.json();
+			setRole(response.role);
+		}
+	};
+
+	useEffect(() => {
+		fetchRole();
+	}, []);
+
 	return (
 		<Sidebar variant="sidebar" className="h-screen font-medium">
-			<SidebarHeader className="h-20">
-				<div className="h-full flex gap-2 items-center px-4">
-					<p>V</p>
-					<p className="font-bold">INVESTRA</p>
+			<SidebarHeader className="h-20 bg-[#f6f5fa]">
+				<div className="h-full flex justify-center gap-2 items-center px-4">
+					<Image src={"/images/Investra-Logo.png"} alt="Investra logo" height={100} width={100} />
 				</div>
 			</SidebarHeader>
 			<Separator />
 			<SidebarContent>
-				<SidebarMenu>
-					<SidebarGroup>
-						<SidebarGroupContent>
+				<SidebarGroup>
+					<SidebarContent>
+						<SimulationDateDisplay />
+					</SidebarContent>
+				</SidebarGroup>
+				<Separator />
+				<SidebarGroup>
+					<SidebarGroupContent>
+						<SidebarMenu>
 							{items.map((item) => (
-								<SidebarItem key={item.label} item={item} />
+								<SidebarItem key={item.label} item={item} role={role} />
 							))}
-						</SidebarGroupContent>
-					</SidebarGroup>
-				</SidebarMenu>
+						</SidebarMenu>
+					</SidebarGroupContent>
+				</SidebarGroup>
 			</SidebarContent>
 			<SidebarFooter className="border-t">
 				<SidebarMenu>

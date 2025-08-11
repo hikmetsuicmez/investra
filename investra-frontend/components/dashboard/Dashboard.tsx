@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import { Loader2, XCircle, Search, X } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 interface DailyValuation {
 	clientId: number;
@@ -200,7 +199,6 @@ export default function Dashboard() {
 
 	return (
 		<div className="p-1 md:p-15 space-y-10 bg-gray-50 min-h-screen relative">
-			<SimulationDateDisplay />
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{renderValuationTable()}
 

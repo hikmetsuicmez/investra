@@ -30,7 +30,6 @@ export async function GET(request: Request) {
     });
 
     const backendResponseData = await response.json();
-    console.log(backendResponseData)
     if (!response.ok) {
       throw new Error(backendResponseData.message || `Müşteri ${clientId} için değerleme alınamadı.`);
     }

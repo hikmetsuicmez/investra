@@ -9,6 +9,7 @@ import { ArrowLeft, Mail, Send } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { validateEmail } from "@/lib/validate-email";
+import Image from "next/image";
 
 export default function ForgotPassword() {
 	const [email, setEmail] = useState("");
@@ -49,12 +50,10 @@ export default function ForgotPassword() {
 
 	return (
 		<div className="w-full h-screen flex items-center justify-center bg-gray-300">
-			<Card className="w-full max-w-sm">
+			<Card className="w-full max-w-sm bg-[#f6f5fa]">
 				<CardHeader className="text-center">
 					<div className="flex justify-center mb-2">
-						<div className="bg-blue-600 p-3 rounded-full">
-							<Mail size={32} color="white" />
-						</div>
+						<Image src={"/images/Investra-Logo.png"} alt="Investra logo" height={100} width={100} />
 					</div>
 					<CardTitle className="text-slate-800/90 text-2xl font-semibold">Şifre Sıfırlama</CardTitle>
 					<CardDescription>E-posta adresinizi girin, şifre sıfırlama bağlantısını size gönderelim.</CardDescription>

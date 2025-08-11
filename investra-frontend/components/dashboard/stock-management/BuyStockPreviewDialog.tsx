@@ -123,10 +123,6 @@ export default function BuyStockPreviewDialog({
 		}
 	}
 
-	useEffect(() => {
-		console.log(previewResults);
-	}, [previewResults]);
-
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>

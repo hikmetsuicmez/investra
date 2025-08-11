@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 import {
 	AlertDialog,
 	AlertDialogContent,
@@ -113,8 +112,6 @@ export default function CreateCustomerAccount({ clientId }: CreateCustomerAccoun
 
 	return (
 		<div className="max-w-3xl mx-auto py-8 px-4">
-			<SimulationDateDisplay />
-
 			<Card>
 				<CardHeader>
 					<CardTitle>Portföy Yöneticisi Hesap Açma</CardTitle>
@@ -136,20 +133,21 @@ export default function CreateCustomerAccount({ clientId }: CreateCustomerAccoun
 							<div className="grid grid-cols-2 gap-4">
 								<div>
 									<Label>
-									Hesap Tipi <span className="text-red-500">*</span>
+										Hesap Tipi <span className="text-red-500">*</span>
 									</Label>
-									<Select
-									defaultValue="SETTLEMENT"
-									onValueChange={(val) => handleChange("accountType", val)}
-									>
-									<SelectTrigger>
-										<SelectValue placeholder="Seçiniz" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="SETTLEMENT">Takas</SelectItem>
-										<SelectItem value="DEPOSIT" disabled>Mevduat</SelectItem>
-										<SelectItem value="BLOKED" disabled>Bloke</SelectItem>
-									</SelectContent>
+									<Select defaultValue="SETTLEMENT" onValueChange={(val) => handleChange("accountType", val)}>
+										<SelectTrigger>
+											<SelectValue placeholder="Seçiniz" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="SETTLEMENT">Takas</SelectItem>
+											<SelectItem value="DEPOSIT" disabled>
+												Mevduat
+											</SelectItem>
+											<SelectItem value="BLOKED" disabled>
+												Bloke
+											</SelectItem>
+										</SelectContent>
 									</Select>
 								</div>
 							</div>
