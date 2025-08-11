@@ -1,11 +1,12 @@
 "use client";
-import SearchClient from "@/components/dashboard/account-management/SearchClientForAccountOpening";
+
+import SearchClientForAccountOpening from "@/components/dashboard/account-management/SearchClientForAccountManagement";
 
 export default function Page() {
 	return (
 		<div>
 			<div>
-				<SearchClient />
+				<SearchClientForAccountOpening />
 			</div>
 		</div>
 	);

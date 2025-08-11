@@ -30,6 +30,7 @@ export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDia
 		phone: "",
 		email: "",
 		role: "VIEWER",
+		isActive: true,
 	});
 
 	useEffect(() => {
@@ -75,6 +76,7 @@ export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDia
 					phone: "",
 					email: "",
 					role: "VIEWER",
+					isActive: true,
 				});
 				setIsSendingForm(false);
 				onOpenChange(false);
