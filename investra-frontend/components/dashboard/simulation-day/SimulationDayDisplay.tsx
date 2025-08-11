@@ -1,5 +1,6 @@
 "use client";
 
+import { ClockIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function SimulationDateDisplay() {
@@ -33,21 +34,22 @@ export default function SimulationDateDisplay() {
 	}, []);
 
 	return (
-		<div
-			style={{
-				position: "fixed",
-				top: 1,
-				right: 47,
-				backgroundColor: "#222",
-				color: "#fff",
-				padding: "8px 12px",
-				borderRadius: 6,
-				fontSize: 14,
-				zIndex: 9999,
-			}}
-		>
+		<div>
 			{error && <span>Hata: {error}</span>}
-			{!error && (date ? <span>Sistem tarihi: {date}</span> : <span>Yükleniyor...</span>)}
+			{!error &&
+				(date ? (
+					<div className="flex items-center gap-4 pb-1 pt-2 pl-10">
+						<div className="rounded-full p-2 bg-gray-200">
+							<ClockIcon size={24} />
+						</div>
+						<div className="flex flex-col items-center">
+							<p className="font-normal text-sm text-gray-700">Sistem tarihi:</p>
+							<p>{date}</p>
+						</div>
+					</div>
+				) : (
+					<span>Yükleniyor...</span>
+				))}
 		</div>
 	);
 }

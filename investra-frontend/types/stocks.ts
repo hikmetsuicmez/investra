@@ -186,4 +186,5 @@ export type TradeOrder = {
 	settlementStatus: SettlementStatus;
 	tradeDate: string;
 	settlementDaysRemaining: number;
+	executionType: string;
 };

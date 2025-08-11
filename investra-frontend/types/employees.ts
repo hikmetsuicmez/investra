@@ -8,8 +8,10 @@ export type User = {
 	employeeNumber: string | null;
 	phoneNumber: string | null;
 	email: string;
-	role: "ADMIN" | "TRADER" | "VIEWER";
+	role: Role;
 };
+
+export type Role = "ADMIN" | "TRADER" | "VIEWER"
 
 // Employee interface for creating new employees
 export interface Employee {
@@ -18,7 +20,7 @@ export interface Employee {
 	nationalId: string; // Tc kimlik
 	phone: string; // Tel no
 	email: string; // E-posta
-	role: "ADMIN" | "TRADER" | "VIEWER";
+	role: Role;
 }
 
 // Props for AddEmployeeDialog component

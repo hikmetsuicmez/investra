@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Client, SearchType } from "@/types/customers";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import SimulationDateDisplay from "@/components/dashboard/simulation-day/SimulationDayDisplay";
 
 export default function SearchClientBySearchTerm() {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -63,8 +62,6 @@ export default function SearchClientBySearchTerm() {
 
 	return (
 		<div className="flex flex-col h-screen bg-gray-100 p-12 space-y-6">
-			<SimulationDateDisplay />
-
 			<div className="flex justify-between items-center p-4 mb-4 flex-shrink-0 bg-white rounded-xl shadow">
 				<h1 className="text-2xl font-semibold">Müşteri Arama</h1>
 			</div>

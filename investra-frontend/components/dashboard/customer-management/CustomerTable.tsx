@@ -1,7 +1,12 @@
 "use client";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CorporateCustomerInfo, IndividualCustomerInfo, CustomerDisplayInfo, CustomerTableProps } from "@/types/customers";
+import {
+	CorporateCustomerInfo,
+	IndividualCustomerInfo,
+	CustomerDisplayInfo,
+	CustomerTableProps,
+} from "@/types/customers";
 import DeleteCustomerDialog from "./DeleteCustomerDialog";
 import { useRouter } from "next/navigation";
 
@@ -46,7 +51,7 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
 			</TableHeader>
 			<TableBody>
 				{customers.map((customer, index) => (
-					<TableRow key={customer.id} onClick={() => handleRowClick(customer.id)}>
+					<TableRow key={customer.id} onClick={() => handleRowClick(customer.id)} className="cursor-pointer">
 						<TableCell>{mapToCustomerDisplay(customer).name}</TableCell>
 						<TableCell>{mapToCustomerDisplay(customer).type}</TableCell>
 						<TableCell>{customer.phone}</TableCell>

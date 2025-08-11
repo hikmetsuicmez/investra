@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { validateEmail } from "@/lib/validate-email";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 
 export default function Login() {
 	const [showPassword, setShowPassword] = useState(false);
@@ -48,12 +49,10 @@ export default function Login() {
 
 	return (
 		<div className="w-full h-screen flex items-center justify-center bg-gray-300">
-			<Card className="w-full max-w-sm bg-gray-50">
+			<Card className="w-full max-w-sm bg-[#f6f5fa]">
 				<CardHeader className="text-center">
 					<div className="flex justify-center mb-2">
-						<div className="bg-blue-600 p-3 rounded-full">
-							<UserLock size={32} color="white" />
-						</div>
+						<Image src={"/images/Investra-Logo.png"} alt="Investra logo" height={100} width={100} />
 					</div>
 					<CardTitle className="text-slate-800/90 text-2xl font-semibold">Sisteme Giriş</CardTitle>
 					<CardDescription>E-posta adresinizi ve şifrenizi girerek sisteme giriş yapın.</CardDescription>
