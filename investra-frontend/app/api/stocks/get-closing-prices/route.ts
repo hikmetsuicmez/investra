@@ -35,8 +35,8 @@ export async function GET() {
         const stockPricesArray = backendResponse.data;
         return NextResponse.json({ data: stockPricesArray }, { status: 200 });
 
-    } catch (error: any) {
-        console.error("get-current-date rotasında bir hata yakalandı:", error.message);
-        return NextResponse.json({ message: error.message }, { status: 500 });
+    } catch (error) {
+        console.error("get-current-date rotasında bir hata yakalandı:", error);
+        return NextResponse.json({ message: error }, { status: 500 });
     }
 }

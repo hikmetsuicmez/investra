@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest, { params }: { params: { orderId: string } }) {
-    const { orderId } = await params;
+export async function POST(req: NextRequest, context: { params: Promise<{ orderId: string }> }) {
+    const params = await context.params
+    const { orderId } = params;
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
 

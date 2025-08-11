@@ -12,6 +12,7 @@ import com.investra.enums.OrderType;
 import com.investra.exception.ValidationException;
 import com.investra.repository.ClientRepository;
 import com.investra.repository.PortfolioItemRepository;
+import com.investra.repository.PortfolioRepository;
 import com.investra.repository.TradeOrderRepository;
 import com.investra.service.helper.*;
 
@@ -33,13 +34,12 @@ public class StockSellServiceImplTest {
 
     @Mock private ClientRepository clientRepository;
     @Mock private PortfolioItemRepository portfolioItemRepository;
+    @Mock private PortfolioRepository portfolioRepository;
     @Mock private TradeOrderRepository tradeOrderRepository;
     @Mock private OrderValidatorService validatorService;
     @Mock private EntityFinderService entityFinderService;
     @Mock private OrderCalculationService calculationService;
-    @Mock private PortfolioUpdateService portfolioUpdateService;
     @Mock private OrderPreviewCacheService previewCacheService;
-    @Mock private TradeOrderService tradeOrderService;
     @Mock private SimulationDateService simulationDateService;
 
     @InjectMocks
@@ -51,13 +51,12 @@ public class StockSellServiceImplTest {
         stockSellService = new StockSellServiceImpl(
                 clientRepository,
                 portfolioItemRepository,
+                portfolioRepository,
                 tradeOrderRepository,
                 validatorService,
                 entityFinderService,
                 calculationService,
-                portfolioUpdateService,
                 previewCacheService,
-                tradeOrderService,
                 simulationDateService
         );
     }
@@ -250,7 +249,6 @@ public class StockSellServiceImplTest {
         tradeOrder.setStatus(OrderStatus.EXECUTED);
 
         when(tradeOrderRepository.save(any(TradeOrder.class))).thenReturn(tradeOrder);
-        when(portfolioUpdateService.updatePortfolioAfterSell(portfolioItem, request.getQuantity())).thenReturn(null);
         doNothing().when(previewCacheService).removeOrderPreview(previewId);
 
         Response<StockSellOrderResultResponse> response = stockSellService.executeSellOrder(request, userEmail);
@@ -269,7 +267,6 @@ public class StockSellServiceImplTest {
         verify(entityFinderService).findAndValidateEntities(request);
         verify(calculationService).calculateOrderAmounts(client, stock, request);
         verify(tradeOrderRepository).save(any(TradeOrder.class));
-        verify(portfolioUpdateService).updatePortfolioAfterSell(portfolioItem, request.getQuantity());
         verify(previewCacheService).removeOrderPreview(previewId);
     }
 }

@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { User, EmployeeTableProps } from "@/types/employees";
+import { EmployeeTableProps } from "@/types/employees";
 import EditUserDialog from "./EditUserDialog";
 import DeleteUserDialog from "./DeleteUserDialog";
 

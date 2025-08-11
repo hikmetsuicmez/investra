@@ -91,12 +91,27 @@ export default function StockBuy() {
 	async function fetchAccounts(clientId: string) {
 		try {
 			const res = await fetch(`/api/accounts/client/${clientId}`);
-			if (!res.ok) throw new Error("Failed to fetch accounts");
-			const responseJson: Account[] = await res.json();
+			if (!res.ok) {
+				console.error(`Failed to fetch accounts for client ${clientId}:`, res.status, res.statusText);
+				return;
+			}
+			const json = await res.json();
 
-			setAccountsByClient((prev) => [...prev, ...(responseJson || [])]);
+			if (!json.success) {
+				console.error(`API error for client ${clientId}:`, json.message);
+				return;
+			}
+
+			const accounts = json.data;
+
+			if (!Array.isArray(accounts)) {
+				console.error(`Invalid accounts data for client ${clientId}: expected array, got`, accounts);
+				return;
+			}
+
+			setAccountsByClient((prev) => [...prev, ...accounts]);
 		} catch (error) {
-			console.error("Error fetching accounts for client:", clientId, error);
+			console.error("Network or unexpected error fetching accounts for client:", clientId, error);
 		}
 	}
 
@@ -105,7 +120,6 @@ export default function StockBuy() {
 	}, []);
 
 	useEffect(() => {
-		// Fetch accounts for customers without accounts loaded yet
 		customers.forEach((customer) => {
 			fetchAccounts(customer.id.toString());
 		});

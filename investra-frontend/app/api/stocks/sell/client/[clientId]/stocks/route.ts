@@ -12,8 +12,9 @@ type BackendStock = {
 	avgPrice: number;
 };
 
-export async function GET(req: NextRequest, { params }: { params: { clientId: string } }) {
-    const { clientId } = await params;
+export async function GET(req: NextRequest, context: { params: Promise<{ clientId: string }> }) {
+    const params = await context.params
+    const { clientId } = params;
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
 
