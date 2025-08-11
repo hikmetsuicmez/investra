@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmployeeTableProps } from "@/types/employees";
 import EditUserDialog from "./EditUserDialog";
 import DeleteUserDialog from "./DeleteUserDialog";
+import { RoleBadge, StatusBadge } from "./Badges";
 
 export default function EmployeeTable({ employees }: EmployeeTableProps) {
 	return (
@@ -19,11 +20,15 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
 			<TableBody>
 				{employees.map((employee) => (
 					<TableRow key={employee.id}>
-						<TableCell>{employee.firstName + " " + employee.lastName}</TableCell>
-						<TableCell>{employee.phoneNumber}</TableCell>
-						<TableCell>{employee.email}</TableCell>
-						<TableCell>{employee.role}</TableCell>
-						<TableCell>{employee.isActive ? "Aktif" : "Pasif"}</TableCell>
+						<TableCell className="font-semibold">{employee.firstName + " " + employee.lastName}</TableCell>
+						<TableCell className="text-sm text-gray-700">{employee.phoneNumber}</TableCell>
+						<TableCell className="text-sm text-gray-700">{employee.email}</TableCell>
+						<TableCell>
+							<RoleBadge role={employee.role} />
+						</TableCell>
+						<TableCell>
+							<StatusBadge status={employee.isActive ? "AKTIF" : "PASIF"} />
+						</TableCell>
 						<TableCell className="flex justify-center gap-2">
 							<EditUserDialog user={employee} />
 							<DeleteUserDialog user={employee} />

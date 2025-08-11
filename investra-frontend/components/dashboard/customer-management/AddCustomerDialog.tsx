@@ -26,6 +26,7 @@ import {
 	CitizenshipType,
 	CompanyType,
 } from "@/types/customers";
+import { toast } from "sonner";
 
 export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDialogProps) {
 	const [tab, setTab] = useState<"bireysel" | "kurumsal">("bireysel");
@@ -97,11 +98,10 @@ export default function AddCustomerDialog({ open, onOpenChange }: AddCustomerDia
 			const result = await response.json();
 
 			if (response.ok) {
-				console.log("API Response:", result);
-				// Optionally show success message
+				toast.success("Müşteri başarıyla eklendi");
 				onOpenChange(false);
 			} else {
-				console.error("API Error:", result.message);
+				toast.error(result.message);
 			}
 		} catch (err) {
 			console.error("Request failed:", err);

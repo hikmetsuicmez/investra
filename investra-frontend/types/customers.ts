@@ -1,7 +1,7 @@
 // Client type for customer data
 export type Client = {
   id: number | null;
-  clientType: "INDIVIDUAL" | "CORPORATE"; 
+  clientType: ClientType; 
   email: string | null;
   phone: string | null;
   address: string | null;

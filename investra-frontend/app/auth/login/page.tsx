@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { KeyRound, Lock, User, UserLock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { KeyRound, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { validateEmail } from "@/lib/validate-email";

@@ -179,7 +179,7 @@ export default function OrderTracking() {
 									</TableCell>
 									<TableCell>
 										<div>
-											<p className="font-light">{new Date(tradeOrder.submittedAt).toLocaleDateString("tr-TR")}</p>
+											<p className="font-light">{new Date(tradeOrder.tradeDate).toLocaleDateString("tr-TR")}</p>
 											<p className="font-light text-gray-700">
 												{new Date(tradeOrder.submittedAt).toLocaleTimeString("tr-TR")}
 											</p>
