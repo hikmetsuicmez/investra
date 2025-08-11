@@ -1,5 +1,6 @@
 package com.investra.dtos.response;
 
+import com.investra.enums.ClientType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +19,7 @@ public class PortfolioReportResponse {
     // Müşteri Bilgileri
     private String customerName;
     private String clientNumber;
-    private String customerType;
+    private ClientType customerType;
     private String accountNumber;
     private LocalDate reportDate;
 

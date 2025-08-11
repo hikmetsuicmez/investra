@@ -23,6 +23,7 @@ import com.investra.repository.UserRepository;
 import com.investra.service.PortfolioService;
 import com.investra.service.SimulationDateService;
 import com.investra.service.TradeOrderService;
+import com.investra.service.helper.OrderValidatorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -48,10 +49,10 @@ public class TradeOrderServiceImpl implements TradeOrderService {
     private final StockRepository stockRepository;
     private final PortfolioService portfolioService;
     private final SimulationDateService simulationDateService;
+    private final OrderValidatorService orderValidatorService;
 
     /**
-     * Bekleyen emirleri işleme - 15 saniye sonra gerçekleştirecek (test için)
-     * Her 5 saniye çalışır (test için)
+     * Her 5 saniyede bir bekleyen emirleri işler
      */
     @Scheduled(fixedRate = 5000) // Her 5 saniye kontrol et
     public void processWaitingOrders() {
@@ -82,6 +83,100 @@ public class TradeOrderServiceImpl implements TradeOrderService {
             }
         } catch (Exception e) {
             log.error("Bekleyen emirleri işlerken hata oluştu: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Her gün 18:00'da borsa kapanış zamanında açık LIMIT emirleri otomatik iptal
+     * eder
+     */
+    @Scheduled(cron = "0 0 18 * * ?") // Her gün 18:00'da çalışır
+    public void cancelOpenLimitOrdersAtMarketClose() {
+        log.info("Borsa kapanış zamanı - Açık LIMIT emirlerin otomatik iptali başlatılıyor... [{}]",
+                LocalDateTime.now());
+
+        try {
+            // Borsa kapalı mı kontrol et
+            if (!orderValidatorService.isMarketOpen()) {
+                log.info("Borsa kapalı - LIMIT emirlerin otomatik iptali başlatılıyor");
+
+                // PENDING durumundaki LIMIT emirleri bul
+                List<TradeOrder> pendingLimitOrders = tradeOrderRepository.findByStatus(OrderStatus.PENDING)
+                        .stream()
+                        .filter(order -> order.getExecutionType() == ExecutionType.LIMIT)
+                        .toList();
+
+                log.info("İptal edilecek LIMIT emir sayısı: {}", pendingLimitOrders.size());
+
+                int cancelledCount = 0;
+                for (TradeOrder order : pendingLimitOrders) {
+                    try {
+                        // Emri otomatik iptal et
+                        cancelOrderAutomatically(order);
+                        cancelledCount++;
+                        log.info("LIMIT emir otomatik iptal edildi: ID={}, Hisse={}, Miktar={}",
+                                order.getId(), order.getStock().getCode(), order.getQuantity());
+                    } catch (Exception e) {
+                        log.error("LIMIT emir {} otomatik iptal edilirken hata: {}", order.getId(), e.getMessage(), e);
+                    }
+                }
+
+                log.info("Borsa kapanış zamanında {} adet LIMIT emir otomatik iptal edildi", cancelledCount);
+
+            } else {
+                log.debug("Borsa hala açık - LIMIT emirlerin otomatik iptali yapılmadı");
+            }
+
+        } catch (Exception e) {
+            log.error("Borsa kapanış zamanında LIMIT emirlerin otomatik iptali sırasında hata: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Emri otomatik olarak iptal eder (borsa kapanış zamanında)
+     */
+    @Transactional
+    public void cancelOrderAutomatically(TradeOrder order) {
+        try {
+            log.info("Emir otomatik iptal ediliyor: ID={}, Hisse={}", order.getId(), order.getStock().getCode());
+
+            // Emir durumunu CANCELLED yap
+            order.setStatus(OrderStatus.CANCELLED);
+            order.setSettlementStatus(SettlementStatus.CANCELLED);
+            order.setSettlementDaysRemaining(0);
+            order.setFundsReserved(false);
+
+            // Alış emri ise rezerve edilen bakiye geri yükle
+            if (order.getOrderType() == OrderType.BUY) {
+                restoreAccountBalanceForCancelledBuyOrder(order.getAccount(), order.getNetAmount());
+            }
+
+            tradeOrderRepository.save(order);
+
+            // Kullanıcıya bildirim gönder
+            try {
+                Notification notification = Notification.builder()
+                        .recipient(order.getUser().getEmail())
+                        .subject("Borsa Kapanış - LIMIT Emir Otomatik İptal")
+                        .content(order.getStock().getCode() + " hissesi için " + order.getOrderType().name() +
+                                " LIMIT emriniz borsa kapanış zamanında otomatik olarak iptal edildi.")
+                        .type(NotificationType.INFO)
+                        .isHtml(false)
+                        .build();
+
+                notificationRepository.save(notification);
+                log.info("Otomatik iptal bildirimi gönderildi: Kullanıcı={}, Emir={}",
+                        order.getUser().getEmail(), order.getId());
+
+            } catch (Exception e) {
+                log.error("Otomatik iptal bildirimi gönderilirken hata (işlem etkilenmez): {}", e.getMessage());
+            }
+
+            log.info("Emir başarıyla otomatik iptal edildi: ID={}", order.getId());
+
+        } catch (Exception e) {
+            log.error("Emir {} otomatik iptal edilirken hata: {}", order.getId(), e.getMessage(), e);
+            throw e;
         }
     }
 

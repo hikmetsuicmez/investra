@@ -20,58 +20,51 @@ import java.util.List;
 @Tag(name = "Yönetici API'ları", description = "Yönetici işlemleri ile ilgili uç noktalar")
 public interface AdminApiDocs {
 
-    @Operation(
-            summary = "Kullanıcı Oluştur",
-            description = "Yeni bir kullanıcı oluşturur. Yalnızca yönetici erişimine sahip kullanıcılar tarafından kullanılabilir."
-    )
-    @ApiResponse(responseCode = "201", description = "Kullanıcı başarıyla oluşturuldu.", content = @Content(schema = @Schema(implementation = CreateUserResponse.class)))
-    @ApiResponse(responseCode = "400", description = "Geçersiz istek.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    ResponseEntity<Response<CreateUserResponse>> createUser(@Parameter CreateUserRequest request);
+        @Operation(summary = "Kullanıcı Oluştur", description = "Yeni bir kullanıcı oluşturur. Yalnızca yönetici erişimine sahip kullanıcılar tarafından kullanılabilir.")
+        @ApiResponse(responseCode = "201", description = "Kullanıcı başarıyla oluşturuldu.", content = @Content(schema = @Schema(implementation = CreateUserResponse.class)))
+        @ApiResponse(responseCode = "400", description = "Geçersiz istek.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        ResponseEntity<Response<CreateUserResponse>> createUser(@Parameter CreateUserRequest request);
 
-    @Operation(
-            summary = "Kullanıcı Güncelle",
-            description = "Mevcut bir kullanıcıyı günceller. Yalnızca yönetici erişimine sahip kullanıcılar tarafından kullanılabilir."
-    )
-    @ApiResponse(responseCode = "200", description = "Kullanıcı başarıyla güncellendi.", content = @Content(schema = @Schema(implementation = UpdateUserResponse.class)))
-    @ApiResponse(responseCode = "400", description = "Geçersiz istek.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @Parameter(name = "employeeNumber", description = "Güncellenecek kullanıcının çalışan numarası")
-    ResponseEntity<Response<UpdateUserResponse>> updateUser(@Parameter String employeeNumber, @Parameter UpdateUserRequest request);
+        @Operation(summary = "Kullanıcı Güncelle", description = "Mevcut bir kullanıcıyı günceller. Yalnızca yönetici erişimine sahip kullanıcılar tarafından kullanılabilir.")
+        @ApiResponse(responseCode = "200", description = "Kullanıcı başarıyla güncellendi.", content = @Content(schema = @Schema(implementation = UpdateUserResponse.class)))
+        @ApiResponse(responseCode = "400", description = "Geçersiz istek.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @Parameter(name = "employeeNumber", description = "Güncellenecek kullanıcının çalışan numarası")
+        ResponseEntity<Response<UpdateUserResponse>> updateUser(@Parameter String employeeNumber,
+                        @Parameter UpdateUserRequest request);
 
-    @Operation(
-            summary = "Kullanıcı Sil",
-            description = "Mevcut bir kullanıcıyı siler. Yalnızca yönetici erişimine sahip kullanıcılar tarafından kullanılabilir."
-    )
-    @ApiResponse(responseCode = "204", description = "Kullanıcı başarıyla silindi.", content = @Content)
-    @ApiResponse(responseCode = "400", description = "Geçersiz istek.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @Parameter(name = "employeeNumber", description = "Silinecek kullanıcının çalışan numarası")
-    ResponseEntity<Response<Void>> deleteUser(@Parameter String employeeNumber);
+        @Operation(summary = "Kullanıcı Sil", description = "Mevcut bir kullanıcıyı siler. Yalnızca yönetici erişimine sahip kullanıcılar tarafından kullanılabilir.")
+        @ApiResponse(responseCode = "204", description = "Kullanıcı başarıyla silindi.", content = @Content)
+        @ApiResponse(responseCode = "400", description = "Geçersiz istek.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @Parameter(name = "employeeNumber", description = "Silinecek kullanıcının çalışan numarası")
+        ResponseEntity<Response<Void>> deleteUser(@Parameter String employeeNumber);
 
-    @Operation(
-            summary = "Tüm Kullanıcıları Getir",
-            description = "Sistemdeki tüm kullanıcıları getirir."
-    )
-    @ApiResponse(responseCode = "200", description = "Kullanıcılar başarıyla getirildi.", content = @Content(schema = @Schema(implementation = List.class)))
-    @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    public ResponseEntity<Response<List<UserDTO>>> retrieveAllUsers();
+        @Operation(summary = "Tüm Kullanıcıları Getir", description = "Sistemdeki tüm kullanıcıları getirir.")
+        @ApiResponse(responseCode = "200", description = "Kullanıcılar başarıyla getirildi.", content = @Content(schema = @Schema(implementation = List.class)))
+        @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        public ResponseEntity<Response<List<UserDTO>>> retrieveAllUsers();
 
-    @Operation(
-            summary = "Kullanıcıyı ID ile Getir",
-            description = "Belirli bir kullanıcıyı ID ile getirir."
-    )
-    @ApiResponse(responseCode = "200", description = "Kullanıcı başarıyla getirildi.", content = @Content(schema = @Schema(implementation = UserDTO.class)))
-    @ApiResponse(responseCode = "400", description = "Geçersiz istek.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    public ResponseEntity<Response<UserDTO>> retrieveUser(@Parameter(description = "Kullanıcının ID'si") Long userId);
+        @Operation(summary = "Kullanıcıyı ID ile Getir", description = "Belirli bir kullanıcıyı ID ile getirir.")
+        @ApiResponse(responseCode = "200", description = "Kullanıcı başarıyla getirildi.", content = @Content(schema = @Schema(implementation = UserDTO.class)))
+        @ApiResponse(responseCode = "400", description = "Geçersiz istek.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "404", description = "Kullanıcı bulunamadı.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        public ResponseEntity<Response<UserDTO>> retrieveUser(
+                        @Parameter(description = "Kullanıcının ID'si") Long userId);
+
+        @Operation(summary = "Borsa Kapanış - LIMIT Emirleri Manuel İptal", description = "Borsa kapanış zamanında açık LIMIT emirleri manuel olarak iptal eder. Test amaçlı kullanılır. Yalnızca yönetici erişimine sahip kullanıcılar tarafından kullanılabilir.")
+        @ApiResponse(responseCode = "200", description = "LIMIT emirlerin otomatik iptali başarıyla çalıştırıldı.", content = @Content(schema = @Schema(implementation = String.class)))
+        @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        ResponseEntity<Response<String>> manuallyCancelLimitOrdersAtMarketClose();
 }
