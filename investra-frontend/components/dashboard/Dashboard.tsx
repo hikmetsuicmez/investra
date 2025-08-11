@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Loader2, XCircle, Search, X } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import Link from "next/link";
 
 interface DailyValuation {
 	clientId: number;
@@ -97,6 +98,10 @@ export default function Dashboard() {
 		fetchStocks();
 	}, []);
 
+	function formatToTurkishLira(amount: number) {
+		return amount.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
+	}
+
 	const renderValuationTable = () => {
 		if (isLoadingInitial) {
 			return (
@@ -121,12 +126,10 @@ export default function Dashboard() {
 			const title = isSearchView ? `Arama Sonucu: Müşteri ID ${searchTerm}` : `Değerleme Sonuçları - ${displayDate}`;
 
 			return (
-				<Card className="overflow-auto shadow-md">
+				<Card className="overflow-none shadow-md">
 					<CardHeader>
 						<CardTitle>{title}</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="flex items-center gap-4 mb-4">
+						<div className="flex items-center gap-4 mt-4">
 							<Input
 								placeholder="Müşteri ID'si ile ara..."
 								value={searchTerm}
@@ -144,6 +147,8 @@ export default function Dashboard() {
 								</Button>
 							)}
 						</div>
+					</CardHeader>
+					<CardContent className="overflow-auto h-[400px]">
 						<div className="border rounded-lg">
 							<div className="grid grid-cols-5 font-semibold bg-gray-100 p-3 text-sm text-gray-600 rounded-t-lg">
 								<div>Müşteri ID</div>
@@ -198,11 +203,14 @@ export default function Dashboard() {
 	};
 
 	return (
-		<div className="p-1 md:p-15 space-y-10 bg-gray-50 min-h-screen relative">
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+		<div className="flex flex-col p-6 gap-6 bg-gray-50 h-screen overflow-hidden">
+			<div className="flex justify-between items-center p-4 pb-0 mb-4 flex-shrink-0">
+				<h1 className="text-2xl font-semibold">Anasayfa</h1>
+			</div>
+			<div className="grid grid-cols-2 gap-6">
 				{renderValuationTable()}
 
-				<Card className="shadow-md overflow-auto">
+				<Card className="shadow-md overflow-auto flex-grow">
 					<CardHeader>
 						<CardTitle>Hisse Senetleri</CardTitle>
 					</CardHeader>
@@ -212,17 +220,15 @@ export default function Dashboard() {
 								<TableRow>
 									<TableHead>Hisse Kodu</TableHead>
 									<TableHead>Şirket Adı</TableHead>
-									<TableHead>Hisse Türü</TableHead>
 									<TableHead>Anlık Fiyat</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
 								{stocks.map((stock) => (
 									<TableRow key={stock.id}>
-										<TableCell>{stock.symbol}</TableCell>
-										<TableCell>{stock.name}</TableCell>
-										<TableCell>{stock.stockGroup}</TableCell>
-										<TableCell>{stock.currentPrice}</TableCell>
+										<TableCell className="font-semibold">{stock.symbol}</TableCell>
+										<TableCell className="text-sm text-gray-700">{stock.name}</TableCell>
+										<TableCell className="font-semibold">{formatToTurkishLira(stock.currentPrice)}</TableCell>
 									</TableRow>
 								))}
 							</TableBody>
@@ -230,6 +236,34 @@ export default function Dashboard() {
 					</CardContent>
 				</Card>
 			</div>
+			<Card className="flex-grow">
+				<CardHeader>
+					<CardTitle>Hızlı İşlemler</CardTitle>
+				</CardHeader>
+				<CardContent className="flex gap-4 h-full justify-stretch">
+					<Link href="/dashboard/portfolio-management" className="w-full rounded-xl border h-full p-4 hover:bg-gray-50">
+						<h1 className="font-semibold">Gün Sonu Değerlendirme</h1>
+						<p className="text-gray-700 text-sm">Portföyünüzü gün sonu kapanış fiyatlarıyla değerlendirin</p>
+					</Link>
+					<Link
+						href="/dashboard/stock-management/list-closing-price"
+						className="w-full rounded-xl border h-full p-4 hover:bg-gray-50"
+					>
+						<h1 className="font-semibold">Hisse Senedi Kapanışı</h1>
+						<p className="text-gray-700 text-sm">Hisse senetlerinin günlük kapanış fiyatlarını görüntüleyin.</p>
+					</Link>
+
+					<Link
+						href="/dashboard/stock-management/order-tracking"
+						className="w-full rounded-xl border h-full p-4 hover:bg-gray-50"
+					>
+						<h1 className="font-semibold">Emir Takibi</h1>
+						<p className="text-gray-700 text-sm">
+							Açık ve kapalı emirlerinizi kolayca takip edin, işlem durumlarını kontrol edin ve yönetim sağlayın.
+						</p>
+					</Link>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

@@ -14,6 +14,7 @@ import { validateEmail } from "@/lib/validate-email";
 import { UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AddEmployeeDialogProps, Employee } from "@/types/employees";
+import { toast } from "sonner";
 
 export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps) {
 	const [userCreateSuccess, setUserCreateSuccess] = useState(false);
@@ -77,11 +78,13 @@ export default function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDia
 				});
 				setIsSendingForm(false);
 				onOpenChange(false);
+				toast.success("Personel başarıyla eklendi");
 			} else {
 				setUserCreateSuccess(false);
 				setUserCreateFail(true);
 				setFailMessage(data.message);
 				setIsSendingForm(false);
+				toast.error("Personel ekleme sırasında bir hata oluştu.");
 			}
 		} catch (error) {
 			console.error("Network or server error:", error);

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { DeleteUserDialogProps } from "@/types/employees";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function DeleteUserDialog({ user, onDeleted }: DeleteUserDialogProps) {
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -27,13 +28,12 @@ export default function DeleteUserDialog({ user, onDeleted }: DeleteUserDialogPr
 				method: "PATCH",
 			});
 
-			if (res.status === 204) {
-				console.log("Kullanıcı başarıyla silindi");
+			if (res.status === 200) {
+				toast.success("Kullanıcı başarıyla silindi");
 				onDeleted?.();
 			} else {
 				const data = await res.json();
-				console.error("Silme hatası:", data.message);
-				// optionally show toast or alert here
+				toast.error("Silme hatası: " + data.message);
 			}
 		} catch (error) {
 			console.error("API hatası:", error);

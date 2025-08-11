@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest) {
         });
 
         if (response.status === 200) {
-            return new NextResponse(null, { status: 200 });
+            return NextResponse.json({success: true, message: "Müşteri silme işlemi başarılı"}, { status: 200 });
         }
 
         const result = await response.json();

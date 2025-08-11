@@ -20,15 +20,15 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ emplo
 			},
 		});
 
-		if (response.status === 204) {
-			return new NextResponse(null, { status: 204 }); // No Content
+		if (response.ok) {
+			return NextResponse.json({success: true, message: "Silme işlemi başarılı"}, { status: 200 }); // No Content
 		}
 
 		const result = await response.json();
-
+		
 		return NextResponse.json(
 			{ success: false, message: result.message || "Silme işlemi başarısız" },
-			{ status: response.status }
+			{ status: result.statusCode }
 		);
 	} catch (error) {
 		console.error("PATCH delete error:", error);

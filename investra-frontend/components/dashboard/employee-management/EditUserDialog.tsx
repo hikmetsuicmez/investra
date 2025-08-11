@@ -50,9 +50,9 @@ export default function EditUserDialog({ user }: EditUserDialogProps) {
 			});
 
 			if (!response.ok) {
-				toast("Kullanıcı bilgileri değiştirilemedi.");
+				toast.error("Kullanıcı bilgileri değiştirilemedi.");
 			} else {
-				toast("Kullanıcı bilgileri başarıyla değiştirildi.");
+				toast.success("Kullanıcı bilgileri başarıyla değiştirildi.");
 			}
 		} catch (error) {
 			console.error("API Hatası:", error);

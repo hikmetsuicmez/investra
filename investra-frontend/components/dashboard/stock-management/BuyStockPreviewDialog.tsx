@@ -6,6 +6,7 @@ import { EyeIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { BuyStockPreviewDialogProps, BuyOrderResults } from "@/types/stocks";
+import { calculateValueDate } from "@/lib/calculateValueDate";
 
 export default function BuyStockPreviewDialog({
 	selectedStock,
@@ -56,13 +57,13 @@ export default function BuyStockPreviewDialog({
 
 			const result = await res.json();
 
-			toast(result.message);
-
 			if (res.ok) {
 				setPreviewResults(result.data);
 				setIsOpen(true); // Open the dialog after successful preview
+				toast.success(result.message);
 			} else {
 				setPreviewFailed(true);
+				toast.error(result.message);
 			}
 		} catch (error) {
 			console.error("Ön izleme sırasında hata oluştu: ", error);
@@ -92,7 +93,7 @@ export default function BuyStockPreviewDialog({
 			if (res.ok) {
 				const result = await res.json();
 				if (result.statusCode == 200) {
-					toast("Hisse alım işleminiz başarıyla gerçekleşti.");
+					toast.success("Hisse alım işleminiz başarıyla gerçekleşti.");
 					// Close the dialog after successful execution
 					setIsOpen(false);
 					// Reset the form state
@@ -115,7 +116,7 @@ export default function BuyStockPreviewDialog({
 						executionType: "",
 					});
 				} else {
-					toast("Hisse alım sırasında bir hata oluştu.");
+					toast.error("Hisse alım sırasında bir hata oluştu.");
 				}
 			}
 		} catch (error) {
@@ -174,6 +175,9 @@ export default function BuyStockPreviewDialog({
 
 							<p className="text-gray-500">Süre/Valör:</p>
 							<p className="font-semibold">{previewResults.valueDate}</p>
+
+							<p className="text-gray-500">İşlem Sonuçlanma Tarihi:</p>
+							<p className="font-semibold">{calculateValueDate(previewResults.tradeDate, previewResults.valueDate)}</p>
 
 							<p className="text-gray-500">Hisse Grubu:</p>
 							<p className="font-semibold">{selectedStock.category}</p>

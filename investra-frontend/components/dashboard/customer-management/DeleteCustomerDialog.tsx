@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { DeleteCustomerDialogProps } from "@/types/customers";
+import { toast } from "sonner";
 
 export default function DeleteCustomerDialog({ customer, onDeleted, disabled }: DeleteCustomerDialogProps) {
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -35,13 +36,12 @@ export default function DeleteCustomerDialog({ customer, onDeleted, disabled }: 
 				}),
 			});
 
-			if (res.status === 204) {
-				console.log("Kullanıcı başarıyla silindi");
+			if (res.status === 200) {
+				toast.success("Kullanıcı başarıyla silindi");
 				onDeleted?.();
 			} else {
 				const data = await res.json();
-				console.error("Silme hatası:", data.message);
-				// optionally show toast or alert here
+				toast.error("Silme hatası: " + data.message);
 			}
 		} catch (error) {
 			console.error("API hatası:", error);
@@ -53,7 +53,7 @@ export default function DeleteCustomerDialog({ customer, onDeleted, disabled }: 
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button variant="ghost" size="icon" disabled={isDeleting || disabled}>
+				<Button variant="outline" size="sm" disabled={isDeleting || disabled}>
 					<Trash2 size={18} color="red" />
 				</Button>
 			</AlertDialogTrigger>
