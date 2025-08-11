@@ -22,13 +22,10 @@ public class CreateIndividualClientRequest extends CreateClientRequest {
     @NotBlank(message = "İsim alanı zorunludur")
     private String fullName;
 
-    @NotNull(message = "Vatandaşlık tipi zorunludur")
     private Boolean nationalityType;
 
-    @NotNull(message = "Doğum tarihi zorunludur")
     private LocalDate birthDate;
 
-    @NotNull(message = "Cinsiyet bilgisi zorunludur")
     private Gender gender;
 
     private String taxId;

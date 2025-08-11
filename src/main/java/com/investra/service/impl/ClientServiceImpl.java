@@ -95,18 +95,6 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
             throw new BusinessException("Müşteri adı boş olamaz", ErrorCode.VALIDATION_ERROR);
         }
 
-        if (request.getBirthDate() == null) {
-            throw new BusinessException("Doğum tarihi boş olamaz", ErrorCode.VALIDATION_ERROR);
-        }
-
-        if (request.getGender() == null) {
-            throw new BusinessException("Cinsiyet bilgisi boş olamaz", ErrorCode.VALIDATION_ERROR);
-        }
-
-        if (request.getAddress() == null || request.getAddress().isBlank()) {
-            throw new BusinessException("Adres bilgisi boş olamaz", ErrorCode.VALIDATION_ERROR);
-        }
-
         // Mükerrer kayıt kontrolü
         if (request.getEmail() != null) {
             duplicateResourceCheck(() -> clientRepository.findByEmail(request.getEmail()).isPresent(),
