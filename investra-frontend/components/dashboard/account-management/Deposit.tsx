@@ -75,8 +75,12 @@ export default function Deposit({ clientId, accountId }: { clientId: string; acc
 
 			setDescription("");
 			setAmount("");
-		} catch (err: any) {
-			setError(err.message || "Bir hata oluştu.");
+		} catch (err: unknown) {
+			if (err instanceof Error) {
+				setError(err.message);
+			} else {
+				setError("Bir hata oluştu.");
+			}
 		} finally {
 			setIsLoading(false);
 		}
@@ -126,11 +130,8 @@ export default function Deposit({ clientId, accountId }: { clientId: string; acc
 						{error && <p className="text-sm text-red-500">{error}</p>}
 
 						<div className="flex justify-between">
-							<Button
-							type="button"
-							variant="outline"
-							onClick={() => router.back()}>
-							Geri Dön
+							<Button type="button" variant="outline" onClick={() => router.back()}>
+								Geri Dön
 							</Button>
 							<Button type="submit" disabled={isLoading}>
 								{isLoading ? "Yükleniyor..." : "✓ Onayla"}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +24,7 @@ export default function ResetPassword() {
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [openDialog, setOpenDialog] = useState(false);
 	const [progress, setProgress] = useState(0);
+	const [token, setToken] = useState<string | null>(null);
 
 	const validatePassword = (pwd: string) => ({
 		length: pwd.length >= 8,
@@ -38,9 +38,10 @@ export default function ResetPassword() {
 	const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0;
 	const isValid = Object.values(requirements).every(Boolean) && passwordsMatch;
 
-	const searchParams = useSearchParams();
-	const token = searchParams.get("token");
-
+	useEffect(() => {
+		const params = new URLSearchParams(window.location.search);
+		setToken(params.get("token"));
+	}, []);
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		if (!isValid) return alert("Lütfen tüm kurallara uygun şifre giriniz.");

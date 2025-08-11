@@ -6,6 +6,7 @@ import {
 	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
+	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
@@ -33,33 +34,41 @@ import {
 } from "lucide-react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { Separator } from "./ui/separator";
 
-const items = [
+type SidebarItemType = {
+	label: string;
+	icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+	href?: string;
+	subitems: SidebarItemType[];
+};
+
+const items: SidebarItemType[] = [
 	{
 		label: "Ana Sayfa",
-		icon: <HomeIcon />,
+		icon: HomeIcon,
 		href: "/dashboard",
 		subitems: [],
 	},
 	{
 		label: "Portföyüm",
-		icon: <Wallet />,
+		icon: Wallet,
 		href: "/dashboard/portfolio-management",
 		subitems: [
 			{
 				label: "Gün Sonu Değerleme",
-				icon: <ChartLine />,
+				icon: ChartLine,
 				href: "/dashboard/portfolio-management",
 				subitems: [
 					{
 						label: "Müşteri Değerleme",
-						icon: <List />,
+						icon: List,
 						href: "/dashboard/portfolio-management",
 						subitems: [],
 					},
 					{
 						label: "Hisse Senedi Kapanışı",
-						icon: <List />,
+						icon: List,
 						href: "/dashboard/stock-management/list-closing-price",
 						subitems: [],
 					},
@@ -69,18 +78,18 @@ const items = [
 	},
 	{
 		label: "Müşteri Yönetimi",
-		icon: <Users />,
+		icon: Users,
 		href: "/dashboard/customer-management",
 		subitems: [
 			{
 				label: "Müşteri İşlemleri",
-				icon: <List />,
+				icon: List,
 				href: "/dashboard/customer-management",
 				subitems: [],
 			},
 			{
 				label: "Hesap İşlemleri",
-				icon: <List />,
+				icon: List,
 				href: "/dashboard/customer-search",
 				subitems: [],
 			},
@@ -88,35 +97,35 @@ const items = [
 	},
 	{
 		label: "Personel Yönetimi",
-		icon: <Network />,
+		icon: Network,
 		href: "/dashboard/employee-management",
 		subitems: [],
 	},
 	{
 		label: "Hisse Senedi İşlemleri",
-		icon: <ChartLine />,
+		icon: ChartLine,
 		subitems: [
 			{
 				label: "Hisse Senedi Listeleme",
-				icon: <List />,
+				icon: List,
 				href: "/dashboard/stock-management/list",
 				subitems: [],
 			},
 			{
 				label: "Hisse Senedi Alış",
-				icon: <ArrowDownCircle />,
+				icon: ArrowDownCircle,
 				href: "/dashboard/stock-management/buy",
 				subitems: [],
 			},
 			{
 				label: "Hisse Senedi Satış",
-				icon: <ArrowUpCircle />,
+				icon: ArrowUpCircle,
 				href: "/dashboard/stock-management/sell",
 				subitems: [],
 			},
 			{
 				label: "Emir Takibi",
-				icon: <ListChecks />,
+				icon: ListChecks,
 				href: "/dashboard/stock-management/order-tracking",
 				subitems: [],
 			},
@@ -124,7 +133,7 @@ const items = [
 	},
 ];
 
-export function SidebarItem({ item }) {
+export function SidebarItem({ item }: { item: SidebarItemType }) {
 	const hasSubitems = item.subitems && item.subitems.length > 0;
 
 	if (!hasSubitems) {
@@ -132,7 +141,7 @@ export function SidebarItem({ item }) {
 			<SidebarMenuItem>
 				<SidebarMenuButton size="lg" asChild>
 					<Link href={item.href || "#"} className="flex gap-2 items-center">
-						{item.icon}
+						<item.icon className="size-4" />
 						<p>{item.label}</p>
 					</Link>
 				</SidebarMenuButton>
@@ -145,17 +154,17 @@ export function SidebarItem({ item }) {
 			<SidebarMenuItem>
 				<CollapsibleTrigger asChild>
 					<SidebarMenuButton size="lg" asChild>
-						<button className="flex justify-between w-full items-center gap-2">
-							<div className="flex items-center gap-2">
-								{item.icon}
+						<div className="flex justify-between w-full items-center gap-2">
+							<div className="flex items-center gap-2 text-sm">
+								<item.icon className="size-4" />
 								<p>{item.label}</p>
 							</div>
-							<ChevronDown className="transition-transform data-[state=open]:rotate-180" />
-						</button>
+							<ChevronDown />
+						</div>
 					</SidebarMenuButton>
 				</CollapsibleTrigger>
 				<CollapsibleContent>
-					<SidebarMenuSub>
+					<SidebarMenuSub className="mr-0 pr-0">
 						{item.subitems.map((subitem) => (
 							<SidebarItem key={subitem.label} item={subitem} />
 						))}
@@ -184,6 +193,13 @@ export function AppSidebar() {
 
 	return (
 		<Sidebar variant="sidebar" className="h-screen font-medium">
+			<SidebarHeader className="h-20">
+				<div className="h-full flex gap-2 items-center px-4">
+					<p>V</p>
+					<p className="font-bold">INVESTRA</p>
+				</div>
+			</SidebarHeader>
+			<Separator />
 			<SidebarContent>
 				<SidebarMenu>
 					<SidebarGroup>
@@ -210,10 +226,7 @@ export function AppSidebar() {
 							</DropdownMenuTrigger>
 							<DropdownMenuContent>
 								<DropdownMenuItem>
-									<Link
-										href={"/auth/change-password"}
-										className="flex gap-2 select-none w-[200px] items-center"
-									>
+									<Link href={"/auth/change-password"} className="flex gap-2 select-none w-[200px] items-center">
 										<Key color="black" />
 										<p className="flex-grow">Şifreni değiştir</p>
 									</Link>

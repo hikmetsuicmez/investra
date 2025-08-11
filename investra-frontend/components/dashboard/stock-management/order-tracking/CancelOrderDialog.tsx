@@ -31,6 +31,7 @@ export default function CancelOrderDialog({ order, onCancelSuccess }: CancelOrde
 				if (onCancelSuccess) onCancelSuccess();
 			}
 		} catch (error) {
+			console.error(error);
 			toast.error("Sunucu hatası: İptal işlemi gerçekleştirilemedi.");
 		} finally {
 			setLoading(false);

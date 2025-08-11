@@ -30,7 +30,7 @@ export default function StockList() {
 	return (
 		<div className="flex flex-col h-screen bg-gray-100 p-6">
 			<SimulationDateDisplay />
-			
+
 			<div className="flex justify-between items-center p-4 mb-4 flex-shrink-0">
 				<h1 className="text-2xl font-semibold">Hisse Senetleri</h1>
 			</div>
@@ -44,7 +44,6 @@ export default function StockList() {
 								<TableHead>Şirket Adı</TableHead>
 								<TableHead>Hisse Türü</TableHead>
 								<TableHead>Anlık Fiyat</TableHead>
-								<TableHead>İşlemler</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
@@ -54,7 +53,6 @@ export default function StockList() {
 									<TableCell>{stock.name}</TableCell>
 									<TableCell>{stock.stockGroup}</TableCell>
 									<TableCell>{stock.currentPrice}</TableCell>
-									<TableCell>AL/SAT</TableCell>
 								</TableRow>
 							))}
 						</TableBody>

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { User, DeleteUserDialogProps } from "@/types/employees";
+import { DeleteUserDialogProps } from "@/types/employees";
 import { useState } from "react";
 
 export default function DeleteUserDialog({ user, onDeleted }: DeleteUserDialogProps) {
