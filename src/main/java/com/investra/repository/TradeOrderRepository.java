@@ -76,4 +76,6 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
          * Belirli bir müşterinin belirli bir tarih aralığındaki işlemlerini getir
          */
         List<TradeOrder> findByClientAndTradeDateBetween(Client client, LocalDate startDate, LocalDate endDate);
+
+        List<TradeOrder> findAllByOrderBySubmittedAtDesc();
 }

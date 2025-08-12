@@ -62,9 +62,4 @@ public interface AdminApiDocs {
         public ResponseEntity<Response<UserDTO>> retrieveUser(
                         @Parameter(description = "Kullanıcının ID'si") Long userId);
 
-        @Operation(summary = "Borsa Kapanış - LIMIT Emirleri Manuel İptal", description = "Borsa kapanış zamanında açık LIMIT emirleri manuel olarak iptal eder. Test amaçlı kullanılır. Yalnızca yönetici erişimine sahip kullanıcılar tarafından kullanılabilir.")
-        @ApiResponse(responseCode = "200", description = "LIMIT emirlerin otomatik iptali başarıyla çalıştırıldı.", content = @Content(schema = @Schema(implementation = String.class)))
-        @ApiResponse(responseCode = "401", description = "Yetkisiz erişim.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-        @ApiResponse(responseCode = "500", description = "Sunucu hatası.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-        ResponseEntity<Response<String>> manuallyCancelLimitOrdersAtMarketClose();
 }

@@ -33,13 +33,10 @@ public interface TradeOrderService {
 
     void restoreAccountBalanceForCancelledBuyOrder(Account account, BigDecimal amount);
 
-    /**
-     * Borsa kapanış zamanında açık LIMIT emirleri otomatik iptal eder
-     */
+    List<TradeOrderDTO> getAllTrades();
+
     void cancelOpenLimitOrdersAtMarketClose();
 
-    /**
-     * Emri otomatik olarak iptal eder (borsa kapanış zamanında)
-     */
+
     void cancelOrderAutomatically(TradeOrder order);
 }

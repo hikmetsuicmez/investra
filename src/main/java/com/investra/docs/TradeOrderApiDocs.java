@@ -2,7 +2,6 @@ package com.investra.docs;
 
 import com.investra.dtos.response.Response;
 import com.investra.dtos.response.TradeOrderDTO;
-import com.investra.entity.TradeOrder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,7 +21,7 @@ public interface TradeOrderApiDocs {
         @ApiResponse(responseCode = "200", description = "Emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))
         @ApiResponse(responseCode = "404", description = "Emir bulunamadı", content = @Content(schema = @Schema(implementation = Response.class)))
         @ApiResponse(responseCode = "500", description = "Sunucu hatası", content = @Content(schema = @Schema(implementation = Response.class)))
-        ResponseEntity<Response<List<TradeOrderDTO>>> getAllOrders(@Parameter UserDetails userDetails);
+        ResponseEntity<Response<List<TradeOrderDTO>>> getAllOrders();
 
         @Operation(summary = "Bekleyen Emirleri Getir", description = "Kullanıcının bekleyen emirlerini getirir.")
         @ApiResponse(responseCode = "200", description = "Bekleyen emirler başarıyla listelendi", content = @Content(schema = @Schema(implementation = Response.class)))

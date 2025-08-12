@@ -66,7 +66,7 @@ export default function SearchClientForBalance() {
 	return (
 		<div className="flex flex-col h-screen bg-gray-100 p-12 space-y-6">
 			<div className="flex justify-between items-center p-4 mb-4 flex-shrink-0 bg-white rounded-xl shadow">
-				<h1 className="text-2xl font-semibold">Müşteri Arama</h1>
+				<h1 className="text-2xl font-semibold">Bakiye İşlemleri</h1>
 			</div>
 			<div className="flex justify-between items-center p-4 mb-4 rounded-xl ">
 				<h6>İşlem yapmak istediğiniz müşteriyi bilgileri girerek arayınız</h6>

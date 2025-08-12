@@ -24,9 +24,8 @@ public class TradeOrderController implements TradeOrderApiDocs {
         private final TradeOrderService tradeOrderService;
 
         @GetMapping(ApiEndpoints.TradeOrder.GET_ALL)
-        public ResponseEntity<Response<List<TradeOrderDTO>>> getAllOrders(
-                        @AuthenticationPrincipal UserDetails userDetails) {
-                List<TradeOrderDTO> orders = tradeOrderService.getAllOrdersByUser(userDetails.getUsername());
+        public ResponseEntity<Response<List<TradeOrderDTO>>> getAllOrders() {
+                List<TradeOrderDTO> orders = tradeOrderService.getAllTrades();
 
                 return ResponseEntity.ok(
                                 Response.<List<TradeOrderDTO>>builder()

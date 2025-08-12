@@ -131,17 +131,6 @@ export default function CustomerPortfolio() {
 		);
 	}
 
-	if (error) {
-		return (
-			<div className="flex items-center justify-center h-screen bg-gray-50">
-				<div className="p-6 bg-red-50 text-red-700 rounded-lg shadow-md flex items-center">
-					<XCircle className="mr-3 h-6 w-6" />
-					<span>Hata: {error}</span>
-				</div>
-			</div>
-		);
-	}
-
 	if (!portfolio) {
 		return (
 			<div className="flex items-center justify-center h-screen bg-gray-50">
