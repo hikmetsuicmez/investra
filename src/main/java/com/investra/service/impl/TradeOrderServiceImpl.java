@@ -592,4 +592,10 @@ public class TradeOrderServiceImpl implements TradeOrderService {
         accountRepository.save(account);
         log.info("İptal edilen alış emri için availableBalance geri alındı: {}", account.getId());
     }
+
+    @Override
+    public List<TradeOrderDTO> getAllTrades() {
+        List<TradeOrder> trades = tradeOrderRepository.findAllByOrderBySubmittedAtDesc();
+        return trades.stream().map(TradeOrderMapper::toDTO).toList();
+    }
 }

@@ -81,7 +81,7 @@ public class StockBuyServiceImpl extends AbstractStockTradeService implements St
         @Cacheable(value = "stocks", key = "'available'")
         public Response<List<StockResponse>> getAvailableStocks() {
                 try {
-                        List<Stock> stocks = stockRepository.findByIsActiveTrue();
+                        List<Stock> stocks = stockRepository.findAll();
                         log.info("Aktif hisse senedi sayısı: {}", stocks.size());
 
                         return Response.<List<StockResponse>>builder()

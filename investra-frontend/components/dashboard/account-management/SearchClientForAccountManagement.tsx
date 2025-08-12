@@ -7,11 +7,14 @@ import { Client, SearchType } from "@/types/customers";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import SearchAccountByClientId from "./SearchAccountsForClient";
+import {useRouter} from "next/navigation";
+
 
 export default function SearchClientForAccountOpening() {
     const [searchTerm, setSearchTerm] = useState("");
     const [client, setClient] = useState<Client | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
     const [notFound, setNotFound] = useState(false);
     const [searchType, setSearchType] = useState<SearchType>("TCKN");
     const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
@@ -66,7 +69,7 @@ export default function SearchClientForAccountOpening() {
     return (
         <div className="flex flex-col h-screen bg-gray-100 p-12 space-y-6">
             <div className="flex justify-between items-center p-4 mb-4 flex-shrink-0 bg-white rounded-xl shadow">
-                <h1 className="text-2xl font-semibold">Müşteri Arama</h1>
+                <h1 className="text-2xl font-semibold">Hesap İşlemleri</h1>
             </div>
             <div className="flex justify-between items-center p-4 mb-4 rounded-xl ">
                 <h6>İşlem yapmak istediğiniz müşteriyi bilgileri girerek arayınız</h6>
@@ -130,7 +133,7 @@ export default function SearchClientForAccountOpening() {
                                 className="text-xs px-4 py-1"
                                 onClick={(e) => {
                                     e.stopPropagation(); // Satır tıklamasını engelle
-                                    setSelectedClientId(client.id);
+                                    router.push(`/dashboard/account-management/accounts/${client.id}/create-account`)
                                 }}
                             >
                                 Hesap Aç

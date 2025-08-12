@@ -210,7 +210,7 @@ export default function EndOfDayValution({ initialRole }: { initialRole: Role })
 					<h1 className="text-2xl font-semibold ">Gün Sonu Değerleme</h1>
 					<AlertDialog>
 						<AlertDialogTrigger asChild>
-							<Button disabled={isLoadingProcess || isLoadingInitial || role === "VIEWER"}>
+							<Button disabled={isLoadingProcess || isLoadingInitial || role !== "ADMIN"}>
 								{isLoadingProcess ? (
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 								) : (

@@ -10,6 +10,7 @@ import com.investra.dtos.response.*;
 import com.investra.entity.*;
 import com.investra.enums.NotificationType;
 import com.investra.enums.OrderStatus;
+import com.investra.enums.SettlementStatus;
 import com.investra.exception.BusinessException;
 import com.investra.exception.ErrorCode;
 import com.investra.exception.UserNotFoundException;
@@ -365,7 +366,10 @@ public class ClientServiceImpl extends AbstractStockTradeService implements Clie
                         // bekleyen emir kontrolü
                         List<TradeOrder> orders = tradeOrderRepository.findAllByClientId(client.getId());
                         boolean hasPendingOrders = orders.stream()
-                                        .anyMatch(order -> order.getStatus() == OrderStatus.PENDING);
+                                        .anyMatch(order -> order.getStatus() == OrderStatus.PENDING
+                                        || order.getSettlementStatus() == SettlementStatus.PENDING
+                                                || order.getSettlementStatus() == SettlementStatus.T1
+                                                || order.getSettlementStatus() == SettlementStatus.T2);
 
                         if (hasPendingOrders) {
                                 return Response.<Void>builder()
