@@ -51,7 +51,7 @@ public class TradeOrderServiceImpl implements TradeOrderService {
     private final SimulationDateService simulationDateService;
     private final OrderValidatorService orderValidatorService;
 
-    /**
+    /*
      * Her 5 saniyede bir bekleyen emirleri işler
      */
     @Scheduled(fixedRate = 5000) // Her 5 saniye kontrol et
@@ -595,7 +595,7 @@ public class TradeOrderServiceImpl implements TradeOrderService {
 
     @Override
     public List<TradeOrderDTO> getAllTrades() {
-        List<TradeOrder> trades = tradeOrderRepository.findAllByOrderBySubmittedAtDesc();
+        List<TradeOrder> trades = tradeOrderRepository.findAllByOrderByIdDesc();
         return trades.stream().map(TradeOrderMapper::toDTO).toList();
     }
 }

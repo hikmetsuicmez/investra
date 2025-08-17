@@ -85,7 +85,7 @@ export default function StockClosingPrice() {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{filteredStocks.slice(0, 20).map((stock) => {
+								{filteredStocks.slice(0, 80).map((stock) => {
 									const closingPrice = stock.closePrice ?? 0;
 									const percentageChange = stock.changePercentage ?? 0;
 

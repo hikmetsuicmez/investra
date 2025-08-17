@@ -693,7 +693,8 @@ public class PortfolioReportServiceImpl implements PortfolioReportService {
             document.add(
                     new com.itextpdf.text.Paragraph("Müsteri Numarasi: " + report.getClientNumber(), normalFont));
             document.add(new com.itextpdf.text.Paragraph("Müsteri Adi: " + report.getCustomerName(), normalFont));
-            document.add(new com.itextpdf.text.Paragraph("Müsteri Tipi: " + report.getCustomerType().getDisplayName(), normalFont));
+            document.add(new com.itextpdf.text.Paragraph("Müsteri Tipi: " + report.getCustomerType().getDisplayName(),
+                    normalFont));
             document.add(new com.itextpdf.text.Paragraph(" ")); // Boşluk
 
             // Hesap bilgileri
